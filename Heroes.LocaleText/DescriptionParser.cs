@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 
 namespace Heroes.LocaleText;
 
@@ -9,7 +8,6 @@ namespace Heroes.LocaleText;
 internal class DescriptionParser
 {
     private readonly StormLocale _gameStringLocale;
-    private readonly CultureInfo _gameStringCultureInfo;
     private readonly Stack<Range> _textStack;
     private readonly HashSet<int> _missingEndTagsByStackCount = [];
     private readonly HashSet<int> _scaleValueByStackCount = [];
@@ -20,7 +18,6 @@ internal class DescriptionParser
     private DescriptionParser(StormLocale gameStringLocale = StormLocale.ENUS)
     {
         _gameStringLocale = gameStringLocale;
-        _gameStringCultureInfo = StormLocaleData.GetCultureInfo(_gameStringLocale);
 
         _startingIndex = 0;
         _index = 0;
@@ -62,7 +59,7 @@ internal class DescriptionParser
         return new DescriptionParser(stormLocale).ParseToColoredText(gameString, includeScaling);
     }
 
-    private static int CopyIntoBuffer(Span<char> buffer, int bufferLength, ReadOnlySpan<char> item, bool cleanTheTag)
+    private static int CopyIntoBuffer(Span<char> buffer, int offset, ReadOnlySpan<char> item, bool cleanTheTag)
     {
         if (cleanTheTag)
         {
@@ -70,16 +67,16 @@ internal class DescriptionParser
             item.CopyTo(tempTagBuffer);
             CleanUpTag(ref tempTagBuffer);
 
-            tempTagBuffer.CopyTo(buffer.Slice(bufferLength - tempTagBuffer.Length, tempTagBuffer.Length));
+            tempTagBuffer.CopyTo(buffer.Slice(offset - tempTagBuffer.Length, tempTagBuffer.Length));
         }
         else
         {
-            item.CopyTo(buffer.Slice(bufferLength - item.Length, item.Length));
+            item.CopyTo(buffer.Slice(offset - item.Length, item.Length));
         }
 
-        bufferLength -= item.Length;
+        offset -= item.Length;
 
-        return bufferLength;
+        return offset;
     }
 
     // replaces double space or more into single space, and lowercases the tag type
@@ -241,7 +238,7 @@ internal class DescriptionParser
             }
             else if (item.StartsWith("~~") && item.EndsWith("~~") && double.TryParse(item.Trim('~'), StormLocaleData.GetCultureInfo(StormLocale.ENUS), out double scaleValue))
             {
-                currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, GetPerLevelLocale(scaleValue * 100), false);
+                currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, GetPerLevelLocale(scaleValue), false);
 
                 continue;
             }
@@ -682,9 +679,9 @@ internal class DescriptionParser
             if (_scaleValueByStackCount.Contains(count))
             {
                 ReadOnlySpan<char> text = gameString[item];
-                if (double.TryParse(text.Trim('~'), _gameStringCultureInfo, out double value))
+                if (double.TryParse(text.Trim('~'), StormLocaleData.GetCultureInfo(StormLocale.ENUS), out double value))
                 {
-                    sum += GetPerLevelLocale(value * 100).Length;
+                    sum += GetPerLevelLocale(value).Length;
                 }
             }
             else
@@ -702,20 +699,20 @@ internal class DescriptionParser
     {
         return _gameStringLocale switch
         {
-            StormLocale.ENUS => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% per level)",
-            StormLocale.DEDE => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% pro Stufe)",
-            StormLocale.ESES => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% por nivel)",
-            StormLocale.ESMX => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% por nivel)",
-            StormLocale.FRFR => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% par niveau)",
-            StormLocale.ITIT => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% per livello)",
-            StormLocale.KOKR => $" (레벨 당 +{value.ToString("0.##", _gameStringCultureInfo)}%)",
-            StormLocale.PLPL => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% na poziom)",
-            StormLocale.PTBR => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% por nível)",
-            StormLocale.RURU => $" (+{value.ToString("0.##", _gameStringCultureInfo)}% за уровень)",
-            StormLocale.ZHCN => $" (每级 +{value.ToString("0.##", _gameStringCultureInfo)}%)",
-            StormLocale.ZHTW => $" (每級 +{value.ToString("0.##", _gameStringCultureInfo)}%)",
+            StormLocale.ENUS => $"{value.ToString(" (+0.##% per level)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.DEDE => $"{value.ToString(" (+0.##% pro Stufe)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.ESES => $"{value.ToString(" (+0.##% por nivel)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.ESMX => $"{value.ToString(" (+0.##% por nivel)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.FRFR => $"{value.ToString(" (+0.##% par niveau)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.ITIT => $"{value.ToString(" (+0.##% per livello)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.KOKR => $"{value.ToString(" (레벨당 +0.##%)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.PLPL => $"{value.ToString(" (+0.##% na poziom)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.PTBR => $"{value.ToString(" (+0.##% por nível)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.RURU => $"{value.ToString(" (+0.##% за уровень)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.ZHCN => $"{value.ToString(" (每级+0.##%)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.ZHTW => $"{value.ToString(" (每級+0.##%)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
 
-            _ => $"{value.ToString("0.##", _gameStringCultureInfo)}% per level",
+            _ => $"{value.ToString(" (+0.##% per level)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
         };
     }
 }

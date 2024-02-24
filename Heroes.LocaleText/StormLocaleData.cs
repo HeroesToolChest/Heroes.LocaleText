@@ -26,6 +26,7 @@ public static class StormLocaleData
         StormLocale.RURU => "ruru.stormdata",
         StormLocale.ZHCN => "zhcn.stormdata",
         StormLocale.ZHTW => "zhtw.stormdata",
+
         _ => "_",
     };
 
@@ -48,6 +49,7 @@ public static class StormLocaleData
         StormLocale.RURU => new CultureInfo("ru-RU"),
         StormLocale.ZHCN => new CultureInfo("zh-CN"),
         StormLocale.ZHTW => new CultureInfo("zh-TW"),
+
         _ => new CultureInfo("en-US"),
     };
 }
