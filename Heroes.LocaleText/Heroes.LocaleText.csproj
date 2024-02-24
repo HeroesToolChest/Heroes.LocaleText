@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Version>1.0.0-beta.1</Version>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <Authors>Kevin Oliva</Authors>
+    <Copyright>Copyright © 2024 Kevin Oliva</Copyright>
+    <!--<Description>Used to parse Heroes of the Storm MPQ files.</Description>
+    <PackageProjectUrl>https://github.com/HeroesToolChest/Heroes.MpqTool</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/HeroesToolChest/Heroes.MpqTool</RepositoryUrl>
+    <PackageReleaseNotes>https://github.com/HeroesToolChest/Heroes.MpqTool/releases</PackageReleaseNotes>-->
+    <!--<PackageTags>hots heroes-of-the-storm HeroesOfTheStorm blizzard mpq</PackageTags>-->
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <!--<PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>-->
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>  
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Heroes.LocaleText.Tests</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Heroes.LocaleText.Benchmark</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>
