@@ -24,13 +24,9 @@ internal class DescriptionParser
         _gameStringLocale = gameStringLocale;
     }
 
-    /// <summary>
-    /// Takes a gamestring and removes unmatched tags and modifies nested tags into unnested tags.
-    /// </summary>
-    /// <param name="gameString">The gamestring text.</param>
-    /// <param name="gameStringLocale">The <see cref="StormLocale"/>.</param>
-    /// <returns>A modified gamestring.</returns>
-    public static DescriptionParser Validate(string gameString, StormLocale gameStringLocale = StormLocale.ENUS)
+    public bool HasErrorTag { get; private set; }
+
+    public static DescriptionParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS)
     {
         return new DescriptionParser(gameString, gameStringLocale);
     }
@@ -40,22 +36,11 @@ internal class DescriptionParser
         return Parse(_description);
     }
 
-    /// <summary>
-    /// Returns a plain text string without any tags.
-    /// </summary>
-    /// <param name="includeNewLineTags">If <see langword="true"/>, includes the newline tags.</param>
-    /// <param name="includeScaling">If <see langword="true"/>, includes the scaling info.</param>
-    /// <returns>A modified gamestring.</returns>
     public string GetPlainText(bool includeNewLineTags, bool includeScaling)
     {
         return ParseToPlainText(_description, includeNewLineTags, includeScaling);
     }
 
-    /// <summary>
-    /// Returns the string with all tags.
-    /// </summary>
-    /// <param name="includeScaling">If <see langword="true"/>, includes the scaling info.</param>
-    /// <returns>A modified gamestring.</returns>
     public string GetColoredText(bool includeScaling)
     {
         return ParseToColoredText(_description, includeScaling);
@@ -280,7 +265,7 @@ internal class DescriptionParser
                 case TextType.ScalingTag:
                     {
                         if (flags.ScalingTag == TagFlag.Eval && double.TryParse(itemText.Trim('~'), CultureInfo.InvariantCulture, out double scaleValue))
-                            currentOffset = CopyIntoBuffer22(buffer, currentOffset, scaleValue);
+                            currentOffset = GetScalingLocaleText(buffer, currentOffset, scaleValue);
                         else if (flags.ScalingTag == TagFlag.Include)
                             currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
 
@@ -335,16 +320,16 @@ internal class DescriptionParser
                             if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
                                 _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
                             else
-                                _textStack.Add(new TextRange(startTag!.Value, TextType.MissingEndTag));
+                                _textStack.Add(new TextRange(startTag.Value, TextType.MissingEndTag));
                         }
 
-                        _textStack.Add(new TextRange(tag!.Value, TextType.StartTag));
+                        _textStack.Add(new TextRange(tag.Value, TextType.StartTag));
 
                         ConstructTextStack(gameString, tag);
 
                         // nested
                         if (startTag.HasValue)
-                            _textStack.Add(new TextRange(startTag!.Value, TextType.StartTag));
+                            _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
                     }
                     else if (IsNewLineTag(gameString, tag.Value))
                     {
@@ -424,6 +409,7 @@ internal class DescriptionParser
 #endif
                 if (TryParseErrorTag(gameString, out Range? tag))
                 {
+                    HasErrorTag = true;
                     _textStack.Add(new TextRange(tag.Value, TextType.ErrorTag));
                 }
 
@@ -566,7 +552,7 @@ internal class DescriptionParser
         ReadOnlySpan<char> currentTextSpan = gameString[_index..];
         int lengthOffset = gameString.Length - currentTextSpan.Length;
 
-        if (currentTextSpan.StartsWith("##ERROR##", StringComparison.OrdinalIgnoreCase))
+        if (currentTextSpan.StartsWith(TooltipDescription.ErrorTag, StringComparison.OrdinalIgnoreCase))
         {
             tag = new Range(lengthOffset, 9 + lengthOffset);
 
@@ -638,7 +624,7 @@ internal class DescriptionParser
                         sum += current.Range.End.Value - current.Range.Start.Value;
                     break;
                 case TextType.ScalingTag:
-                    sum += 21 + 23; // 21 largest min text, 23 for double
+                    sum += 21 + gameString[current.Range].Length; // 21 largest min text
                     break;
                 default:
                     sum += current.Range.End.Value - current.Range.Start.Value;
@@ -649,7 +635,7 @@ internal class DescriptionParser
         return sum;
     }
 
-    private int CopyIntoBuffer22(Span<char> buffer, int offset, double value)
+    private int GetScalingLocaleText(Span<char> buffer, int offset, double value)
     {
         _culture ??= StormLocaleData.GetCultureInfo(_gameStringLocale);
 
@@ -674,28 +660,5 @@ internal class DescriptionParser
         value.TryFormat(buffer[offset..], out int charsWritten, format, _culture);
 
         return offset += charsWritten;
-    }
-
-    private ReadOnlySpan<char> GetPerLevelLocale(double value)
-    {
-        _culture ??= StormLocaleData.GetCultureInfo(_gameStringLocale);
-
-        return _gameStringLocale switch
-        {
-            StormLocale.ENUS => $"{value.ToString(" (+0.##% per level)", _culture)}",
-            StormLocale.DEDE => $"{value.ToString(" (+0.##% pro Stufe)", _culture)}",
-            StormLocale.ESES => $"{value.ToString(" (+0.##% por nivel)", _culture)}",
-            StormLocale.ESMX => $"{value.ToString(" (+0.##% por nivel)", _culture)}",
-            StormLocale.FRFR => $"{value.ToString(" (+0.##% par niveau)", _culture)}",
-            StormLocale.ITIT => $"{value.ToString(" (+0.##% per livello)", _culture)}",
-            StormLocale.KOKR => $"{value.ToString(" (레벨당 +0.##%)", _culture)}",
-            StormLocale.PLPL => $"{value.ToString(" (+0.##% na poziom)", _culture)}",
-            StormLocale.PTBR => $"{value.ToString(" (+0.##% por nível)", _culture)}",
-            StormLocale.RURU => $"{value.ToString(" (+0.##% за уровень)", _culture)}",
-            StormLocale.ZHCN => $"{value.ToString(" (每级+0.##%)", _culture)}",
-            StormLocale.ZHTW => $"{value.ToString(" (每級+0.##%)", _culture)}",
-
-            _ => $"{value.ToString(" (+0.##% per level)", _culture)}",
-        };
     }
 }

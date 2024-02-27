@@ -10,14 +10,14 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// </summary>
     public const string ErrorTag = "##ERROR##";
 
-    private readonly Lazy<string> _plainText;
-    private readonly Lazy<string> _plainTextWithNewlines;
-    private readonly Lazy<string> _plainTextWithScaling;
-    private readonly Lazy<string> _plainTextWithScalingWithNewlines;
-    private readonly Lazy<string> _coloredText;
-    private readonly Lazy<string> _coloredTextWithScaling;
-
-    private readonly Lazy<bool> _hasErrorTag;
+    private readonly DescriptionParser _descriptionParser;
+    private string? _rawDescription;
+    private string? _plainText;
+    private string? _plainTextWithNewlines;
+    private string? _plainTextWithScaling;
+    private string? _plainTextWithScalingWithNewlines;
+    private string? _coloredText;
+    private string? _coloredTextWithScaling;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TooltipDescription"/> class.
@@ -31,39 +31,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
 
         GameStringLocale = gameStringLocale;
 
-        RawDescription = DescriptionParserOld.Validate(text);
-
-        _plainText = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, false, false, GameStringLocale));
-        _plainTextWithNewlines = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, true, false, GameStringLocale));
-        _plainTextWithScaling = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, false, true, GameStringLocale));
-        _plainTextWithScalingWithNewlines = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, true, true, GameStringLocale));
-
-        _coloredText = new Lazy<string>(DescriptionParserOld.GetColoredText(RawDescription, false, GameStringLocale));
-        _coloredTextWithScaling = new Lazy<string>(DescriptionParserOld.GetColoredText(RawDescription, true, GameStringLocale));
-
-        _hasErrorTag = new Lazy<bool>(value: RawDescription.Contains(ErrorTag, StringComparison.Ordinal));
-    }
-
-    public TooltipDescription(string? text, bool test, StormLocale gameStringLocale = StormLocale.ENUS)
-    {
-        if (string.IsNullOrEmpty(text))
-            text = string.Empty;
-
-        GameStringLocale = gameStringLocale;
-
-        DescriptionParser dp = DescriptionParser.Validate(text, gameStringLocale);
-
-        RawDescription = dp.GetRawDescription();
-
-        _plainText = new Lazy<string>(dp.GetPlainText(false, false));
-        _plainTextWithNewlines = new Lazy<string>(dp.GetPlainText(true, false));
-        _plainTextWithScaling = new Lazy<string>(dp.GetPlainText(false, true));
-        _plainTextWithScalingWithNewlines = new Lazy<string>(dp.GetPlainText(true, true));
-
-        _coloredText = new Lazy<string>(dp.GetColoredText(false));
-        _coloredTextWithScaling = new Lazy<string>(dp.GetColoredText(true));
-
-        _hasErrorTag = new Lazy<bool>(value: RawDescription.Contains(ErrorTag, StringComparison.Ordinal));
+        _descriptionParser = DescriptionParser.GetInstance(text, gameStringLocale);
     }
 
     /// <summary>
@@ -74,7 +42,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200~~0.04~~&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
-    public string RawDescription { get; }
+    public string RawDescription => _rawDescription ??= _descriptionParser.GetRawDescription();
 
     /// <summary>
     /// <para>Gets the validated description with text only.</para>
@@ -84,7 +52,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Fires a laser that deals 200 damage. Does not affect minions.
     /// </para>
     /// </summary>
-    public string PlainText => _plainText.Value;
+    public string PlainText => _plainText ??= _descriptionParser.GetPlainText(false, false);
 
     /// <summary>
     /// <para>Gets the validated description with text only.</para>
@@ -94,7 +62,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Fires a laser that deals 200 damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
-    public string PlainTextWithNewlines => _plainTextWithNewlines.Value;
+    public string PlainTextWithNewlines => _plainTextWithNewlines ??= _descriptionParser.GetPlainText(true, false);
 
     /// <summary>
     /// <para>Gets the validated description with text only.</para>
@@ -104,7 +72,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Fires a laser that deals 200 (+4% per level) damage.  Does not affect minions.
     /// </para>
     /// </summary>
-    public string PlainTextWithScaling => _plainTextWithScaling.Value;
+    public string PlainTextWithScaling => _plainTextWithScaling ??= _descriptionParser.GetPlainText(false, true);
 
     /// <summary>
     /// <para>Gets the validated description with text only.</para>
@@ -114,7 +82,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Fires a laser that deals 200 (+4% per level) damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
-    public string PlainTextWithScalingWithNewlines => _plainTextWithScalingWithNewlines.Value;
+    public string PlainTextWithScalingWithNewlines => _plainTextWithScalingWithNewlines ??= _descriptionParser.GetPlainText(true, true);
 
     /// <summary>
     /// <para>Gets the validated description with colored tags and new lines, when parsed this is what appears ingame for tooltip.</para>
@@ -123,7 +91,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
-    public string ColoredText => _coloredText.Value;
+    public string ColoredText => _coloredText ??= _descriptionParser.GetColoredText(false);
 
     /// <summary>
     /// <para>Gets the validated description with colored tags, newlines, and scaling info.</para>
@@ -133,12 +101,7 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200 (+4% per level)&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
-    public string ColoredTextWithScaling => _coloredTextWithScaling.Value;
-
-    /// <summary>
-    /// Gets a value indicating whether the raw description contains an error tag.
-    /// </summary>
-    public bool HasErrorTag => _hasErrorTag.Value;
+    public string ColoredTextWithScaling => _coloredTextWithScaling ??= _descriptionParser.GetColoredText(true);
 
     /// <summary>
     /// Gets the localization used for the description text.
