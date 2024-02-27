@@ -24,8 +24,6 @@ internal class DescriptionParser
         _gameStringLocale = gameStringLocale;
     }
 
-    public bool HasErrorTag { get; private set; }
-
     public static DescriptionParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS)
     {
         return new DescriptionParser(gameString, gameStringLocale);
@@ -409,7 +407,6 @@ internal class DescriptionParser
 #endif
                 if (TryParseErrorTag(gameString, out Range? tag))
                 {
-                    HasErrorTag = true;
                     _textStack.Add(new TextRange(tag.Value, TextType.ErrorTag));
                 }
 

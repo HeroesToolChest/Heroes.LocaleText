@@ -3,7 +3,7 @@
 /// <summary>
 /// Contains the information for tooltip descriptions.
 /// </summary>
-public class TooltipDescription : IEquatable<TooltipDescription>
+public class TooltipDescription
 {
     /// <summary>
     /// The error tag string.
@@ -107,59 +107,6 @@ public class TooltipDescription : IEquatable<TooltipDescription>
     /// Gets the localization used for the description text.
     /// </summary>
     public StormLocale GameStringLocale { get; }
-
-    /// <summary>
-    /// Compares the <paramref name="left"/> value to the <paramref name="right"/> value and determines if they are equal.
-    /// </summary>
-    /// <param name="left">The left hand side of the operator.</param>
-    /// <param name="right">The right hand side of the operator.</param>
-    /// <returns><see langword="true"/> if the <paramref name="left"/> value is equal to the <paramref name="right"/> value; otherwise <see langword="false"/>.</returns>
-    public static bool operator ==(TooltipDescription? left, TooltipDescription? right)
-    {
-        if (left is null)
-            return right is null;
-        return left.Equals(right);
-    }
-
-    /// <summary>
-    /// Compares the <paramref name="left"/> value to the <paramref name="right"/> value and determines if they are not equal.
-    /// </summary>
-    /// <param name="left">The left hand side of the operator.</param>
-    /// <param name="right">The right hand side of the operator.</param>
-    /// <returns><see langword="true"/> if the <paramref name="left"/> value is not equal to the <paramref name="right"/> value; otherwise <see langword="false"/>.</returns>
-    public static bool operator !=(TooltipDescription? left, TooltipDescription? right)
-    {
-        return !(left == right);
-    }
-
-    /// <inheritdoc/>
-    public bool Equals(TooltipDescription? other)
-    {
-        if (other is null)
-            return false;
-
-        return other.RawDescription.Equals(RawDescription, StringComparison.Ordinal) && other.GameStringLocale == GameStringLocale;
-    }
-
-    /// <inheritdoc/>
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(this, obj))
-            return true;
-        if (obj is null)
-            return false;
-
-        if (obj is not TooltipDescription tooltipDescription)
-            return false;
-        else
-            return Equals(tooltipDescription);
-    }
-
-    /// <inheritdoc/>
-    public override int GetHashCode()
-    {
-        return HashCode.Combine(RawDescription, GameStringLocale);
-    }
 
     /// <inheritdoc/>
     public override string ToString()
