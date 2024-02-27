@@ -23,20 +23,20 @@ public class TooltipsBenchmarks
     {
     }
 
-    [Benchmark]
-    public (string, string) Old()
-    {
-        string raw = DescriptionParserOld.Validate(_plainTextScalingDoubleScaleNewline1);
-        string plain = DescriptionParserOld.GetPlainText(raw, true, true);
+    //[Benchmark]
+    //public (string, string) Old()
+    //{
+    //    string raw = DescriptionParserOld.Validate(_plainTextScalingDoubleScaleNewline1);
+    //    string plain = DescriptionParserOld.GetPlainText(raw, true, true);
 
-        return (raw, plain);
-    }
+    //    return (raw, plain);
+    //}
 
-    [Benchmark]
-    public string OldSingle()
-    {
-        return DescriptionParserOld.Validate(_plainTextScalingDoubleScaleNewline1);
-    }
+    //[Benchmark]
+    //public string OldSingle()
+    //{
+    //    return DescriptionParserOld.Validate(_plainTextScalingDoubleScaleNewline1);
+    //}
 
     [Benchmark]
     public (string, string) New()

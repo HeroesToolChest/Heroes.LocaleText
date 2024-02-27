@@ -16,17 +16,20 @@ internal class DescriptionParser
     private int _startingIndex = 0;
     private int _index = 0;
 
+    private CultureInfo? _culture;
+
     private DescriptionParser(string description, StormLocale gameStringLocale)
     {
         _description = description;
         _gameStringLocale = gameStringLocale;
     }
 
-    ///// <summary>
-    ///// Takes a gamestring and removes unmatched tags and modifies nested tags into unnested tags.
-    ///// </summary>
-    ///// <param name="gameString">The gamestring text.</param>
-    ///// <returns>A modified gamestring.</returns>
+    /// <summary>
+    /// Takes a gamestring and removes unmatched tags and modifies nested tags into unnested tags.
+    /// </summary>
+    /// <param name="gameString">The gamestring text.</param>
+    /// <param name="gameStringLocale">The <see cref="StormLocale"/>.</param>
+    /// <returns>A modified gamestring.</returns>
     public static DescriptionParser Validate(string gameString, StormLocale gameStringLocale = StormLocale.ENUS)
     {
         return new DescriptionParser(gameString, gameStringLocale);
@@ -37,59 +40,35 @@ internal class DescriptionParser
         return Parse(_description);
     }
 
+    /// <summary>
+    /// Returns a plain text string without any tags.
+    /// </summary>
+    /// <param name="includeNewLineTags">If <see langword="true"/>, includes the newline tags.</param>
+    /// <param name="includeScaling">If <see langword="true"/>, includes the scaling info.</param>
+    /// <returns>A modified gamestring.</returns>
     public string GetPlainText(bool includeNewLineTags, bool includeScaling)
     {
         return ParseToPlainText(_description, includeNewLineTags, includeScaling);
     }
 
+    /// <summary>
+    /// Returns the string with all tags.
+    /// </summary>
+    /// <param name="includeScaling">If <see langword="true"/>, includes the scaling info.</param>
+    /// <returns>A modified gamestring.</returns>
     public string GetColoredText(bool includeScaling)
     {
         return ParseToColoredText(_description, includeScaling);
     }
-    ///// <summary>
-    ///// Returns a plain text string without any tags.
-    ///// </summary>
-    ///// <param name="gameString">The gamestring text.</param>
-    ///// <param name="includeNewLineTags">If true, includes the newline tags.</param>
-    ///// <param name="includeScaling">If true, includes the scaling info.</param>
-    ///// <param name="stormLocale">Localization for the gamestring.</param>
-    ///// <returns>A modified gamestring.</returns>
-    //public static string GetPlainText(ReadOnlySpan<char> gameString, bool includeNewLineTags, bool includeScaling, StormLocale stormLocale = StormLocale.ENUS)
-    //{
-    //    return new DescriptionParserCopy(stormLocale).ParseToPlainText(gameString, includeNewLineTags, includeScaling);
-    //}
-
-    ///// <summary>
-    ///// Returns the string with all tags.
-    ///// </summary>
-    ///// <param name="gameString">The gamestring text.</param>
-    ///// <param name="includeScaling">If true, includes the scaling info.</param>
-    ///// <param name="stormLocale">Localization for the gamestring.</param>
-    ///// <returns>A modified gamestring.</returns>
-    //public static string GetColoredText(ReadOnlySpan<char> gameString, bool includeScaling, StormLocale stormLocale = StormLocale.ENUS)
-    //{
-    //    return new DescriptionParserCopy(stormLocale).ParseToColoredText(gameString, includeScaling);
-    //}
 
     private static int CopyIntoBuffer(Span<char> buffer, int offset, ReadOnlySpan<char> item, bool cleanTheTag)
     {
         item.CopyTo(buffer[offset..]);
 
         if (cleanTheTag)
-        {
             offset += CleanUpTag(buffer.Slice(offset, item.Length));
-            //Span<char> tempTagBuffer = item.Length < 1024 ? stackalloc char[item.Length] : new char[item.Length];
-            //item.CopyTo(tempTagBuffer);
-            //CleanUpTag(ref tempTagBuffer);
-
-            //tempTagBuffer.CopyTo(buffer[offset..]);
-            //offset += item.Length;
-        }
         else
-        {
-            //item.CopyTo(buffer[offset..]);
             offset += item.Length;
-        }
 
         return offset;
     }
@@ -169,6 +148,26 @@ internal class DescriptionParser
         ReadOnlySpan<char> tagSpan = text[tag];
 
         return !tagSpan.Equals("<li/>", StringComparison.OrdinalIgnoreCase) && tagSpan.Length > 3 && tagSpan.EndsWith("/>", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsDigits(ReadOnlySpan<char> value)
+    {
+        if (value.IsEmpty || value.IsWhiteSpace())
+            return false;
+
+        bool dot = false;
+
+        for (int i = 0; i < value.Length; i++)
+        {
+            if (char.IsDigit(value[i]))
+                continue;
+            else if (dot is false && value[i] == '.')
+                dot = true;
+            else
+                return false;
+        }
+
+        return true;
     }
 
     private string Parse(ReadOnlySpan<char> gameString)
@@ -281,13 +280,9 @@ internal class DescriptionParser
                 case TextType.ScalingTag:
                     {
                         if (flags.ScalingTag == TagFlag.Eval && double.TryParse(itemText.Trim('~'), CultureInfo.InvariantCulture, out double scaleValue))
-                        {
-                            currentOffset = CopyIntoBuffer(buffer, currentOffset, GetPerLevelLocale(scaleValue), false);
-                        }
+                            currentOffset = CopyIntoBuffer22(buffer, currentOffset, scaleValue);
                         else if (flags.ScalingTag == TagFlag.Include)
-                        {
                             currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
-                        }
 
                         break;
                     }
@@ -549,7 +544,7 @@ internal class DescriptionParser
         {
             ReadOnlySpan<char> value = currentTextSpan[(startScaleIndex + 1)..endScaleIndex];
 
-            if (double.TryParse(value, out _))
+            if (IsDigits(value))
             {
                 tag = new Range(startScaleIndex - 1 + lengthOffset, endScaleIndex + 1 + lengthOffset + 1);
 
@@ -654,24 +649,53 @@ internal class DescriptionParser
         return sum;
     }
 
+    private int CopyIntoBuffer22(Span<char> buffer, int offset, double value)
+    {
+        _culture ??= StormLocaleData.GetCultureInfo(_gameStringLocale);
+
+        ReadOnlySpan<char> format = _gameStringLocale switch
+        {
+            StormLocale.ENUS => " (+0.##% per level)",
+            StormLocale.DEDE => " (+0.##% pro Stufe)",
+            StormLocale.ESES => " (+0.##% por nivel)",
+            StormLocale.ESMX => " (+0.##% por nivel)",
+            StormLocale.FRFR => " (+0.##% par niveau)",
+            StormLocale.ITIT => " (+0.##% per livello)",
+            StormLocale.KOKR => " (레벨당 +0.##%)",
+            StormLocale.PLPL => " (+0.##% na poziom)",
+            StormLocale.PTBR => " (+0.##% por nível)",
+            StormLocale.RURU => " (+0.##% за уровень)",
+            StormLocale.ZHCN => " (每级+0.##%)",
+            StormLocale.ZHTW => " (每級+0.##%)",
+
+            _ => $"{value.ToString(" (+0.##% per level)", _culture)}",
+        };
+
+        value.TryFormat(buffer[offset..], out int charsWritten, format, _culture);
+
+        return offset += charsWritten;
+    }
+
     private ReadOnlySpan<char> GetPerLevelLocale(double value)
     {
+        _culture ??= StormLocaleData.GetCultureInfo(_gameStringLocale);
+
         return _gameStringLocale switch
         {
-            StormLocale.ENUS => $"{value.ToString(" (+0.##% per level)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.DEDE => $"{value.ToString(" (+0.##% pro Stufe)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.ESES => $"{value.ToString(" (+0.##% por nivel)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.ESMX => $"{value.ToString(" (+0.##% por nivel)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.FRFR => $"{value.ToString(" (+0.##% par niveau)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.ITIT => $"{value.ToString(" (+0.##% per livello)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.KOKR => $"{value.ToString(" (레벨당 +0.##%)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.PLPL => $"{value.ToString(" (+0.##% na poziom)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.PTBR => $"{value.ToString(" (+0.##% por nível)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.RURU => $"{value.ToString(" (+0.##% за уровень)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.ZHCN => $"{value.ToString(" (每级+0.##%)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
-            StormLocale.ZHTW => $"{value.ToString(" (每級+0.##%)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            StormLocale.ENUS => $"{value.ToString(" (+0.##% per level)", _culture)}",
+            StormLocale.DEDE => $"{value.ToString(" (+0.##% pro Stufe)", _culture)}",
+            StormLocale.ESES => $"{value.ToString(" (+0.##% por nivel)", _culture)}",
+            StormLocale.ESMX => $"{value.ToString(" (+0.##% por nivel)", _culture)}",
+            StormLocale.FRFR => $"{value.ToString(" (+0.##% par niveau)", _culture)}",
+            StormLocale.ITIT => $"{value.ToString(" (+0.##% per livello)", _culture)}",
+            StormLocale.KOKR => $"{value.ToString(" (레벨당 +0.##%)", _culture)}",
+            StormLocale.PLPL => $"{value.ToString(" (+0.##% na poziom)", _culture)}",
+            StormLocale.PTBR => $"{value.ToString(" (+0.##% por nível)", _culture)}",
+            StormLocale.RURU => $"{value.ToString(" (+0.##% за уровень)", _culture)}",
+            StormLocale.ZHCN => $"{value.ToString(" (每级+0.##%)", _culture)}",
+            StormLocale.ZHTW => $"{value.ToString(" (每級+0.##%)", _culture)}",
 
-            _ => $"{value.ToString(" (+0.##% per level)", StormLocaleData.GetCultureInfo(_gameStringLocale))}",
+            _ => $"{value.ToString(" (+0.##% per level)", _culture)}",
         };
     }
 }
