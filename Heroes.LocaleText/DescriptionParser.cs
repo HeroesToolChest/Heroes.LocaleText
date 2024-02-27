@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace Heroes.LocaleText;
 
@@ -7,80 +8,94 @@ namespace Heroes.LocaleText;
 /// </summary>
 internal class DescriptionParser
 {
+    private readonly string _description;
     private readonly StormLocale _gameStringLocale;
-    private readonly Stack<Range> _textStack;
-    private readonly HashSet<int> _missingEndTagsByStackCount = [];
-    private readonly HashSet<int> _scaleValueByStackCount = [];
+    private readonly List<TextRange> _textStack = [];
 
-    private int _startingIndex;
-    private int _index;
+    private bool _isContructed = false;
+    private int _startingIndex = 0;
+    private int _index = 0;
 
-    private DescriptionParser(StormLocale gameStringLocale = StormLocale.ENUS)
+    private DescriptionParser(string description, StormLocale gameStringLocale)
     {
+        _description = description;
         _gameStringLocale = gameStringLocale;
-
-        _startingIndex = 0;
-        _index = 0;
-        _textStack = [];
     }
 
-    /// <summary>
-    /// Takes a gamestring and removes unmatched tags and modifies nested tags into unnested tags.
-    /// </summary>
-    /// <param name="gameString">The gamestring text.</param>
-    /// <returns>A modified gamestring.</returns>
-    public static string Validate(ReadOnlySpan<char> gameString)
+    ///// <summary>
+    ///// Takes a gamestring and removes unmatched tags and modifies nested tags into unnested tags.
+    ///// </summary>
+    ///// <param name="gameString">The gamestring text.</param>
+    ///// <returns>A modified gamestring.</returns>
+    public static DescriptionParser Validate(string gameString, StormLocale gameStringLocale = StormLocale.ENUS)
     {
-        return new DescriptionParser().Parse(gameString);
+        return new DescriptionParser(gameString, gameStringLocale);
     }
 
-    /// <summary>
-    /// Returns a plain text string without any tags.
-    /// </summary>
-    /// <param name="gameString">The gamestring text.</param>
-    /// <param name="includeNewLineTags">If true, includes the newline tags.</param>
-    /// <param name="includeScaling">If true, includes the scaling info.</param>
-    /// <param name="stormLocale">Localization for the gamestring.</param>
-    /// <returns>A modified gamestring.</returns>
-    public static string GetPlainText(ReadOnlySpan<char> gameString, bool includeNewLineTags, bool includeScaling, StormLocale stormLocale = StormLocale.ENUS)
+    public string GetRawDescription()
     {
-        return new DescriptionParser(stormLocale).ParseToPlainText(gameString, includeNewLineTags, includeScaling);
+        return Parse(_description);
     }
 
-    /// <summary>
-    /// Returns the string with all tags.
-    /// </summary>
-    /// <param name="gameString">The gamestring text.</param>
-    /// <param name="includeScaling">If true, includes the scaling info.</param>
-    /// <param name="stormLocale">Localization for the gamestring.</param>
-    /// <returns>A modified gamestring.</returns>
-    public static string GetColoredText(ReadOnlySpan<char> gameString, bool includeScaling, StormLocale stormLocale = StormLocale.ENUS)
+    public string GetPlainText(bool includeNewLineTags, bool includeScaling)
     {
-        return new DescriptionParser(stormLocale).ParseToColoredText(gameString, includeScaling);
+        return ParseToPlainText(_description, includeNewLineTags, includeScaling);
     }
+
+    public string GetColoredText(bool includeScaling)
+    {
+        return ParseToColoredText(_description, includeScaling);
+    }
+    ///// <summary>
+    ///// Returns a plain text string without any tags.
+    ///// </summary>
+    ///// <param name="gameString">The gamestring text.</param>
+    ///// <param name="includeNewLineTags">If true, includes the newline tags.</param>
+    ///// <param name="includeScaling">If true, includes the scaling info.</param>
+    ///// <param name="stormLocale">Localization for the gamestring.</param>
+    ///// <returns>A modified gamestring.</returns>
+    //public static string GetPlainText(ReadOnlySpan<char> gameString, bool includeNewLineTags, bool includeScaling, StormLocale stormLocale = StormLocale.ENUS)
+    //{
+    //    return new DescriptionParserCopy(stormLocale).ParseToPlainText(gameString, includeNewLineTags, includeScaling);
+    //}
+
+    ///// <summary>
+    ///// Returns the string with all tags.
+    ///// </summary>
+    ///// <param name="gameString">The gamestring text.</param>
+    ///// <param name="includeScaling">If true, includes the scaling info.</param>
+    ///// <param name="stormLocale">Localization for the gamestring.</param>
+    ///// <returns>A modified gamestring.</returns>
+    //public static string GetColoredText(ReadOnlySpan<char> gameString, bool includeScaling, StormLocale stormLocale = StormLocale.ENUS)
+    //{
+    //    return new DescriptionParserCopy(stormLocale).ParseToColoredText(gameString, includeScaling);
+    //}
 
     private static int CopyIntoBuffer(Span<char> buffer, int offset, ReadOnlySpan<char> item, bool cleanTheTag)
     {
+        item.CopyTo(buffer[offset..]);
+
         if (cleanTheTag)
         {
-            Span<char> tempTagBuffer = item.Length < 1024 ? stackalloc char[item.Length] : new char[item.Length];
-            item.CopyTo(tempTagBuffer);
-            CleanUpTag(ref tempTagBuffer);
+            offset += CleanUpTag(buffer.Slice(offset, item.Length));
+            //Span<char> tempTagBuffer = item.Length < 1024 ? stackalloc char[item.Length] : new char[item.Length];
+            //item.CopyTo(tempTagBuffer);
+            //CleanUpTag(ref tempTagBuffer);
 
-            tempTagBuffer.CopyTo(buffer.Slice(offset - tempTagBuffer.Length, tempTagBuffer.Length));
+            //tempTagBuffer.CopyTo(buffer[offset..]);
+            //offset += item.Length;
         }
         else
         {
-            item.CopyTo(buffer.Slice(offset - item.Length, item.Length));
+            //item.CopyTo(buffer[offset..]);
+            offset += item.Length;
         }
-
-        offset -= item.Length;
 
         return offset;
     }
 
     // replaces double space or more into single space, and lowercases the tag type
-    private static void CleanUpTag(ref Span<char> text)
+    private static int CleanUpTag(Span<char> text)
     {
         int position;
         int i;
@@ -96,23 +111,26 @@ internal class DescriptionParser
 
         text = text[..(position - (position - i))];
 
-        Span<char> tagTypeSpan = text;
+        Span<char> tagTypeSpan;
         int spaceIndex = text.IndexOf(' ');
 
         if (spaceIndex > -1)
-            tagTypeSpan = text[..spaceIndex];
-
+            tagTypeSpan = text[..spaceIndex].TrimStart('<');
+        else
+            tagTypeSpan = text.Trim("</>");
         for (int j = 0; j < tagTypeSpan.Length; j++)
         {
             tagTypeSpan[j] = char.ToLowerInvariant(tagTypeSpan[j]);
         }
+
+        return text.Length;
     }
 
     // checks if the end tag matches the start tag
-    private static bool IsTagsMatch(ReadOnlySpan<char> gameString, Range startTag, Range endTag)
+    private static bool IsTagsMatch(ReadOnlySpan<char> text, Range startTag, Range endTag)
     {
-        ReadOnlySpan<char> startSpan = gameString[startTag];
-        ReadOnlySpan<char> endSpan = gameString[endTag].Trim("</> ");
+        ReadOnlySpan<char> startSpan = text[startTag];
+        ReadOnlySpan<char> endSpan = text[endTag].Trim("</> ");
         ReadOnlySpan<char> firstPart;
 
         int spaceIndex = startSpan.IndexOf(' ');
@@ -125,137 +143,181 @@ internal class DescriptionParser
         return firstPart.Equals(endSpan, StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsNewLineTag(ReadOnlySpan<char> gameString, Range tag) => IsNewLineTag(gameString[tag]);
-
-    private static bool IsNewLineTag(ReadOnlySpan<char> gameString) => gameString.Equals("<n/>", StringComparison.OrdinalIgnoreCase) || gameString.Equals("</n>", StringComparison.OrdinalIgnoreCase);
-
-    private static bool IsSpaceTag(ReadOnlySpan<char> gameString, Range tag) => IsSpaceTag(gameString[tag]);
-
-    private static bool IsSpaceTag(ReadOnlySpan<char> gameString) => gameString.Equals("<sp/>", StringComparison.OrdinalIgnoreCase);
-
-    private static bool IsSelfCloseTag(ReadOnlySpan<char> gameString, Range tag)
+    private static ReadOnlySpan<char> GetEndTagCharType(ReadOnlySpan<char> startTagText)
     {
-        ReadOnlySpan<char> tagSpan = gameString[tag];
+        ReadOnlySpan<char> tagTypeSpan;
+
+        int spaceIndex = startTagText.IndexOf(' ');
+        if (spaceIndex > -1)
+            tagTypeSpan = startTagText[..spaceIndex].TrimStart('<');
+        else
+            tagTypeSpan = startTagText.Trim("<>");
+
+        return tagTypeSpan;
+    }
+
+    private static bool IsNewLineTag(ReadOnlySpan<char> text, Range tag) => IsNewLineTag(text[tag]);
+
+    private static bool IsNewLineTag(ReadOnlySpan<char> text) => text.Equals("<n/>", StringComparison.OrdinalIgnoreCase) || text.Equals("</n>", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsSpaceTag(ReadOnlySpan<char> text, Range tag) => IsSpaceTag(text[tag]);
+
+    private static bool IsSpaceTag(ReadOnlySpan<char> text) => text.Equals("<sp/>", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsSelfCloseTag(ReadOnlySpan<char> text, Range tag)
+    {
+        ReadOnlySpan<char> tagSpan = text[tag];
 
         return !tagSpan.Equals("<li/>", StringComparison.OrdinalIgnoreCase) && tagSpan.Length > 3 && tagSpan.EndsWith("/>", StringComparison.OrdinalIgnoreCase);
     }
 
     private string Parse(ReadOnlySpan<char> gameString)
     {
-        // build up the stack
-        NestedTagCleanUp(gameString);
+        if (!_isContructed)
+        {
+            ConstructTextStack(gameString);
+            _isContructed = true;
+        }
 
-        // then build the string
-        return BuildDescription(gameString, true, false);
+        return BuildDescription(gameString, new DescriptionFlags()
+        {
+            ColorTags = TagFlag.Include,
+            ScalingTag = TagFlag.Include,
+            NewLineTag = TagFlag.Include,
+            ErrorTag = TagFlag.Include,
+            SpaceTag = TagFlag.Include,
+        });
     }
 
     private string ParseToPlainText(ReadOnlySpan<char> gameString, bool includeNewlineTags, bool includeScaling)
     {
-        PlainTextTagCleanup(gameString, includeScaling);
+        if (!_isContructed)
+        {
+            ConstructTextStack(gameString);
+            _isContructed = true;
+        }
 
-        return BuildDescription(gameString, includeNewlineTags, true);
+        return BuildDescription(gameString, new DescriptionFlags()
+        {
+            ColorTags = TagFlag.None,
+            ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
+            NewLineTag = includeNewlineTags ? TagFlag.Include : TagFlag.Eval,
+            ErrorTag = TagFlag.None,
+            SpaceTag = TagFlag.Eval,
+        });
     }
 
     private string ParseToColoredText(ReadOnlySpan<char> gameString, bool includeScaling)
     {
-        ColoredTextTagCleanup(gameString, includeScaling);
+        if (!_isContructed)
+        {
+            ConstructTextStack(gameString);
+            _isContructed = true;
+        }
 
-        return BuildDescription(gameString, true, false);
+        return BuildDescription(gameString, new DescriptionFlags()
+        {
+            ColorTags = TagFlag.Include,
+            ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
+            NewLineTag = TagFlag.Include,
+            ErrorTag = TagFlag.None,
+            SpaceTag = TagFlag.Eval,
+        });
     }
 
-    private string BuildDescription(ReadOnlySpan<char> gameString, bool includeNewlineTags, bool eval)
+    private string BuildDescription(ReadOnlySpan<char> gameString, DescriptionFlags flags)
     {
         if (_textStack.Count < 1)
             return string.Empty;
 
-        ReadOnlySpan<char> endTag = [];
-        ReadOnlySpan<char> firstItem = gameString[_textStack.Peek()];
-
-        // remove unmatched start tag
-        if (!_missingEndTagsByStackCount.Contains(_textStack.Count) && firstItem[0] == '<' && firstItem[^1] == '>' &&
-            !firstItem.EndsWith("/>") && !firstItem.StartsWith("</"))
-        {
-            _textStack.Pop();
-        }
-
-        int totalSize = GetSizeOfBuffer(gameString);
+        int totalSize = GetSizeOfBuffer(gameString, flags);
 
         Span<char> buffer = totalSize < 1024 ? stackalloc char[totalSize] : new char[totalSize];
-        int currentCopyIndex = buffer.Length;
 
-        // loop through stack and build string
-        // the buffer is being filled from the end
-        while (_textStack.Count > 0)
+        ReadOnlySpan<char> startTag = [];
+        int currentOffset = 0;
+
+        // loop through and build string
+        for (int i = 0; i < _textStack.Count; i++)
         {
-            ReadOnlySpan<char> item = gameString[_textStack.Pop()];
+            TextRange item = _textStack[i];
+            ReadOnlySpan<char> itemText = gameString[item.Range];
 
-            if (_missingEndTagsByStackCount.Contains(_textStack.Count + 1))
+            switch (item.Type)
             {
-                ReadOnlySpan<char> tagTypeSpan;
+                case TextType.Newline:
+                    if (flags.NewLineTag == TagFlag.Include)
+                        currentOffset = CopyIntoBuffer(buffer, currentOffset, "<n/>", false);
+                    else if (flags.NewLineTag == TagFlag.Eval)
+                        currentOffset = CopyIntoBuffer(buffer, currentOffset, " ", false);
+                    break;
+                case TextType.SpaceTag:
+                    if (flags.SpaceTag == TagFlag.Include)
+                        currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                    else if (flags.SpaceTag == TagFlag.Eval)
+                        currentOffset = CopyIntoBuffer(buffer, currentOffset, " ", false);
+                    break;
+                case TextType.StartTag:
+                    startTag = itemText;
+                    break;
+                case TextType.MissingEndTag:
+                case TextType.EndTag:
+                    if (flags.ColorTags == TagFlag.Include)
+                    {
+                        if (startTag.IsEmpty)
+                        {
+                            if (item.Type == TextType.EndTag)
+                                currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, true);
+                            else
+                                currentOffset = CopyIntoBuffer(buffer, currentOffset, $"</{GetEndTagCharType(itemText)}>", false);
+                        }
+                        else // dont save, empty tag
+                        {
+                            startTag = [];
+                        }
+                    }
 
-                int spaceIndex = item.IndexOf(' ');
-                if (spaceIndex > -1)
-                    tagTypeSpan = item[..spaceIndex].TrimStart('<');
-                else
-                    tagTypeSpan = item.Trim("<>");
+                    break;
+                case TextType.ScalingTag:
+                    {
+                        if (flags.ScalingTag == TagFlag.Eval && double.TryParse(itemText.Trim('~'), CultureInfo.InvariantCulture, out double scaleValue))
+                        {
+                            currentOffset = CopyIntoBuffer(buffer, currentOffset, GetPerLevelLocale(scaleValue), false);
+                        }
+                        else if (flags.ScalingTag == TagFlag.Include)
+                        {
+                            currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                        }
 
-                endTag = $"</{tagTypeSpan}>";
+                        break;
+                    }
 
-                continue;
+                default:
+                    if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
+                    {
+                        currentOffset = CopyIntoBuffer(buffer, currentOffset, startTag, true);
+                        startTag = [];
+                        currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                    }
+                    else if (item.Type == TextType.ErrorTag)
+                    {
+                        if (flags.ErrorTag == TagFlag.Include)
+                            currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                    }
+                    else
+                    {
+                        currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                    }
+
+                    break;
             }
-            else if (IsNewLineTag(item))
-            {
-                if (includeNewlineTags)
-                    currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, "<n/>", false);
-                else
-                    currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, " ", false);
-
-                continue;
-            }
-            else if (eval && IsSpaceTag(item))
-            {
-                currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, " ", false);
-
-                continue;
-            }
-            else if (item.StartsWith("</") && item[^1] == '>' && !item.EndsWith("/>")) // end tag
-            {
-                endTag = item;
-                continue;
-            }
-            else if (item[0] == '<' && item[^1] == '>' && !item.EndsWith("/>")) // check if start tag
-            {
-                if (endTag.IsEmpty)
-                {
-                    currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, item, true);
-                }
-                else // dont save, empty tag
-                {
-                    endTag = [];
-                }
-
-                continue;
-            }
-            else if (item.StartsWith("~~") && item.EndsWith("~~") && double.TryParse(item.Trim('~'), StormLocaleData.GetCultureInfo(StormLocale.ENUS), out double scaleValue))
-            {
-                currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, GetPerLevelLocale(scaleValue), false);
-
-                continue;
-            }
-            else if (!endTag.IsEmpty)
-            {
-                currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, endTag, true);
-                endTag = [];
-            }
-
-            currentCopyIndex = CopyIntoBuffer(buffer, currentCopyIndex, item, false);
         }
 
         // since we filled the buffer from the end, it could have null chars at the beginning
-        return buffer.TrimStart('\0').ToString();
+        return buffer.TrimEnd('\0').ToString();
     }
 
-    private void NestedTagCleanUp(ReadOnlySpan<char> gameString, Range? startTag = null)
+    private void ConstructTextStack(ReadOnlySpan<char> gameString, Range? startTag = null)
     {
         _startingIndex = _index;
 
@@ -276,23 +338,18 @@ internal class DescriptionParser
                         if (startTag.HasValue)
                         {
                             if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
-                            {
-                                _textStack.Push(endTag.Value);
-                            }
+                                _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
                             else
-                            {
-                                _textStack.Push(startTag!.Value);
-                                _missingEndTagsByStackCount.Add(_textStack.Count);
-                            }
+                                _textStack.Add(new TextRange(startTag!.Value, TextType.MissingEndTag));
                         }
 
-                        _textStack.Push(tag.Value);
+                        _textStack.Add(new TextRange(tag!.Value, TextType.StartTag));
 
-                        NestedTagCleanUp(gameString, tag);
+                        ConstructTextStack(gameString, tag);
 
                         // nested
                         if (startTag.HasValue)
-                            _textStack.Push(startTag.Value);
+                            _textStack.Add(new TextRange(startTag!.Value, TextType.StartTag));
                     }
                     else if (IsNewLineTag(gameString, tag.Value))
                     {
@@ -300,38 +357,79 @@ internal class DescriptionParser
                         if (startTag.HasValue)
                         {
                             if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
-                                _textStack.Push(endTag.Value);
+                                _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
 
-                            _textStack.Push(tag.Value);
-                            _textStack.Push(startTag.Value);
+                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
+                            _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
                         }
                         else
                         {
-                            _textStack.Push(tag.Value);
+                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
                         }
                     }
                     else if (startTag is not null)
                     {
                         if (IsTagsMatch(gameString, startTag.Value, tag.Value))
                         {
-                            _textStack.Push(tag.Value);
+                            _textStack.Add(new TextRange(tag.Value, TextType.EndTag));
 
                             return;
                         }
                     }
+                    else if (IsSpaceTag(gameString, tag.Value))
+                    {
+                        _textStack.Add(new TextRange(tag.Value, TextType.SpaceTag));
+                    }
                     else if (IsSelfCloseTag(gameString, tag.Value))
                     {
-                        _textStack.Push(tag.Value);
+                        _textStack.Add(new TextRange(tag.Value, TextType.SelfCloseTag));
                     }
                 }
                 else
                 {
-                    _textStack.Pop();
+                    _textStack.RemoveAt(_textStack.Count - 1);
 #if DEBUG
                     PushNormalText(gameString);
 #else
                     PushNormalText();
 #endif
+                }
+
+                _startingIndex = _index;
+            }
+            else if (gameString[_index] == '~' && _index + 1 < gameString.Length && gameString[_index + 1] == '~')
+            {
+#if DEBUG
+                PushNormalText(gameString);
+#else
+                PushNormalText();
+#endif
+                if (TryParseScalingTag(gameString, out Range? tag))
+                {
+                    _textStack.Add(new TextRange(tag.Value, TextType.ScalingTag));
+                }
+                else
+                {
+                    _textStack.RemoveAt(_textStack.Count - 1);
+#if DEBUG
+                    PushNormalText(gameString);
+#else
+                    PushNormalText();
+#endif
+                }
+
+                _startingIndex = _index;
+            }
+            else if (gameString[_index] == '#' && _index + 1 < gameString.Length && gameString[_index + 1] == '#')
+            {
+#if DEBUG
+                PushNormalText(gameString);
+#else
+                PushNormalText();
+#endif
+                if (TryParseErrorTag(gameString, out Range? tag))
+                {
+                    _textStack.Add(new TextRange(tag.Value, TextType.ErrorTag));
                 }
 
                 _startingIndex = _index;
@@ -344,7 +442,7 @@ internal class DescriptionParser
 
         if (_index <= gameString.Length)
         {
-            bool missingEndTag = _textStack.Count > 0 && startTag.HasValue && _textStack.Peek().Equals(startTag);
+            bool missingEndTag = _textStack.Count > 0 && startTag.HasValue && _textStack[^1].Range.Equals(startTag);
 
 #if DEBUG
             PushNormalText(gameString);
@@ -352,163 +450,7 @@ internal class DescriptionParser
             PushNormalText();
 #endif
             if (missingEndTag)
-            {
-                _textStack.Push(startTag!.Value);
-                _missingEndTagsByStackCount.Add(_textStack.Count);
-            }
-        }
-    }
-
-    private void PlainTextTagCleanup(ReadOnlySpan<char> gameString, bool includeScaling)
-    {
-        _startingIndex = _index;
-
-        while (_index < gameString.Length)
-        {
-            if (gameString[_index] == '<' && _index + 1 < gameString.Length && gameString[_index + 1] != ' ')
-            {
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseTag(gameString, out Range? tag, out _))
-                {
-                    if (IsNewLineTag(gameString, tag.Value) || IsSpaceTag(gameString, tag.Value))
-                        _textStack.Push(tag.Value);
-                }
-
-                _startingIndex = _index;
-            }
-            else if (gameString[_index] == '~' && _index + 1 < gameString.Length && gameString[_index + 1] == '~')
-            {
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseScalingTag(gameString, out Range? tag))
-                {
-                    if (includeScaling)
-                    {
-                        _textStack.Push(tag.Value);
-                        _scaleValueByStackCount.Add(_textStack.Count);
-                    }
-                }
-                else
-                {
-                    _textStack.Pop();
-#if DEBUG
-                    PushNormalText(gameString);
-#else
-                    PushNormalText();
-#endif
-                }
-
-                _startingIndex = _index;
-            }
-            else if (gameString[_index] == '#' && _index + 1 < gameString.Length && gameString[_index + 1] == '#')
-            {
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseErrorTag(gameString, out _))
-                {
-                }
-
-                _startingIndex = _index;
-            }
-            else
-            {
-                _index++;
-            }
-        }
-
-        if (_index <= gameString.Length)
-        {
-#if DEBUG
-            PushNormalText(gameString);
-#else
-            PushNormalText();
-#endif
-        }
-    }
-
-    private void ColoredTextTagCleanup(ReadOnlySpan<char> gameString, bool includeScaling)
-    {
-        _startingIndex = _index;
-
-        while (_index < gameString.Length)
-        {
-            if (gameString[_index] == '<' && _index + 1 < gameString.Length && gameString[_index + 1] != ' ')
-            {
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseTag(gameString, out Range? tag, out _))
-                {
-                    _textStack.Push(tag.Value);
-                }
-
-                _startingIndex = _index;
-            }
-            else if (gameString[_index] == '~' && _index + 1 < gameString.Length && gameString[_index + 1] == '~')
-            {
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseScalingTag(gameString, out Range? tag))
-                {
-                    if (includeScaling)
-                    {
-                        _textStack.Push(tag.Value);
-                        _scaleValueByStackCount.Add(_textStack.Count);
-                    }
-                }
-                else
-                {
-                    _textStack.Pop();
-#if DEBUG
-                    PushNormalText(gameString);
-#else
-                    PushNormalText();
-#endif
-                }
-
-                _startingIndex = _index;
-            }
-            else if (gameString[_index] == '#' && _index + 1 < gameString.Length && gameString[_index + 1] == '#')
-            {
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseErrorTag(gameString, out _))
-                {
-                }
-
-                _startingIndex = _index;
-            }
-            else
-            {
-                _index++;
-            }
-        }
-
-        if (_index <= gameString.Length)
-        {
-#if DEBUG
-            PushNormalText(gameString);
-#else
-            PushNormalText();
-#endif
+                _textStack.Add(new TextRange(startTag!.Value, TextType.MissingEndTag));
         }
     }
 
@@ -520,7 +462,7 @@ internal class DescriptionParser
         {
             ReadOnlySpan<char> temp = gameString.Slice(_startingIndex, normalTextLength);
 
-            _textStack.Push(new Range(_startingIndex, _index));
+            _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
         }
     }
 #else
@@ -529,7 +471,7 @@ internal class DescriptionParser
         int normalTextLength = _index - _startingIndex;
         if (normalTextLength > 0)
         {
-            _textStack.Push(new Range(_startingIndex, _index));
+            _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
         }
     }
 #endif
@@ -650,13 +592,7 @@ internal class DescriptionParser
         ReadOnlySpan<char> startTagSpan = gameString[startTag];
 
         // find the tag type
-        int spaceIndex = startTagSpan.IndexOf(' ');
-        ReadOnlySpan<char> tagTypeSpan;
-
-        if (spaceIndex > -1)
-            tagTypeSpan = startTagSpan[..spaceIndex].TrimStart('<');
-        else
-            tagTypeSpan = startTagSpan.Trim("<>");
+        ReadOnlySpan<char> tagTypeSpan = GetEndTagCharType(startTagSpan);
 
         int indexOfEndTag = currentTextSpan.IndexOf($"</{tagTypeSpan}>", StringComparison.OrdinalIgnoreCase);
 
@@ -669,30 +605,53 @@ internal class DescriptionParser
         return false;
     }
 
-    private int GetSizeOfBuffer(ReadOnlySpan<char> gameString)
+    private int GetSizeOfBuffer(ReadOnlySpan<char> gameString, DescriptionFlags flags)
     {
-        int count = _textStack.Count;
         int sum = 0;
 
-        foreach (Range item in _textStack)
+        for (int i = _textStack.Count - 1; i >= 0; i--)
         {
-            if (_scaleValueByStackCount.Contains(count))
-            {
-                ReadOnlySpan<char> text = gameString[item];
-                if (double.TryParse(text.Trim('~'), StormLocaleData.GetCultureInfo(StormLocale.ENUS), out double value))
-                {
-                    sum += GetPerLevelLocale(value).Length;
-                }
-            }
-            else
-            {
-                sum += item.End.Value - item.Start.Value;
-            }
+            TextRange current = _textStack[i];
 
-            count--;
+            switch (current.Type)
+            {
+                case TextType.MissingEndTag:
+                    {
+                        // find the size of the tag
+                        ReadOnlySpan<char> currentSpan = gameString[current.Range];
+                        ReadOnlySpan<char> tagTypeSpan = GetEndTagCharType(currentSpan);
+
+                        sum += tagTypeSpan.Length + 3; // 3 for </>
+                        break;
+                    }
+
+                case TextType.Newline:
+                    if (flags.NewLineTag == TagFlag.Include)
+                        sum += 4; // <n/>
+                    else if (flags.NewLineTag == TagFlag.Eval)
+                        sum += 1; // as space " "
+                    break;
+                case TextType.SpaceTag:
+                    if (flags.SpaceTag == TagFlag.Include)
+                        sum += 5; // <sp/>
+                    else if (flags.SpaceTag == TagFlag.Eval)
+                        sum += 1; // as space " "
+                    break;
+                case TextType.StartTag:
+                case TextType.EndTag:
+                    if (flags.ColorTags == TagFlag.Include)
+                        sum += current.Range.End.Value - current.Range.Start.Value;
+                    break;
+                case TextType.ScalingTag:
+                    sum += 21 + 23; // 21 largest min text, 23 for double
+                    break;
+                default:
+                    sum += current.Range.End.Value - current.Range.Start.Value;
+                    break;
+            }
         }
 
-        return sum += _missingEndTagsByStackCount.Count;
+        return sum;
     }
 
     private ReadOnlySpan<char> GetPerLevelLocale(double value)

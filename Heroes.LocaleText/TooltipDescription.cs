@@ -31,15 +31,37 @@ public class TooltipDescription : IEquatable<TooltipDescription>
 
         GameStringLocale = gameStringLocale;
 
-        RawDescription = DescriptionParser.Validate(text);
+        RawDescription = DescriptionParserOld.Validate(text);
 
-        _plainText = new Lazy<string>(DescriptionParser.GetPlainText(RawDescription, false, false, GameStringLocale));
-        _plainTextWithNewlines = new Lazy<string>(DescriptionParser.GetPlainText(RawDescription, true, false, GameStringLocale));
-        _plainTextWithScaling = new Lazy<string>(DescriptionParser.GetPlainText(RawDescription, false, true, GameStringLocale));
-        _plainTextWithScalingWithNewlines = new Lazy<string>(DescriptionParser.GetPlainText(RawDescription, true, true, GameStringLocale));
+        _plainText = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, false, false, GameStringLocale));
+        _plainTextWithNewlines = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, true, false, GameStringLocale));
+        _plainTextWithScaling = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, false, true, GameStringLocale));
+        _plainTextWithScalingWithNewlines = new Lazy<string>(DescriptionParserOld.GetPlainText(RawDescription, true, true, GameStringLocale));
 
-        _coloredText = new Lazy<string>(DescriptionParser.GetColoredText(RawDescription, false, GameStringLocale));
-        _coloredTextWithScaling = new Lazy<string>(DescriptionParser.GetColoredText(RawDescription, true, GameStringLocale));
+        _coloredText = new Lazy<string>(DescriptionParserOld.GetColoredText(RawDescription, false, GameStringLocale));
+        _coloredTextWithScaling = new Lazy<string>(DescriptionParserOld.GetColoredText(RawDescription, true, GameStringLocale));
+
+        _hasErrorTag = new Lazy<bool>(value: RawDescription.Contains(ErrorTag, StringComparison.Ordinal));
+    }
+
+    public TooltipDescription(string? text, bool test, StormLocale gameStringLocale = StormLocale.ENUS)
+    {
+        if (string.IsNullOrEmpty(text))
+            text = string.Empty;
+
+        GameStringLocale = gameStringLocale;
+
+        DescriptionParser dp = DescriptionParser.Validate(text, gameStringLocale);
+
+        RawDescription = dp.GetRawDescription();
+
+        _plainText = new Lazy<string>(dp.GetPlainText(false, false));
+        _plainTextWithNewlines = new Lazy<string>(dp.GetPlainText(true, false));
+        _plainTextWithScaling = new Lazy<string>(dp.GetPlainText(false, true));
+        _plainTextWithScalingWithNewlines = new Lazy<string>(dp.GetPlainText(true, true));
+
+        _coloredText = new Lazy<string>(dp.GetColoredText(false));
+        _coloredTextWithScaling = new Lazy<string>(dp.GetColoredText(true));
 
         _hasErrorTag = new Lazy<bool>(value: RawDescription.Contains(ErrorTag, StringComparison.Ordinal));
     }
@@ -56,10 +78,10 @@ public class TooltipDescription : IEquatable<TooltipDescription>
 
     /// <summary>
     /// <para>Gets the validated description with text only.</para>
-    /// <para>No color tags, scaling info, or newlines. Newlines are replaced with a double space.</para>
+    /// <para>No color tags, scaling info, or newlines. Newlines are replaced with a single space.</para>
     /// <para>
     /// Example:<br/>
-    /// Fires a laser that deals 200 damage.  Does not affect minions.
+    /// Fires a laser that deals 200 damage. Does not affect minions.
     /// </para>
     /// </summary>
     public string PlainText => _plainText.Value;
