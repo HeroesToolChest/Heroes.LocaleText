@@ -291,7 +291,7 @@ internal class DescriptionParser
             }
         }
 
-        // since we filled the buffer from the end, it could have null chars at the beginning
+        // remove any null chars at the end
         return buffer.TrimEnd('\0').ToString();
     }
 
@@ -388,11 +388,10 @@ internal class DescriptionParser
                 }
                 else
                 {
-                    _textStack.RemoveAt(_textStack.Count - 1);
 #if DEBUG
-                    PushNormalText(gameString);
+                    PushNormalText(gameString, true);
 #else
-                    PushNormalText();
+                    PushNormalText(true);
 #endif
                 }
 
@@ -408,6 +407,14 @@ internal class DescriptionParser
                 if (TryParseErrorTag(gameString, out Range? tag))
                 {
                     _textStack.Add(new TextRange(tag.Value, TextType.ErrorTag));
+                }
+                else
+                {
+#if DEBUG
+                    PushNormalText(gameString, true);
+#else
+                    PushNormalText(true);
+#endif
                 }
 
                 _startingIndex = _index;
@@ -433,23 +440,43 @@ internal class DescriptionParser
     }
 
 #if DEBUG
-    private void PushNormalText(ReadOnlySpan<char> gameString)
+    private void PushNormalText(ReadOnlySpan<char> gameString, bool append = false)
     {
         int normalTextLength = _index - _startingIndex;
         if (normalTextLength > 0)
         {
             ReadOnlySpan<char> temp = gameString.Slice(_startingIndex, normalTextLength);
 
-            _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
+            if (append is false)
+            {
+                _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
+            }
+            else
+            {
+                Range existing = _textStack[^1].Range;
+
+                _textStack.RemoveAt(_textStack.Count - 1);
+                _textStack.Add(new TextRange(new Range(existing.Start, _index), TextType.Text));
+            }
         }
     }
 #else
-    private void PushNormalText()
+    private void PushNormalText(bool append = false)
     {
         int normalTextLength = _index - _startingIndex;
         if (normalTextLength > 0)
         {
-            _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
+            if (append is false)
+            {
+                _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
+            }
+            else
+            {
+                Range existing = _textStack[^1].Range;
+
+                _textStack.RemoveAt(_textStack.Count - 1);
+                _textStack.Add(new TextRange(new Range(existing.Start, _index), TextType.Text));
+            }
         }
     }
 #endif
@@ -537,7 +564,7 @@ internal class DescriptionParser
             }
         }
 
-        _index += endScaleIndex + 2;
+        _index += 2;
 
         return false;
     }
@@ -557,6 +584,8 @@ internal class DescriptionParser
 
             return true;
         }
+
+        _index += 2;
 
         return false;
     }

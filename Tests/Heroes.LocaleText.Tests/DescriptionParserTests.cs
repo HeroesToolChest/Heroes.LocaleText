@@ -131,6 +131,12 @@ public class DescriptionParserTests
     private readonly string _coloredTextScaling1Corrected = "<c val=\"#TooltipNumbers\">100 (+4% per level)</c><n/> damage per second<n/>";
     private readonly string _coloredTextScaling2 = "<c val=\"#TooltipNumbers\">100~~0.04~~</c> damage per second ~~0.05~~";
     private readonly string _coloredTextScaling2Corrected = "<c val=\"#TooltipNumbers\">100 (+4% per level)</c> damage per second  (+5% per level)";
+    private readonly string _coloredTextScaling3 = "<c val=\"#TooltipNumbers\">100~~no-scale~~</c> damage per second~~0.05~~";
+    private readonly string _coloredTextScaling3Corrected = "<c val=\"#TooltipNumbers\">100~~no-scale~~</c> damage per second (+5% per level)";
+    private readonly string _coloredTextScaling4 = "<c val=\"#TooltipNumbers\">100~~0.04</c> damage per second~~0.05~~";
+    private readonly string _coloredTextScaling4Corrected = "<c val=\"#TooltipNumbers\">100~~0.04</c> damage per second (+5% per level)";
+    private readonly string _coloredTextScaling5 = "<c val=\"#TooltipNumbers\">100~~no-scale~~##ERROR</c> damage per second~~0.05~~";
+    private readonly string _coloredTextScaling5Corrected = "<c val=\"#TooltipNumbers\">100~~no-scale~~##ERROR</c> damage per second (+5% per level)";
 
     // text with error tag
     private readonly string _errorText1 = "<c val=\"#TooltipNumbers\">100##ERROR##~~0.04~~</c> damage per second<n/>";
@@ -139,6 +145,43 @@ public class DescriptionParserTests
     private readonly string _errorText2Corrected = "Gain 30% points";
     private readonly string _errorText3 = "100##ERROR##<n/> damage per second<n/>";
     private readonly string _errorText3Corrected = "100<n/> damage per second<n/>";
+
+    // no scale tag
+    private readonly string _noScaleText1 = "100~~no-scale~~ damage per second";
+    private readonly string _noScaleText2 = "100~~0.04 damage per second";
+    private readonly string _noScaleText3 = "100 0.04~~ damage per second";
+    private readonly string _noScaleText4 = "100~0.04~~ damage per second";
+    private readonly string _noScaleText5 = "100~~0.04~ damage per second";
+
+    // no error tag
+    private readonly string _noErrorText1 = "100##hello##<n/> damage per second<n/>";
+    private readonly string _noErrorText2 = "100 ERROR##<n/> damage per second<n/>";
+    private readonly string _noErrorText3 = "100##ERROR<n/> damage per second<n/>";
+    private readonly string _noErrorText4 = "100#ERROR##<n/> damage per second<n/>";
+    private readonly string _noErrorText5 = "100##ERROR#<n/> damage per second<n/>";
+
+    // other languages
+    private readonly string _meiSnowBlindEsES = "Lanzas una bola de nieve que golpea a todos los enemigos en un área. Los enemigos golpeados reciben <c val=\"bfd4fd\">70~~0.045~~</c> de daño, quedan ralentizados un <c val=\"bfd4fd\">35%</c> y cegados durante <c val=\"bfd4fd\">1,75</c> s.";
+    private readonly string _meiSnowBlindEsMX = "Lanza una bola de nieve que golpea a todos los enemigos en un área. Los enemigos golpeados reciben <c val=\"bfd4fd\">70~~0.045~~</c> de daño, son ralentizados un <c val=\"bfd4fd\">35%</c> y quedan cegados durante <c val=\"bfd4fd\">1.75</c> segundos.";
+    private readonly string _meiSnowBlindFrFR = "Lance une boule de neige qui frappe tous les ennemis dans une zone. Les ennemis touchés subissent <c val=\"bfd4fd\">70~~0.045~~</c> points de dégâts, sont ralentis de <c val=\"bfd4fd\">35%</c> et sont aveuglés pendant <c val=\"bfd4fd\">1,75</c> seconde.";
+    private readonly string _meiSnowBlindItIT = "Lancia una palla di neve che colpisce tutti i nemici in un'area. I nemici colpiti subiscono <c val=\"bfd4fd\">70~~0.045~~</c> danni, sono rallentati del <c val=\"bfd4fd\">35%</c> e sono accecati per <c val=\"bfd4fd\">1,75</c> s.";
+    private readonly string _meiSnowBlindKoKR = "눈덩이를 던져 대상 지역의 모든 적에게 <c val=\"bfd4fd\">70~~0.045~~</c>의 피해를 주고, <c val=\"bfd4fd\">1.75</c>초 동안 <c val=\"bfd4fd\">35%</c> 느려지고 실명하게 합니다.";
+    private readonly string _meiSnowBlindPlPL = "Mei ciska śnieżką, która trafia wszystkich przeciwników na danym obszarze. Trafieni przeciwnicy otrzymują <c val=\"bfd4fd\">70~~0.045~~</c> pkt. obrażeń, zostają spowolnieni o <c val=\"bfd4fd\">35%</c>, a także oślepieni na <c val=\"bfd4fd\">1,75</c> sek.";
+    private readonly string _meiSnowBlindPtBR = "Joga uma bola de neve que atinge todos os inimigos na área. Inimigos atingidos recebem <c val=\"bfd4fd\">70~~0.045~~</c> de dano, são desacelerados em <c val=\"bfd4fd\">35%</c> e ficam cegos por <c val=\"bfd4fd\">1,75</c> s.";
+    private readonly string _meiSnowBlindRuRU = "Бросает снежок, поражая противников в области действия. Пораженные цели получают <c val=\"bfd4fd\">70~~0.045~~</c> ед. урона, замедляются на <c val=\"bfd4fd\">35%</c> и ослепляются на <c val=\"bfd4fd\">1,75</c> сек.";
+    private readonly string _meiSnowBlindZhCN = "投掷一个雪球，击中区域内所有敌人。被击中的敌人受到<c val=\"bfd4fd\">70~~0.045~~</c>点伤害，同时会被减速<c val=\"bfd4fd\">35%</c>并且被致盲，持续<c val=\"bfd4fd\">1.75</c>秒。";
+    private readonly string _meiSnowBlindZhTW = "投擲一顆雪球，命中範圍內的所有敵人。命中的敵人受到<c val=\"bfd4fd\">70~~0.045~~</c>點傷害和緩速<c val=\"bfd4fd\">35%</c>，同時會目盲<c val=\"bfd4fd\">1.75</c>秒。";
+
+    private readonly string _meiSnowBlindEsESColorWithScaling = "Lanzas una bola de nieve que golpea a todos los enemigos en un área. Los enemigos golpeados reciben <c val=\"bfd4fd\">70 (+4,5% por nivel)</c> de daño, quedan ralentizados un <c val=\"bfd4fd\">35%</c> y cegados durante <c val=\"bfd4fd\">1,75</c> s.";
+    private readonly string _meiSnowBlindEsMXColorWithScaling = "Lanza una bola de nieve que golpea a todos los enemigos en un área. Los enemigos golpeados reciben <c val=\"bfd4fd\">70 (+4.5% por nivel)</c> de daño, son ralentizados un <c val=\"bfd4fd\">35%</c> y quedan cegados durante <c val=\"bfd4fd\">1.75</c> segundos.";
+    private readonly string _meiSnowBlindFrFRColorWithScaling = "Lance une boule de neige qui frappe tous les ennemis dans une zone. Les ennemis touchés subissent <c val=\"bfd4fd\">70 (+4,5% par niveau)</c> points de dégâts, sont ralentis de <c val=\"bfd4fd\">35%</c> et sont aveuglés pendant <c val=\"bfd4fd\">1,75</c> seconde.";
+    private readonly string _meiSnowBlindItITColorWithScaling = "Lancia una palla di neve che colpisce tutti i nemici in un'area. I nemici colpiti subiscono <c val=\"bfd4fd\">70 (+4,5% per livello)</c> danni, sono rallentati del <c val=\"bfd4fd\">35%</c> e sono accecati per <c val=\"bfd4fd\">1,75</c> s.";
+    private readonly string _meiSnowBlindKoKRColorWithScaling = "눈덩이를 던져 대상 지역의 모든 적에게 <c val=\"bfd4fd\">70 (레벨당 +4.5%)</c>의 피해를 주고, <c val=\"bfd4fd\">1.75</c>초 동안 <c val=\"bfd4fd\">35%</c> 느려지고 실명하게 합니다.";
+    private readonly string _meiSnowBlindPlPLColorWithScaling = "Mei ciska śnieżką, która trafia wszystkich przeciwników na danym obszarze. Trafieni przeciwnicy otrzymują <c val=\"bfd4fd\">70 (+4,5% na poziom)</c> pkt. obrażeń, zostają spowolnieni o <c val=\"bfd4fd\">35%</c>, a także oślepieni na <c val=\"bfd4fd\">1,75</c> sek.";
+    private readonly string _meiSnowBlindPtBRColorWithScaling = "Joga uma bola de neve que atinge todos os inimigos na área. Inimigos atingidos recebem <c val=\"bfd4fd\">70 (+4,5% por nível)</c> de dano, são desacelerados em <c val=\"bfd4fd\">35%</c> e ficam cegos por <c val=\"bfd4fd\">1,75</c> s.";
+    private readonly string _meiSnowBlindRuRUColorWithScaling = "Бросает снежок, поражая противников в области действия. Пораженные цели получают <c val=\"bfd4fd\">70 (+4,5% за уровень)</c> ед. урона, замедляются на <c val=\"bfd4fd\">35%</c> и ослепляются на <c val=\"bfd4fd\">1,75</c> сек.";
+    private readonly string _meiSnowBlindZhCNColorWithScaling = "投掷一个雪球，击中区域内所有敌人。被击中的敌人受到<c val=\"bfd4fd\">70 (每级+4.5%)</c>点伤害，同时会被减速<c val=\"bfd4fd\">35%</c>并且被致盲，持续<c val=\"bfd4fd\">1.75</c>秒。";
+    private readonly string _meiSnowBlindZhTWColorWithScaling = "投擲一顆雪球，命中範圍內的所有敵人。命中的敵人受到<c val=\"bfd4fd\">70 (每級+4.5%)</c>點傷害和緩速<c val=\"bfd4fd\">35%</c>，同時會目盲<c val=\"bfd4fd\">1.75</c>秒。";
 
     [TestMethod]
     public void ValidateTest()
@@ -274,6 +317,9 @@ public class DescriptionParserTests
     {
         Assert.AreEqual(_coloredTextScaling1Corrected, DescriptionParser.GetInstance(_coloredTextScaling1).GetColoredText(true));
         Assert.AreEqual(_coloredTextScaling2Corrected, DescriptionParser.GetInstance(_coloredTextScaling2).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling3Corrected, DescriptionParser.GetInstance(_coloredTextScaling3).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling4Corrected, DescriptionParser.GetInstance(_coloredTextScaling4).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling5Corrected, DescriptionParser.GetInstance(_coloredTextScaling5).GetColoredText(true));
     }
 
     [TestMethod]
@@ -294,5 +340,52 @@ public class DescriptionParserTests
         Assert.AreEqual(_spaceTagNormalDescription1, DescriptionParser.GetInstance(_spaceTagDescription1).GetPlainText(false, true));
         Assert.AreEqual(_spaceTagNormalDescription2, DescriptionParser.GetInstance(_spaceTagDescription2).GetPlainText(true, true));
         Assert.AreEqual(_spaceTagNormalDescription3, DescriptionParser.GetInstance(_spaceTagDescription3).GetPlainText(true, true));
+    }
+
+    [TestMethod]
+    public void LanguageTests()
+    {
+        Assert.AreEqual(_meiSnowBlindEsESColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindEsES, StormLocale.ESES).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindEsMXColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindEsMX, StormLocale.ESMX).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindFrFRColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindFrFR, StormLocale.FRFR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindItITColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindItIT, StormLocale.ITIT).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindKoKRColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindKoKR, StormLocale.KOKR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindPlPLColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindPlPL, StormLocale.PLPL).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindPtBRColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindPtBR, StormLocale.PTBR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindRuRUColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindRuRU, StormLocale.RURU).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindZhCNColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindZhCN, StormLocale.ZHCN).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindZhTWColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindZhTW, StormLocale.ZHTW).GetColoredText(true));
+    }
+
+    [TestMethod]
+    public void NoScaleTagTests()
+    {
+        Assert.AreEqual(_noScaleText1, DescriptionParser.GetInstance(_noScaleText1).GetColoredText(true));
+        Assert.AreEqual(_noScaleText2, DescriptionParser.GetInstance(_noScaleText2).GetColoredText(true));
+        Assert.AreEqual(_noScaleText3, DescriptionParser.GetInstance(_noScaleText3).GetColoredText(true));
+        Assert.AreEqual(_noScaleText4, DescriptionParser.GetInstance(_noScaleText4).GetColoredText(true));
+        Assert.AreEqual(_noScaleText5, DescriptionParser.GetInstance(_noScaleText5).GetColoredText(true));
+
+        Assert.AreEqual(_noScaleText1, DescriptionParser.GetInstance(_noScaleText1).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText2, DescriptionParser.GetInstance(_noScaleText2).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText3, DescriptionParser.GetInstance(_noScaleText3).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText4, DescriptionParser.GetInstance(_noScaleText4).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText5, DescriptionParser.GetInstance(_noScaleText5).GetPlainText(false, true));
+    }
+
+    [TestMethod]
+    public void NoErrorTagsTests()
+    {
+        Assert.AreEqual(_noErrorText1, DescriptionParser.GetInstance(_noErrorText1).GetRawDescription());
+        Assert.AreEqual(_noErrorText2, DescriptionParser.GetInstance(_noErrorText2).GetRawDescription());
+        Assert.AreEqual(_noErrorText3, DescriptionParser.GetInstance(_noErrorText3).GetRawDescription());
+        Assert.AreEqual(_noErrorText4, DescriptionParser.GetInstance(_noErrorText4).GetRawDescription());
+        Assert.AreEqual(_noErrorText5, DescriptionParser.GetInstance(_noErrorText5).GetRawDescription());
+
+        Assert.AreEqual(_noErrorText1, DescriptionParser.GetInstance(_noErrorText1).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText2, DescriptionParser.GetInstance(_noErrorText2).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText3, DescriptionParser.GetInstance(_noErrorText3).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText4, DescriptionParser.GetInstance(_noErrorText4).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText5, DescriptionParser.GetInstance(_noErrorText5).GetPlainText(true, false));
     }
 }

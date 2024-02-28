@@ -35,7 +35,7 @@ public class TooltipDescription
     }
 
     /// <summary>
-    /// <para>Gets the raw validated description. Unmatched tags have been removed and nested tag have been modified into unnested tags.</para>
+    /// <para>Gets the raw description. Unmatched tags have been fixed and nested tag have been modified into unnested tags.</para>
     /// <para>Contains the color tags &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt;, scaling data ~~x~~, and newlines &lt;n/&gt;. It can also contain error tags ##ERROR##.</para>
     /// <para>
     /// Example:<br/>
@@ -45,7 +45,7 @@ public class TooltipDescription
     public string RawDescription => _rawDescription ??= _descriptionParser.GetRawDescription();
 
     /// <summary>
-    /// <para>Gets the validated description with text only.</para>
+    /// <para>Gets the description with text only.</para>
     /// <para>No color tags, scaling info, or newlines. Newlines are replaced with a single space.</para>
     /// <para>
     /// Example:<br/>
@@ -65,17 +65,17 @@ public class TooltipDescription
     public string PlainTextWithNewlines => _plainTextWithNewlines ??= _descriptionParser.GetPlainText(true, false);
 
     /// <summary>
-    /// <para>Gets the validated description with text only.</para>
+    /// <para>Gets the description with text only.</para>
     /// <para>Same as <see cref="PlainText"/> but contains the scaling info (+x% per level).</para>
     /// <para>
     /// Example:<br/>
-    /// Fires a laser that deals 200 (+4% per level) damage.  Does not affect minions.
+    /// Fires a laser that deals 200 (+4% per level) damage. Does not affect minions.
     /// </para>
     /// </summary>
     public string PlainTextWithScaling => _plainTextWithScaling ??= _descriptionParser.GetPlainText(false, true);
 
     /// <summary>
-    /// <para>Gets the validated description with text only.</para>
+    /// <para>Gets the description with text only.</para>
     /// <para>Same as <see cref="PlainTextWithScaling"/> but contains the newlines.</para>
     /// <para>
     /// Example:<br/>
@@ -85,7 +85,7 @@ public class TooltipDescription
     public string PlainTextWithScalingWithNewlines => _plainTextWithScalingWithNewlines ??= _descriptionParser.GetPlainText(true, true);
 
     /// <summary>
-    /// <para>Gets the validated description with colored tags and new lines, when parsed this is what appears ingame for tooltip.</para>
+    /// <para>Gets the description with colored tags and new lines, when parsed this is what appears ingame for tooltips.</para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
@@ -94,7 +94,7 @@ public class TooltipDescription
     public string ColoredText => _coloredText ??= _descriptionParser.GetColoredText(false);
 
     /// <summary>
-    /// <para>Gets the validated description with colored tags, newlines, and scaling info.</para>
+    /// <para>Gets the description with colored tags, newlines, and scaling info.</para>
     /// <para>Same as <see cref="ColoredText"/> but contains the scaling info (+x% per level).</para>
     /// <para>
     /// Example:<br/>
