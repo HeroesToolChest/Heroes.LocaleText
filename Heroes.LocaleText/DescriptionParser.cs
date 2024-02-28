@@ -253,8 +253,9 @@ internal class DescriptionParser
                             else
                                 currentOffset = CopyIntoBuffer(buffer, currentOffset, $"</{GetEndTagCharType(itemText)}>", false);
                         }
-                        else // dont save, empty tag
+                        else
                         {
+                            // dont save, empty tag
                             startTag = [];
                         }
                     }

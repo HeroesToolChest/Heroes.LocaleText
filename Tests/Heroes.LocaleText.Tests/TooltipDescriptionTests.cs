@@ -12,7 +12,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(string.Empty);
 
-        // assert 
+        // assert
         string result = tooltipDescription.RawDescription;
 
         // act
@@ -25,7 +25,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(null);
 
-        // assert 
+        // assert
         string result = tooltipDescription.RawDescription;
 
         // act
@@ -38,7 +38,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         string result = tooltipDescription.RawDescription;
 
         // act
@@ -51,7 +51,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         string result = tooltipDescription.PlainText;
 
         // act
@@ -64,7 +64,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         string result = tooltipDescription.PlainTextWithNewlines;
 
         // act
@@ -77,7 +77,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         string result = tooltipDescription.PlainTextWithScaling;
 
         // act
@@ -90,7 +90,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         string result = tooltipDescription.PlainTextWithScalingWithNewlines;
 
         // act
@@ -103,7 +103,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         string result = tooltipDescription.ColoredText;
 
         // act
@@ -116,7 +116,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         string result = tooltipDescription.ColoredTextWithScaling;
 
         // act
@@ -129,7 +129,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testTextDeDE, StormLocale.DEDE);
 
-        // assert 
+        // assert
         string result = tooltipDescription.ColoredText;
 
         // act
@@ -143,7 +143,7 @@ public class TooltipDescriptionTests
         TooltipDescription tooltipDescription = new(_testText);
         string plainTextWithScaling = tooltipDescription.PlainTextWithScaling;
 
-        // assert 
+        // assert
         string result = tooltipDescription.ToString();
 
         // act
@@ -156,7 +156,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert 
+        // assert
         StormLocale result = tooltipDescription.GameStringLocale;
 
         // act
@@ -169,7 +169,7 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText, StormLocale.DEDE);
 
-        // assert 
+        // assert
         StormLocale result = tooltipDescription.GameStringLocale;
 
         // act
