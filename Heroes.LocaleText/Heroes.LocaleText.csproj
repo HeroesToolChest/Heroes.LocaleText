@@ -8,19 +8,30 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Kevin Oliva</Authors>
     <Copyright>Copyright © 2024 Kevin Oliva</Copyright>
-    <!--<Description>Used to parse Heroes of the Storm MPQ files.</Description>
-    <PackageProjectUrl>https://github.com/HeroesToolChest/Heroes.MpqTool</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/HeroesToolChest/Heroes.MpqTool</RepositoryUrl>
-    <PackageReleaseNotes>https://github.com/HeroesToolChest/Heroes.MpqTool/releases</PackageReleaseNotes>-->
-    <!--<PackageTags>hots heroes-of-the-storm HeroesOfTheStorm blizzard mpq</PackageTags>-->
+    <Description>Used to parse tooltip descriptions.</Description>
+    <PackageProjectUrl>https://github.com/HeroesToolChest/Heroes.LocaleText</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/HeroesToolChest/Heroes.LocaleText</RepositoryUrl>
+    <PackageReleaseNotes>https://github.com/HeroesToolChest/Heroes.LocaleText/releases</PackageReleaseNotes>
+    <PackageTags>hots heroes-of-the-storm HeroesOfTheStorm blizzard locale localization gamestrings tooltips</PackageTags>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <!--<PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>-->
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>  
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
   
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
