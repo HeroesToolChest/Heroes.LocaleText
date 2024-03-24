@@ -617,7 +617,7 @@ internal class DescriptionParser
     {
         int sum = 0;
 
-        for (int i = _textStack.Count - 1; i >= 0; i--)
+        for (int i = 0; i < _textStack.Count; i++)
         {
             TextRange current = _textStack[i];
 
@@ -648,10 +648,13 @@ internal class DescriptionParser
                 case TextType.StartTag:
                 case TextType.EndTag:
                     if (flags.ColorTags == TagFlag.Include)
-                        sum += current.Range.End.Value - current.Range.Start.Value;
+                        goto default;
                     break;
                 case TextType.ScalingTag:
-                    sum += 21 + gameString[current.Range].Length; // 21 largest min text
+                    if (flags.ScalingTag == TagFlag.Include)
+                        goto default;
+                    else if (flags.ScalingTag == TagFlag.Eval)
+                        sum += 21 + gameString[current.Range].Length; // 21 largest min text
                     break;
                 default:
                     sum += current.Range.End.Value - current.Range.Start.Value;

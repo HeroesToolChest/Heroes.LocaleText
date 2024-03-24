@@ -24,6 +24,7 @@ public class DescriptionParserTests
     private readonly string _spaceTagDescription1 = "Temps de recharge :<sp/>20 secondes";
     private readonly string _spaceTagDescription2 = "À distance<sp/>";
     private readonly string _spaceTagDescription3 = "<sp/>À distance";
+    private readonly string _scaleTagDescription1 = "aa ~~0.045~~ bb";
 
     // Convert newline tags </n> to <n/>
     private readonly string _convertNewLineTagDescription1 = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c></n>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c>";
@@ -203,6 +204,7 @@ public class DescriptionParserTests
         Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_duplicateTagsDescription2).GetRawDescription());
         Assert.AreEqual(_spaceTagDescription1, DescriptionParser.GetInstance(_spaceTagDescription1).GetRawDescription()); // no changes
         Assert.AreEqual(_spaceTagDescription2, DescriptionParser.GetInstance(_spaceTagDescription2).GetRawDescription()); // no changes
+        Assert.AreEqual(_scaleTagDescription1, DescriptionParser.GetInstance(_scaleTagDescription1).GetRawDescription()); // no changes
     }
 
     [TestMethod]
