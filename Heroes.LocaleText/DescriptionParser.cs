@@ -220,9 +220,8 @@ internal class DescriptionParser
         int currentOffset = 0;
 
         // loop through and build string
-        for (int i = 0; i < _textStack.Count; i++)
+        foreach (TextRange item in _textStack)
         {
-            TextRange item = _textStack[i];
             ReadOnlySpan<char> itemText = gameString[item.Range];
 
             switch (item.Type)
