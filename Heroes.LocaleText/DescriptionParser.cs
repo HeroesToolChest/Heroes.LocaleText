@@ -616,10 +616,8 @@ internal class DescriptionParser
     {
         int sum = 0;
 
-        for (int i = 0; i < _textStack.Count; i++)
+        foreach (var current in _textStack)
         {
-            TextRange current = _textStack[i];
-
             switch (current.Type)
             {
                 case TextType.MissingEndTag:
