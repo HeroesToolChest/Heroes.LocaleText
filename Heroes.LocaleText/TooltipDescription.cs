@@ -23,7 +23,7 @@ public class TooltipDescription
     /// <summary>
     /// Initializes a new instance of the <see cref="TooltipDescription"/> class.
     /// </summary>
-    /// <param name="text">A parsed description that has not been modified into a readable verbiage. Description does not have to be pre-validated.</param>
+    /// <param name="text">A parsed description that has not been modified into a readable verbiage (e.g. PlainText or ColorText from this class should not be used).</param>
     /// <param name="gameStringLocale">The localization of the <paramref name="text"/>.</param>
     public TooltipDescription(string text, StormLocale gameStringLocale = StormLocale.ENUS)
     {
