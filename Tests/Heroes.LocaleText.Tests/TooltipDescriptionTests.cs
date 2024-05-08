@@ -7,23 +7,22 @@ public class TooltipDescriptionTests
     private readonly string _testTextDeDE = "Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern <c val=\"bfd4fd\">70~~0.045~~</c> Schaden zu, verlangsamt sie um <c val=\"bfd4fd\">35%</c> und blendet sie <c val=\"bfd4fd\">1,75</c> Sek. lang.";
 
     [TestMethod]
+    public void RawDescription_NullText_ThrowsException()
+    {
+        // arrange
+
+        // assert
+        Action act = () => new TooltipDescription(null!);
+
+        // act
+        Assert.ThrowsException<ArgumentNullException>(act);
+    }
+
+    [TestMethod]
     public void RawDescription_EmptyText_ReturnsEmptyDescription()
     {
         // arrange
         TooltipDescription tooltipDescription = new(string.Empty);
-
-        // assert
-        string result = tooltipDescription.RawDescription;
-
-        // act
-        Assert.AreEqual(string.Empty, result);
-    }
-
-    [TestMethod]
-    public void RawDescription_NullText_ReturnsEmptyDescription()
-    {
-        // arrange
-        TooltipDescription tooltipDescription = new(null);
 
         // assert
         string result = tooltipDescription.RawDescription;
