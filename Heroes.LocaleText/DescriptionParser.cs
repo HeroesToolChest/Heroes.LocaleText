@@ -9,8 +9,10 @@ namespace Heroes.LocaleText;
 internal class DescriptionParser
 {
     private readonly string _description;
+    private readonly bool _extractStyleVars;
     private readonly StormLocale _gameStringLocale;
     private readonly List<TextRange> _textStack = [];
+    private readonly HashSet<string> _styleTagVariables = new(StringComparer.Ordinal);
 
     private bool _isContructed = false;
     private int _startingIndex = 0;
@@ -18,15 +20,18 @@ internal class DescriptionParser
 
     private CultureInfo? _culture;
 
-    private DescriptionParser(string description, StormLocale gameStringLocale)
+    private DescriptionParser(string description, StormLocale gameStringLocale, bool extractStyleVars)
     {
         _description = description;
+        _extractStyleVars = extractStyleVars;
         _gameStringLocale = gameStringLocale;
     }
 
-    public static DescriptionParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS)
+    public IEnumerable<string> StyleTagVariables => _styleTagVariables;
+
+    public static DescriptionParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS, bool extractStyleVars = false)
     {
-        return new DescriptionParser(gameString, gameStringLocale);
+        return new DescriptionParser(gameString, gameStringLocale, extractStyleVars);
     }
 
     public string GetRawDescription()
@@ -312,6 +317,9 @@ internal class DescriptionParser
                 {
                     if (isStartTag)
                     {
+                        if (_extractStyleVars)
+                            PushStyleVarFromTag(gameString, tag.Value);
+
                         // nested
                         if (startTag.HasValue)
                         {
@@ -610,6 +618,26 @@ internal class DescriptionParser
         }
 
         return false;
+    }
+
+    private void PushStyleVarFromTag(ReadOnlySpan<char> gameString, Range tag)
+    {
+        // <c val=\"#TooltipNumbers\">
+        ReadOnlySpan<char> styleSpan = gameString[tag];
+
+        if (!styleSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && !styleSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        int indexOfVal = styleSpan.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
+        if (indexOfVal < 0)
+            return;
+
+        int startIndexOfQuote = styleSpan.IndexOf("\"");
+        int endIndexOfQuote = styleSpan[(startIndexOfQuote + 1)..].IndexOf("\"");
+
+        ReadOnlySpan<char> styleValue = styleSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
+        if (styleValue.StartsWith("#"))
+            _styleTagVariables.Add(styleValue.TrimStart('#').ToString());
     }
 
     private int GetSizeOfBuffer(ReadOnlySpan<char> gameString, DescriptionFlags flags)

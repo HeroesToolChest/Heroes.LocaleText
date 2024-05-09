@@ -11,10 +11,10 @@ public class TooltipDescriptionTests
     {
         // arrange
 
-        // assert
+        // act
         Action act = () => new TooltipDescription(null!);
 
-        // act
+        // assert
         Assert.ThrowsException<ArgumentNullException>(act);
     }
 
@@ -24,10 +24,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(string.Empty);
 
-        // assert
+        // act
         string result = tooltipDescription.RawDescription;
 
-        // act
+        // assert
         Assert.AreEqual(string.Empty, result);
     }
 
@@ -37,10 +37,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         string result = tooltipDescription.RawDescription;
 
-        // act
+        // assert
         Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipNumbers\">2.75</c> seconds.", result);
     }
 
@@ -50,10 +50,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         string result = tooltipDescription.PlainText;
 
-        // act
+        // assert
         Assert.AreEqual("Every 18 seconds, deals 125  extra damage every 2.75 seconds.", result);
     }
 
@@ -63,10 +63,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         string result = tooltipDescription.PlainTextWithNewlines;
 
-        // act
+        // assert
         Assert.AreEqual("Every 18 seconds, deals 125<n/> extra damage every 2.75 seconds.", result);
     }
 
@@ -76,10 +76,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         string result = tooltipDescription.PlainTextWithScaling;
 
-        // act
+        // assert
         Assert.AreEqual("Every 18 seconds, deals 125 (+4.5% per level)  extra damage every 2.75 seconds.", result);
     }
 
@@ -89,10 +89,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         string result = tooltipDescription.PlainTextWithScalingWithNewlines;
 
-        // act
+        // assert
         Assert.AreEqual("Every 18 seconds, deals 125 (+4.5% per level)<n/> extra damage every 2.75 seconds.", result);
     }
 
@@ -102,10 +102,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         string result = tooltipDescription.ColoredText;
 
-        // act
+        // assert
         Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125</c><n/> extra damage every <c val=\"#TooltipNumbers\">2.75</c> seconds.", result);
     }
 
@@ -115,10 +115,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         string result = tooltipDescription.ColoredTextWithScaling;
 
-        // act
+        // assert
         Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125 (+4.5% per level)</c><n/> extra damage every <c val=\"#TooltipNumbers\">2.75</c> seconds.", result);
     }
 
@@ -128,10 +128,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testTextDeDE, StormLocale.DEDE);
 
-        // assert
+        // act
         string result = tooltipDescription.ColoredText;
 
-        // act
+        // assert
         Assert.AreEqual("Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern <c val=\"bfd4fd\">70</c> Schaden zu, verlangsamt sie um <c val=\"bfd4fd\">35%</c> und blendet sie <c val=\"bfd4fd\">1,75</c> Sek. lang.", result);
     }
 
@@ -142,10 +142,10 @@ public class TooltipDescriptionTests
         TooltipDescription tooltipDescription = new(_testText);
         string plainTextWithScaling = tooltipDescription.PlainTextWithScaling;
 
-        // assert
+        // act
         string result = tooltipDescription.ToString();
 
-        // act
+        // assert
         Assert.AreEqual(plainTextWithScaling, result);
     }
 
@@ -155,10 +155,10 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText);
 
-        // assert
+        // act
         StormLocale result = tooltipDescription.GameStringLocale;
 
-        // act
+        // assert
         Assert.AreEqual(StormLocale.ENUS, result);
     }
 
@@ -168,10 +168,64 @@ public class TooltipDescriptionTests
         // arrange
         TooltipDescription tooltipDescription = new(_testText, StormLocale.DEDE);
 
-        // assert
+        // act
         StormLocale result = tooltipDescription.GameStringLocale;
 
-        // act
+        // assert
         Assert.AreEqual(StormLocale.DEDE, result);
+    }
+
+    [TestMethod]
+    public void TextStyleVariables_HasStyleVariables_ReturnsVars()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new(_testText, extractStyleVars: true);
+
+        // act
+        IEnumerable<string> result = tooltipDescription.TextStyleVariables;
+
+        // assert
+        CollectionAssert.AreEqual(
+            new List<string>()
+            {
+                "TooltipNumbers",
+            },
+            result.ToList());
+    }
+
+    [TestMethod]
+    public void TextStyleVariables_DoesNotHaveStyleVariables_ReturnsEmpty()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("test text", extractStyleVars: true);
+
+        // act
+        IEnumerable<string> result = tooltipDescription.TextStyleVariables;
+
+        // assert
+        Assert.IsTrue(tooltipDescription.IsStyleVarsExtracted);
+        CollectionAssert.AreEqual(
+            new List<string>()
+            {
+            },
+            result.ToList());
+    }
+
+    [TestMethod]
+    public void TextStyleVariables_ExtractSetToFalse_ReturnsEmpty()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new(_testText, extractStyleVars: false);
+
+        // act
+        IEnumerable<string> result = tooltipDescription.TextStyleVariables;
+
+        // assert
+        Assert.IsFalse(tooltipDescription.IsStyleVarsExtracted);
+        CollectionAssert.AreEqual(
+            new List<string>()
+            {
+            },
+            result.ToList());
     }
 }

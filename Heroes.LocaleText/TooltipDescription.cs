@@ -1,4 +1,5 @@
-﻿
+﻿using System.Diagnostics;
+
 namespace Heroes.LocaleText;
 
 /// <summary>
@@ -12,12 +13,26 @@ public class TooltipDescription
     public const string ErrorTag = "##ERROR##";
 
     private readonly DescriptionParser _descriptionParser;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _rawDescription;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _plainText;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _plainTextWithNewlines;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _plainTextWithScaling;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _plainTextWithScalingWithNewlines;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _coloredText;
+
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _coloredTextWithScaling;
 
     /// <summary>
@@ -25,13 +40,15 @@ public class TooltipDescription
     /// </summary>
     /// <param name="text">A parsed description that has not been modified into a readable verbiage (e.g. PlainText or ColorText from this class should not be used).</param>
     /// <param name="gameStringLocale">The localization of the <paramref name="text"/>.</param>
-    public TooltipDescription(string text, StormLocale gameStringLocale = StormLocale.ENUS)
+    /// <param name="extractStyleVars">If <see langword="true"/>, then the property <see cref="TextStyleVariables"/> may have items.</param>
+    public TooltipDescription(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractStyleVars = false)
     {
         ArgumentNullException.ThrowIfNull(text);
 
         GameStringLocale = gameStringLocale;
+        IsStyleVarsExtracted = extractStyleVars;
 
-        _descriptionParser = DescriptionParser.GetInstance(text, gameStringLocale);
+        _descriptionParser = DescriptionParser.GetInstance(text, gameStringLocale, extractStyleVars);
     }
 
     /// <summary>
@@ -107,6 +124,26 @@ public class TooltipDescription
     /// Gets the localization used for the description text.
     /// </summary>
     public StormLocale GameStringLocale { get; }
+
+    /// <summary>
+    /// Gets a value indicating whether the style vars have been extracted.
+    /// </summary>
+    public bool IsStyleVarsExtracted { get; }
+
+    /// <summary>
+    /// Gets a collection of text style variables used in the tooltip description.
+    /// </summary>
+    /// <returns>A collection of text style variables.</returns>
+    public IEnumerable<string> TextStyleVariables
+    {
+        get
+        {
+            if (_rawDescription is null)
+                _ = RawDescription; // trigger the parsing
+
+            return _descriptionParser.StyleTagVariables;
+        }
+    }
 
     /// <inheritdoc/>
     public override string ToString()
