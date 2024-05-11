@@ -176,7 +176,7 @@ public class TooltipDescription
     /// <summary>
     /// Adds a dictionary of values that will be replaced by new values.
     /// </summary>
-    /// <param name="newValuesByValue">A dictionary of values and their replacement values.</param>
+    /// <param name="newValuesByValue">A dictionary of values and their replacement values. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
     public TooltipDescription AddFontValueReplacements(IDictionary<string, string> newValuesByValue, FontTagType fontTagType)
@@ -192,7 +192,7 @@ public class TooltipDescription
     /// <summary>
     /// Adds a collection of values that will be replaced by new values.
     /// </summary>
-    /// <param name="newValuesByValue">A collection of values and their replacement values.</param>
+    /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
     public TooltipDescription AddFontValueReplacements(IEnumerable<(string Value, string Replacement)> newValuesByValue, FontTagType fontTagType)
@@ -208,8 +208,8 @@ public class TooltipDescription
     /// <summary>
     /// Adds a value that will be replaced by a new value.
     /// </summary>
-    /// <param name="value">The value of the val attribute of the tag.</param>
-    /// <param name="replacement">The new value that will replace <paramref name="value"/>.</param>
+    /// <param name="value">The value of the val attribute of the tag. Is case-sensitive.</param>
+    /// <param name="replacement">The new value that will replace <paramref name="value"/>. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the <paramref name="value"/>.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
     public TooltipDescription AddFontValueReplacements(string value, string replacement, FontTagType fontTagType)
