@@ -395,11 +395,30 @@ public class DescriptionParserTests
     public void StyleTagVariables_MultipleOfSameStyleVars_ReturnsOne()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance(_normalTagsDescription1, extractStyleVars: true);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipHeader\">Cooldown: <s/>", extractFontVars: true);
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
+        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+
+        // assert
+        CollectionAssert.AreEquivalent(
+            new List<string>()
+            {
+                "StandardTooltipHeader",
+            },
+            styleTagVars);
+    }
+
+    [TestMethod]
+    public void StyleConstantTagVariables_MultipleOfSameStyleVars_ReturnsOne()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance(_normalTagsDescription1, extractFontVars: true);
+
+        // act
+        descriptionParser.GetRawDescription();
+        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -407,18 +426,38 @@ public class DescriptionParserTests
             {
                 "TooltipNumbers",
             },
-            styleTagVars);
+            styleConstantTagVars);
     }
 
     [TestMethod]
     public void StyleTagVariables_DifferentStyleVars_ReturnsAll()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers1\">18</c> seconds, deals <c val=\"#TooltipNumbers2\">125</c> bonus by <c val=\"#TooltipNumbers3\">2</c> seconds.", extractStyleVars: true);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails\">Cooldown: </s>", extractFontVars: true);
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
+        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+
+        // assert
+        CollectionAssert.AreEquivalent(
+            new List<string>()
+            {
+                "StandardTooltipHeader",
+                "StandardTooltipDetails",
+            },
+            styleTagVars);
+    }
+
+    [TestMethod]
+    public void StyleTagConstantVariables_DifferentStyleVars_ReturnsAll()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers1\">18</c> seconds, deals <c val=\"#TooltipNumbers2\">125</c> bonus by <c val=\"#TooltipNumbers3\">2</c> seconds.", extractFontVars: true);
+
+        // act
+        descriptionParser.GetRawDescription();
+        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -428,18 +467,38 @@ public class DescriptionParserTests
                 "TooltipNumbers2",
                 "TooltipNumbers3",
             },
-            styleTagVars);
+            styleConstantTagVars);
     }
 
     [TestMethod]
     public void StyleTagVariables_CaseSensitive_Returns2()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\" #TooltipNumbers \">18</c> seconds, deals <c val=\"#tooltipnumbers\">125</c> bonus by <c val=\"#TooltipNumbers\">2</c> seconds.", extractStyleVars: true);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"standardtooltipheader\">Cooldown: </s>", extractFontVars: true);
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
+        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+
+        // assert
+        CollectionAssert.AreEquivalent(
+            new List<string>()
+            {
+                "StandardTooltipHeader",
+                "standardtooltipheader",
+            },
+            styleTagVars);
+    }
+
+    [TestMethod]
+    public void StyleConstantTagVariables_CaseSensitive_Returns2()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\" #TooltipNumbers \">18</c> seconds, deals <c val=\"#tooltipnumbers\">125</c> bonus by <c val=\"#TooltipNumbers\">2</c> seconds.", extractFontVars: true);
+
+        // act
+        descriptionParser.GetRawDescription();
+        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -448,20 +507,39 @@ public class DescriptionParserTests
                 "TooltipNumbers",
                 "tooltipnumbers",
             },
+            styleConstantTagVars);
+    }
+
+    [TestMethod]
+    public void StyleTagVariables_ValHasAPoundSign_ReturnsVal()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance($"<s val=\"#other\">Archon </s>", extractFontVars: true);
+
+        // act
+        descriptionParser.GetRawDescription();
+        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+
+        // assert
+        CollectionAssert.AreEquivalent(
+            new List<string>()
+            {
+                "#other",
+            },
             styleTagVars);
     }
 
     [TestMethod]
     [DataRow("")]
     [DataRow("other")]
-    public void StyleTagVariables_ValHasNoPoundSign_ReturnsEmpty(string val)
+    public void StyleConstantTagVariables_ValHasNoPoundSign_ReturnsEmpty(string val)
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance($"Every <c val=\"{val}\">18</c> seconds", extractStyleVars: true);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance($"Every <c val=\"{val}\">18</c> seconds", extractFontVars: true);
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
+        List<string> styleTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -472,34 +550,15 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void StyleTagVariables_DifferentTags_ReturnsValFromCostantAndStyleOnly()
+    public void StyleVariables_NoTags_ReturnsEmpty()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"#style\">125</c> bonus by <x val=\"#other\">2</c> seconds.", extractStyleVars: true);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every 18 seconds.", extractFontVars: true);
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
-
-        // assert
-        CollectionAssert.AreEquivalent(
-            new List<string>()
-            {
-                "TooltipNumbers",
-                "style",
-            },
-            styleTagVars);
-    }
-
-    [TestMethod]
-    public void StyleTagVariables_NoTags_ReturnsEmpty()
-    {
-        // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every 18 seconds.", extractStyleVars: true);
-
-        // act
-        descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
+        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -507,17 +566,39 @@ public class DescriptionParserTests
             {
             },
             styleTagVars);
+
+        CollectionAssert.AreEquivalent(
+            new List<string>()
+            {
+            },
+            styleConstantTagVars);
     }
 
     [TestMethod]
     public void StyleTagVariables_ExtractSetToFalse_ReturnsEmpty()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"#style\">125</c> bonus by <x val=\"#other\">2</c> seconds.", extractStyleVars: false);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: false);
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
+        IEnumerable<string>? styleTagVars = descriptionParser.StyleTagVariables;
+        IEnumerable<string>? styleConstantTagVars = descriptionParser.StyleConstantTagVariables;
+
+        // assert
+        Assert.IsNull(styleTagVars);
+        Assert.IsNull(styleConstantTagVars);
+    }
+
+    [TestMethod]
+    public void StyleTagVariables_StyleTagHasNoValAttribute_ReturnsEmpty()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c>18</c> seconds", extractFontVars: true);
+
+        // act
+        descriptionParser.GetRawDescription();
+        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -528,20 +609,91 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void StyleTagVariables_StyleTagHasNoValAttribute_ReturnsEmpty()
+    public void StyleConstantTagVariables_StyleTagHasNoValAttribute_ReturnsEmpty()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c>18</c> seconds", extractStyleVars: false);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <s>18</s> seconds", extractFontVars: true);
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables.ToList();
+        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
 
         // assert
         CollectionAssert.AreEquivalent(
             new List<string>()
             {
             },
-            styleTagVars);
+            styleConstantTagVars);
+    }
+
+    [TestMethod]
+    public void GetColoredText_WithReplacementStyleVars_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445");
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"F50707-F64445\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
+    }
+
+    [TestMethod]
+    public void GetRawDescription_WithReplacementStyleVars_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445");
+
+        // act
+        string result = descriptionParser.GetRawDescription();
+
+        // assert
+        Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"F50707-F64445\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
+    }
+
+    [TestMethod]
+    public void GetPlainText_WithReplacementStyleVars_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445");
+
+        // act
+        string result = descriptionParser.GetPlainText(false, false);
+
+        // assert
+        Assert.AreEqual("Every 18 seconds, deals 125 bonus by 2 seconds.", result);
+    }
+
+    [TestMethod]
+    public void GetColoredText_WithReplacementStyleVarsAndEmptyStyleVar_ReturnsOriginal()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"\">18</c> seconds", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement(string.Empty, "00a2ff");
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("Every <c val=\"\">18</c> seconds", result);
+    }
+
+    [TestMethod]
+    public void GetColoredText_WithReplacementVarsThatIsSmallerThanOriginal_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"#this-is-a-long-constant-name\">18</c>", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("this-is-a-long-style-name", "short");
+        descriptionParser.AddStyleConstantVarsWithReplacement("this-is-a-long-constant-name", "short");
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("deals <s val=\"short\">125</s><c val=\"short\">18</c>", result);
     }
 }

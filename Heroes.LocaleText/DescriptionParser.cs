@@ -9,10 +9,15 @@ namespace Heroes.LocaleText;
 internal class DescriptionParser
 {
     private readonly string _description;
-    private readonly bool _extractStyleVars;
+
     private readonly StormLocale _gameStringLocale;
     private readonly List<TextRange> _textStack = [];
-    private readonly HashSet<string> _styleTagVariables = new(StringComparer.Ordinal);
+
+    private readonly HashSet<string>? _styleTagVariables;
+    private readonly HashSet<string>? _styleConstantTagVariables;
+
+    private Dictionary<string, string>? _valueByStyleVar;
+    private Dictionary<string, string>? _valueByStyleConstantVar;
 
     private bool _isContructed = false;
     private int _startingIndex = 0;
@@ -20,18 +25,29 @@ internal class DescriptionParser
 
     private CultureInfo? _culture;
 
-    private DescriptionParser(string description, StormLocale gameStringLocale, bool extractStyleVars)
+    private DescriptionParser(string description, StormLocale gameStringLocale, bool extractFontVars)
     {
         _description = description;
-        _extractStyleVars = extractStyleVars;
         _gameStringLocale = gameStringLocale;
+
+        ExtractFontVars = extractFontVars;
+        if (ExtractFontVars is true)
+        {
+            _styleTagVariables = new(StringComparer.Ordinal);
+            _styleConstantTagVariables = new(StringComparer.Ordinal);
+        }
     }
 
-    public IEnumerable<string> StyleTagVariables => _styleTagVariables;
+    public IEnumerable<string>? StyleTagVariables => _styleTagVariables;
 
-    public static DescriptionParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS, bool extractStyleVars = false)
+    public IEnumerable<string>? StyleConstantTagVariables => _styleConstantTagVariables;
+
+    [MemberNotNullWhen(true, nameof(_styleTagVariables), nameof(StyleTagVariables), nameof(_styleConstantTagVariables), nameof(StyleConstantTagVariables))]
+    public bool ExtractFontVars { get; }
+
+    public static DescriptionParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontVars = false)
     {
-        return new DescriptionParser(gameString, gameStringLocale, extractStyleVars);
+        return new DescriptionParser(gameString, gameStringLocale, extractFontVars);
     }
 
     public string GetRawDescription()
@@ -49,7 +65,19 @@ internal class DescriptionParser
         return ParseToColoredText(_description, includeScaling);
     }
 
-    private static int CopyIntoBuffer(Span<char> buffer, int offset, ReadOnlySpan<char> item, bool cleanTheTag)
+    public void AddStyleVarsWithReplacement(string styleVar, string replacement)
+    {
+        _valueByStyleVar ??= new(StringComparer.Ordinal);
+        _valueByStyleVar.TryAdd(styleVar, replacement);
+    }
+
+    public void AddStyleConstantVarsWithReplacement(string styleConstantVar, string replacement)
+    {
+        _valueByStyleConstantVar ??= new(StringComparer.Ordinal);
+        _valueByStyleConstantVar.TryAdd(styleConstantVar.TrimStart('#'), replacement);
+    }
+
+    private static void CopyIntoBuffer(Span<char> buffer, ref int offset, ReadOnlySpan<char> item, bool cleanTheTag)
     {
         item.CopyTo(buffer[offset..]);
 
@@ -57,8 +85,6 @@ internal class DescriptionParser
             offset += CleanUpTag(buffer.Slice(offset, item.Length));
         else
             offset += item.Length;
-
-        return offset;
     }
 
     // replaces double space or more into single space, and lowercases the tag type
@@ -158,6 +184,20 @@ internal class DescriptionParser
         return true;
     }
 
+    private static ReadOnlySpan<char> GetFontTagVal(ReadOnlySpan<char> tag)
+    {
+        // <c val=\"#TooltipNumbers\">
+        // <s val=\"StandardTooltipHeader\">
+        int indexOfVal = tag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
+        if (indexOfVal < 0)
+            return [];
+
+        int startIndexOfQuote = tag.IndexOf("\"");
+        int endIndexOfQuote = tag[(startIndexOfQuote + 1)..].IndexOf("\"");
+
+        return tag[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
+    }
+
     private string Parse(ReadOnlySpan<char> gameString)
     {
         if (!_isContructed)
@@ -221,7 +261,7 @@ internal class DescriptionParser
 
         Span<char> buffer = totalSize < 1024 ? stackalloc char[totalSize] : new char[totalSize];
 
-        ReadOnlySpan<char> startTag = [];
+        ReadOnlySpan<char> startTag = null;
         int currentOffset = 0;
 
         // loop through and build string
@@ -233,15 +273,15 @@ internal class DescriptionParser
             {
                 case TextType.Newline:
                     if (flags.NewLineTag == TagFlag.Include)
-                        currentOffset = CopyIntoBuffer(buffer, currentOffset, "<n/>", false);
+                        CopyIntoBuffer(buffer, ref currentOffset, "<n/>", false);
                     else if (flags.NewLineTag == TagFlag.Eval)
-                        currentOffset = CopyIntoBuffer(buffer, currentOffset, " ", false);
+                        CopyIntoBuffer(buffer, ref currentOffset, " ", false);
                     break;
                 case TextType.SpaceTag:
                     if (flags.SpaceTag == TagFlag.Include)
-                        currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                        CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
                     else if (flags.SpaceTag == TagFlag.Eval)
-                        currentOffset = CopyIntoBuffer(buffer, currentOffset, " ", false);
+                        CopyIntoBuffer(buffer, ref currentOffset, " ", false);
                     break;
                 case TextType.StartTag:
                     startTag = itemText;
@@ -253,14 +293,14 @@ internal class DescriptionParser
                         if (startTag.IsEmpty)
                         {
                             if (item.Type == TextType.EndTag)
-                                currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, true);
+                                CopyIntoBuffer(buffer, ref currentOffset, itemText, true);
                             else
-                                currentOffset = CopyIntoBuffer(buffer, currentOffset, $"</{GetEndTagCharType(itemText)}>", false);
+                                CopyIntoBuffer(buffer, ref currentOffset, $"</{GetEndTagCharType(itemText)}>", false);
                         }
                         else
                         {
                             // dont save, empty tag
-                            startTag = [];
+                            startTag = null;
                         }
                     }
 
@@ -268,9 +308,9 @@ internal class DescriptionParser
                 case TextType.ScalingTag:
                     {
                         if (flags.ScalingTag == TagFlag.Eval && double.TryParse(itemText.Trim('~'), CultureInfo.InvariantCulture, out double scaleValue))
-                            currentOffset = GetScalingLocaleText(buffer, currentOffset, scaleValue);
+                            GetScalingLocaleText(buffer, ref currentOffset, scaleValue);
                         else if (flags.ScalingTag == TagFlag.Include)
-                            currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                            CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
 
                         break;
                     }
@@ -278,18 +318,21 @@ internal class DescriptionParser
                 default:
                     if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                     {
-                        currentOffset = CopyIntoBuffer(buffer, currentOffset, startTag, true);
-                        startTag = [];
-                        currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                        CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
+
+                        ReplaceFontTagVal(buffer, startTag, ref currentOffset);
+
+                        startTag = null;
+                        CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
                     }
                     else if (item.Type == TextType.ErrorTag)
                     {
                         if (flags.ErrorTag == TagFlag.Include)
-                            currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                            CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
                     }
                     else
                     {
-                        currentOffset = CopyIntoBuffer(buffer, currentOffset, itemText, false);
+                        CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
                     }
 
                     break;
@@ -297,7 +340,7 @@ internal class DescriptionParser
         }
 
         // remove any null chars at the end
-        return buffer.TrimEnd('\0').ToString();
+        return buffer[..currentOffset].ToString();
     }
 
     private void ConstructTextStack(ReadOnlySpan<char> gameString, Range? startTag = null)
@@ -317,8 +360,7 @@ internal class DescriptionParser
                 {
                     if (isStartTag)
                     {
-                        if (_extractStyleVars)
-                            PushStyleVarFromTag(gameString, tag.Value);
+                        PushFontVarFromTag(gameString, tag.Value);
 
                         // nested
                         if (startTag.HasValue)
@@ -620,31 +662,49 @@ internal class DescriptionParser
         return false;
     }
 
-    private void PushStyleVarFromTag(ReadOnlySpan<char> gameString, Range tag)
+    private void PushFontVarFromTag(ReadOnlySpan<char> gameString, Range tag)
     {
+        if (!ExtractFontVars)
+            return;
+
         // <c val=\"#TooltipNumbers\">
-        ReadOnlySpan<char> styleSpan = gameString[tag];
+        // <s val=\"StandardTooltipHeader\">
+        ReadOnlySpan<char> fontSpan = gameString[tag];
 
-        if (!styleSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && !styleSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase))
+        bool isConstant = fontSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase);
+        bool isStyle = fontSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase);
+
+        if (isConstant is false && isStyle is false)
             return;
 
-        int indexOfVal = styleSpan.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
-        if (indexOfVal < 0)
-            return;
+        ReadOnlySpan<char> styleValue = GetFontTagVal(fontSpan);
 
-        int startIndexOfQuote = styleSpan.IndexOf("\"");
-        int endIndexOfQuote = styleSpan[(startIndexOfQuote + 1)..].IndexOf("\"");
+        if (isConstant && styleValue.StartsWith("#"))
+            _styleConstantTagVariables.Add(styleValue.TrimStart('#').ToString());
+        else if (isStyle)
+            _styleTagVariables.Add(styleValue.ToString());
+    }
 
-        ReadOnlySpan<char> styleValue = styleSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
-        if (styleValue.StartsWith("#"))
-            _styleTagVariables.Add(styleValue.TrimStart('#').ToString());
+    private void ReplaceFontTagVal(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
+    {
+        ReadOnlySpan<char> fontTagVal = GetFontTagVal(startTag);
+
+        if (TryGetNewTagValue(fontTagVal, startTag, out string? newValue))
+        {
+            int indexOfStyleVar = startTag.IndexOf(fontTagVal);
+
+            currentOffset = currentOffset - startTag.Length + indexOfStyleVar;
+
+            CopyIntoBuffer(buffer, ref currentOffset, newValue, false);
+            CopyIntoBuffer(buffer, ref currentOffset, "\">", false);
+        }
     }
 
     private int GetSizeOfBuffer(ReadOnlySpan<char> gameString, DescriptionFlags flags)
     {
         int sum = 0;
 
-        foreach (var current in _textStack)
+        foreach (TextRange current in _textStack)
         {
             switch (current.Type)
             {
@@ -671,6 +731,27 @@ internal class DescriptionParser
                         sum += 1; // as space " "
                     break;
                 case TextType.StartTag:
+                    {
+                        if (flags.ColorTags == TagFlag.Include && (_valueByStyleVar is not null || _valueByStyleConstantVar is not null))
+                        {
+                            ReadOnlySpan<char> currentSpan = gameString[current.Range];
+                            ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan);
+
+                            if (TryGetNewTagValue(tagVarVal, currentSpan, out string? newValue))
+                            {
+                                sum += currentSpan.Length + Math.Max(tagVarVal.Length, newValue.Length);
+
+                                break;
+                            }
+                            else
+                            {
+                                goto case TextType.EndTag;
+                            }
+                        }
+
+                        goto case TextType.EndTag;
+                    }
+
                 case TextType.EndTag:
                     if (flags.ColorTags == TagFlag.Include)
                         goto default;
@@ -690,7 +771,15 @@ internal class DescriptionParser
         return sum;
     }
 
-    private int GetScalingLocaleText(Span<char> buffer, int offset, double value)
+    private bool TryGetNewTagValue(ReadOnlySpan<char> tagVarVal, ReadOnlySpan<char> fullTagSpan, [NotNullWhen(true)] out string? newValue)
+    {
+        newValue = null;
+        return tagVarVal.IsEmpty is false &&
+            ((_valueByStyleConstantVar is not null && fullTagSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar.TryGetValue(tagVarVal.TrimStart('#').ToString(), out newValue)) ||
+            (_valueByStyleVar is not null && fullTagSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar.TryGetValue(tagVarVal.ToString(), out newValue)));
+    }
+
+    private void GetScalingLocaleText(Span<char> buffer, ref int offset, double value)
     {
         _culture ??= StormLocaleData.GetCultureInfo(_gameStringLocale);
 
@@ -714,6 +803,6 @@ internal class DescriptionParser
 
         value.TryFormat(buffer[offset..], out int charsWritten, format, _culture);
 
-        return offset += charsWritten;
+        offset += charsWritten;
     }
 }

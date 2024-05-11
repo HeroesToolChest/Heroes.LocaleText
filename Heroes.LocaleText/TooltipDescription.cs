@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Heroes.LocaleText;
 
@@ -40,15 +41,18 @@ public class TooltipDescription
     /// </summary>
     /// <param name="text">A parsed description that has not been modified into a readable verbiage (e.g. PlainText or ColorText from this class should not be used).</param>
     /// <param name="gameStringLocale">The localization of the <paramref name="text"/>.</param>
-    /// <param name="extractStyleVars">If <see langword="true"/>, then the property <see cref="TextStyleVariables"/> may have items.</param>
-    public TooltipDescription(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractStyleVars = false)
+    /// <param name="extractFontValues">
+    /// If <see langword="true"/>, then the font style and constant tags will have their val values saved in <see cref="FontStyleValues"/> and  <see cref="FontStyleConstantValues"/>.
+    /// If not needing the output with color tags, then set to <see langword="false"/> for performance.
+    /// </param>
+    public TooltipDescription(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontValues = false)
     {
         ArgumentNullException.ThrowIfNull(text);
 
         GameStringLocale = gameStringLocale;
-        IsStyleVarsExtracted = extractStyleVars;
+        IsFontValuesExtracted = extractFontValues;
 
-        _descriptionParser = DescriptionParser.GetInstance(text, gameStringLocale, extractStyleVars);
+        _descriptionParser = DescriptionParser.GetInstance(text, gameStringLocale, extractFontValues);
     }
 
     /// <summary>
@@ -126,15 +130,20 @@ public class TooltipDescription
     public StormLocale GameStringLocale { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the style vars have been extracted.
+    /// Gets a value indicating whether the font style and constant values have been extracted.
     /// </summary>
-    public bool IsStyleVarsExtracted { get; }
+    [MemberNotNullWhen(true, nameof(FontStyleValues), nameof(FontStyleConstantValues))]
+    public bool IsFontValuesExtracted { get; }
 
     /// <summary>
-    /// Gets a collection of text style variables used in the tooltip description.
+    /// <para>Gets a collection of text style values used in the tooltip description.</para>
+    /// <para>
+    /// Example:<br/>
+    /// With &lt;s val=\"StandardTooltipHeader\"&gt;&lt;/s&gt; returns StandardTooltipHeader.
+    /// </para>
     /// </summary>
-    /// <returns>A collection of text style variables.</returns>
-    public IEnumerable<string> TextStyleVariables
+    /// <returns>A collection of text style values.</returns>
+    public IEnumerable<string>? FontStyleValues
     {
         get
         {
@@ -145,7 +154,78 @@ public class TooltipDescription
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// <para>Gets a collection of text style constant values used in the tooltip description.</para>
+    /// <para>
+    /// Example:<br/>
+    /// With &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt; returns TooltipNumbers.
+    /// </para>
+    /// </summary>
+    /// <returns>A collection of text style constant values.</returns>
+    public IEnumerable<string>? FontStyleConstantValues
+    {
+        get
+        {
+            if (_rawDescription is null)
+                _ = RawDescription; // trigger the parsing
+
+            return _descriptionParser.StyleConstantTagVariables;
+        }
+    }
+
+    /// <summary>
+    /// Adds a dictionary of values that will be replaced by new values.
+    /// </summary>
+    /// <param name="newValuesByValue">A dictionary of values and their replacement values.</param>
+    /// <param name="fontTagType">The tag type for the replacement of the values.</param>
+    /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
+    public TooltipDescription AddFontValueReplacements(IDictionary<string, string> newValuesByValue, FontTagType fontTagType)
+    {
+        foreach (var item in newValuesByValue)
+        {
+            AddFontValueReplacements(item.Key, item.Value, fontTagType);
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a collection of values that will be replaced by new values.
+    /// </summary>
+    /// <param name="newValuesByValue">A collection of values and their replacement values.</param>
+    /// <param name="fontTagType">The tag type for the replacement of the values.</param>
+    /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
+    public TooltipDescription AddFontValueReplacements(IEnumerable<(string Value, string Replacement)> newValuesByValue, FontTagType fontTagType)
+    {
+        foreach ((string value, string replacement) in newValuesByValue)
+        {
+            AddFontValueReplacements(value, replacement, fontTagType);
+        }
+
+        return this;
+    }
+
+    /// <summary>
+    /// Adds a value that will be replaced by a new value.
+    /// </summary>
+    /// <param name="value">The value of the val attribute of the tag.</param>
+    /// <param name="replacement">The new value that will replace <paramref name="value"/>.</param>
+    /// <param name="fontTagType">The tag type for the replacement of the <paramref name="value"/>.</param>
+    /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
+    public TooltipDescription AddFontValueReplacements(string value, string replacement, FontTagType fontTagType)
+    {
+        if (fontTagType == FontTagType.Constant)
+            _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement);
+        else if (fontTagType == FontTagType.Style)
+            _descriptionParser.AddStyleVarsWithReplacement(value, replacement);
+
+        return this;
+    }
+
+    /// <summary>
+    /// Returns the same as <see cref="PlainTextWithScaling"/>.
+    /// </summary>
+    /// <returns>The same as <see cref="PlainTextWithScaling"/>.</returns>
     public override string ToString()
     {
         return PlainTextWithScaling;
