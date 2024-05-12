@@ -206,7 +206,7 @@ public class TooltipDescriptionTests
         CollectionAssert.AreEqual(
             new List<string>()
             {
-                "TooltipNumbers",
+                "#TooltipNumbers",
             },
             result!.ToList());
     }
@@ -281,6 +281,7 @@ public class TooltipDescriptionTests
 
         Dictionary<string, string> keyValuePairs = [];
         keyValuePairs.Add("#TooltipNumbers", "123456");
+        keyValuePairs.Add("TooltipNumbers", "123456");
         keyValuePairs.Add("TooltipNumbers2", "222222");
         keyValuePairs.Add("TooltipNumbers3", "333333");
 
@@ -319,7 +320,7 @@ public class TooltipDescriptionTests
         TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
         List<(string, string)> values = [];
-        values.Add(("TooltipNumbers", "123456"));
+        values.Add(("#TooltipNumbers", "123456"));
         values.Add(("TooltipNumbers2", "123456"));
         values.Add(("TooltipNumbers3", "123456"));
 
@@ -356,7 +357,7 @@ public class TooltipDescriptionTests
     {
         // arrange
         TooltipDescription tooltipDescription = new TooltipDescription("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false)
-            .AddFontValueReplacements("TooltipNumbers", "123456", FontTagType.Constant);
+            .AddFontValueReplacements("#TooltipNumbers", "123456", FontTagType.Constant);
 
         // act
         string result = tooltipDescription.ColoredText;

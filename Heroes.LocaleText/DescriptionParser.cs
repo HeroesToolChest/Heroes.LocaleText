@@ -74,7 +74,7 @@ internal class DescriptionParser
     public void AddStyleConstantVarsWithReplacement(string styleConstantVar, string replacement)
     {
         _valueByStyleConstantVar ??= new(StringComparer.Ordinal);
-        _valueByStyleConstantVar.TryAdd(styleConstantVar.TrimStart('#'), replacement);
+        _valueByStyleConstantVar.TryAdd(styleConstantVar, replacement);
     }
 
     private static void CopyIntoBuffer(Span<char> buffer, ref int offset, ReadOnlySpan<char> item, bool cleanTheTag)
@@ -671,25 +671,31 @@ internal class DescriptionParser
         // <s val=\"StandardTooltipHeader\">
         ReadOnlySpan<char> fontSpan = gameString[tag];
 
-        bool isConstant = fontSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase);
-        bool isStyle = fontSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase);
+        if (fontSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase))
+        {
+            ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
 
-        if (isConstant is false && isStyle is false)
+            _styleConstantTagVariables.Add(fontTagVal.ToString());
+        }
+        else if (fontSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase))
+        {
+            ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
+
+            _styleTagVariables.Add(fontTagVal.ToString());
+        }
+        else
+        {
             return;
-
-        ReadOnlySpan<char> styleValue = GetFontTagVal(fontSpan);
-
-        if (isConstant && styleValue.StartsWith("#"))
-            _styleConstantTagVariables.Add(styleValue.TrimStart('#').ToString());
-        else if (isStyle)
-            _styleTagVariables.Add(styleValue.ToString());
+        }
     }
 
     private void ReplaceFontTagVal(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
     {
         ReadOnlySpan<char> fontTagVal = GetFontTagVal(startTag);
 
-        if (TryGetNewTagValue(fontTagVal, startTag, out string? newValue))
+        if (fontTagVal.IsEmpty is false &&
+            ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c") && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out string? newValue)) ||
+            (_valueByStyleVar is not null && startTag.StartsWith("<s") && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
         {
             int indexOfStyleVar = startTag.IndexOf(fontTagVal);
 
@@ -732,20 +738,29 @@ internal class DescriptionParser
                     break;
                 case TextType.StartTag:
                     {
-                        if (flags.ColorTags == TagFlag.Include && (_valueByStyleVar is not null || _valueByStyleConstantVar is not null))
+                        if (flags.ColorTags == TagFlag.Include)
                         {
                             ReadOnlySpan<char> currentSpan = gameString[current.Range];
-                            ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan);
 
-                            if (TryGetNewTagValue(tagVarVal, currentSpan, out string? newValue))
+                            if (currentSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar is not null)
                             {
-                                sum += currentSpan.Length + Math.Max(tagVarVal.Length, newValue.Length);
+                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan);
 
-                                break;
+                                if (_valueByStyleConstantVar.TryGetValue(tagVarVal.ToString(), out string? newValue))
+                                {
+                                    sum += currentSpan.Length - tagVarVal.Length + Math.Max(tagVarVal.Length, newValue.Length);
+                                    break;
+                                }
                             }
-                            else
+                            else if (currentSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar is not null)
                             {
-                                goto case TextType.EndTag;
+                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan);
+
+                                if (_valueByStyleVar.TryGetValue(tagVarVal.ToString(), out string? newValue))
+                                {
+                                    sum += currentSpan.Length - tagVarVal.Length + Math.Max(tagVarVal.Length, newValue.Length);
+                                    break;
+                                }
                             }
                         }
 
@@ -769,14 +784,6 @@ internal class DescriptionParser
         }
 
         return sum;
-    }
-
-    private bool TryGetNewTagValue(ReadOnlySpan<char> tagVarVal, ReadOnlySpan<char> fullTagSpan, [NotNullWhen(true)] out string? newValue)
-    {
-        newValue = null;
-        return tagVarVal.IsEmpty is false &&
-            ((_valueByStyleConstantVar is not null && fullTagSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar.TryGetValue(tagVarVal.TrimStart('#').ToString(), out newValue)) ||
-            (_valueByStyleVar is not null && fullTagSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar.TryGetValue(tagVarVal.ToString(), out newValue)));
     }
 
     private void GetScalingLocaleText(Span<char> buffer, ref int offset, double value)
