@@ -752,4 +752,34 @@ public class DescriptionParserTests
         // assert
         Assert.AreEqual("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"this-is-a-long-constant-name\">18</c>", result);
     }
+
+    [TestMethod]
+    [DataRow("by <c val=\"#TooltipNumbers\">13700~~0.04~~%</c>")]
+    [DataRow("by <c val=\"#TooltipNumbers\">13700%~~0.04~~</c>")]
+    public void GetColoredText_ValueHasAScalingPercent_ReturnsScalingAfterPercent(string text)
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance(text);
+
+        // act
+        string result = descriptionParser.GetColoredText(true);
+
+        // assert
+        Assert.AreEqual("by <c val=\"#TooltipNumbers\">13700% (+4% per level)</c>", result);
+    }
+
+    [TestMethod]
+    [DataRow("by <c val=\"#TooltipNumbers\">13700~~0.04~~%</c>")]
+    [DataRow("by <c val=\"#TooltipNumbers\">13700%~~0.04~~</c>")]
+    public void GetColoredText_ValueHasAScalingPercentAndColoredTextWithNoScaling_ReturnsNoScalingText(string text)
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance(text);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("by <c val=\"#TooltipNumbers\">13700%</c>", result);
+    }
 }
