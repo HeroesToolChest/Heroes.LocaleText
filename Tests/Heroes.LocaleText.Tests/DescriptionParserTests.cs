@@ -784,7 +784,7 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void Test()
+    public void GetPlainText_HasPercentSign_ReturnsPlainText()
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("RefName[%1] did not return a valid actor.");
