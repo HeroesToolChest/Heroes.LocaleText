@@ -469,7 +469,7 @@ internal class DescriptionParser
 
                 _startingIndex = _index;
             }
-            else if (gameString[_index] == '%' && _textStack[^1].Type == TextType.ScalingTag)
+            else if (gameString[_index] == '%' && _textStack.Count > 0 && _textStack[^1].Type == TextType.ScalingTag)
             {
                 // increment and push the percent text into the stack
                 _index++;

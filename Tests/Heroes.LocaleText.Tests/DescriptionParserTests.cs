@@ -782,4 +782,17 @@ public class DescriptionParserTests
         // assert
         Assert.AreEqual("by <c val=\"#TooltipNumbers\">13700%</c>", result);
     }
+
+    [TestMethod]
+    public void Test()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("RefName[%1] did not return a valid actor.");
+
+        // act
+        string result = descriptionParser.GetPlainText(false, false);
+
+        // assert
+        Assert.AreEqual("RefName[%1] did not return a valid actor.", result);
+    }
 }
