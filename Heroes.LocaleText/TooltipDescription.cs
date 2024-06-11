@@ -43,7 +43,7 @@ public class TooltipDescription
     /// <param name="gameStringLocale">The localization of the <paramref name="text"/>.</param>
     /// <param name="extractFontValues">
     /// If <see langword="true"/>, then the font style and constant tags will have their val values saved in <see cref="FontStyleValues"/> and  <see cref="FontStyleConstantValues"/>.
-    /// If not needing the output with color tags, then set to <see langword="false"/> for performance.
+    /// If not needing the output with color tags, then set to <see langword="false"/> for faster parsing performance.
     /// </param>
     public TooltipDescription(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontValues = false)
     {
@@ -158,7 +158,7 @@ public class TooltipDescription
     /// <para>Gets a collection of text style constant values used in the tooltip description.</para>
     /// <para>
     /// Example:<br/>
-    /// With &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt; returns TooltipNumbers.
+    /// With &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt; returns #TooltipNumbers.
     /// </para>
     /// </summary>
     /// <returns>A collection of text style constant values.</returns>
