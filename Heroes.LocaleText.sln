@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Heroes.LocaleText", "Heroes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Heroes.LocaleText.Tests", "Tests\Heroes.LocaleText.Tests\Heroes.LocaleText.Tests.csproj", "{AE6C79BD-9B68-4732-9F68-91A0E6CE3A98}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Heroes.LocaleText.Benchmarks", "Heroes.LocaleText.Benchmarks\Heroes.LocaleText.Benchmarks.csproj", "{80E97147-3763-4022-8A88-E63B2E40241C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{AE6C79BD-9B68-4732-9F68-91A0E6CE3A98}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE6C79BD-9B68-4732-9F68-91A0E6CE3A98}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE6C79BD-9B68-4732-9F68-91A0E6CE3A98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{80E97147-3763-4022-8A88-E63B2E40241C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{80E97147-3763-4022-8A88-E63B2E40241C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{80E97147-3763-4022-8A88-E63B2E40241C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{80E97147-3763-4022-8A88-E63B2E40241C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
