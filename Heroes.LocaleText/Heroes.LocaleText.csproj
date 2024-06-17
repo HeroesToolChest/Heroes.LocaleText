@@ -8,7 +8,7 @@
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
     <Authors>Kevin Oliva</Authors>
     <Copyright>Copyright © 2024 Kevin Oliva</Copyright>
-    <Description>Used to parse tooltip descriptions.</Description>
+    <Description>Used to parse Heroes of the Storm tooltip descriptions.</Description>
     <PackageProjectUrl>https://github.com/HeroesToolChest/Heroes.LocaleText</PackageProjectUrl>
     <RepositoryUrl>https://github.com/HeroesToolChest/Heroes.LocaleText</RepositoryUrl>
     <PackageReleaseNotes>https://github.com/HeroesToolChest/Heroes.LocaleText/releases</PackageReleaseNotes>
