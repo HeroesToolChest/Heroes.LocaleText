@@ -161,6 +161,7 @@ internal class DescriptionParser
     {
         ReadOnlySpan<char> tagSpan = text[tag];
 
+        // <li> tags are a thing inside of an <ol> or <ul>, but since no tooltips acutally use them so far we can ignore them
         return !tagSpan.Equals("<li/>", StringComparison.OrdinalIgnoreCase) && tagSpan.Length > 3 && tagSpan.EndsWith("/>", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -641,7 +642,7 @@ internal class DescriptionParser
         ReadOnlySpan<char> currentTextSpan = gameString[_index..];
         int lengthOffset = gameString.Length - currentTextSpan.Length;
 
-        if (currentTextSpan.StartsWith(TooltipDescription.ErrorTag, StringComparison.OrdinalIgnoreCase))
+        if (currentTextSpan.StartsWith(TooltipDescription.ErrorTag, StringComparison.Ordinal))
         {
             tag = new Range(lengthOffset, 9 + lengthOffset);
 
