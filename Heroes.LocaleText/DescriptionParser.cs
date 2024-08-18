@@ -644,9 +644,9 @@ internal class DescriptionParser
 
         if (currentTextSpan.StartsWith(TooltipDescription.ErrorTag, StringComparison.Ordinal))
         {
-            tag = new Range(lengthOffset, 9 + lengthOffset);
+            tag = new Range(lengthOffset, TooltipDescription.ErrorTag.Length + lengthOffset);
 
-            _index += 9;
+            _index += TooltipDescription.ErrorTag.Length;
 
             return true;
         }
