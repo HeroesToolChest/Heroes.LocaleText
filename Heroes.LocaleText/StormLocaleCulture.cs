@@ -5,7 +5,7 @@ namespace Heroes.LocaleText;
 /// <summary>
 /// Class for obtaining the heroes localization data.
 /// </summary>
-public static class StormLocaleData
+public static class StormLocaleCulture
 {
     /// <summary>
     /// Gets the <see cref="CultureInfo"/>.

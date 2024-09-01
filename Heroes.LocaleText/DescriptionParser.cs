@@ -804,7 +804,7 @@ internal class DescriptionParser
 
     private void GetScalingLocaleText(Span<char> buffer, ref int offset, double value)
     {
-        _culture ??= StormLocaleData.GetCultureInfo(_gameStringLocale);
+        _culture ??= StormLocaleCulture.GetCultureInfo(_gameStringLocale);
 
         ReadOnlySpan<char> format = _gameStringLocale switch
         {
