@@ -8,29 +8,6 @@ namespace Heroes.LocaleText;
 public static class StormLocaleData
 {
     /// <summary>
-    /// Gets the locale stormdata file name.
-    /// </summary>
-    /// <param name="stormLocale">The locale.</param>
-    /// <returns>The locale file name.</returns>
-    public static string GetStormDataFileName(StormLocale stormLocale) => stormLocale switch
-    {
-        StormLocale.ENUS => "enus.stormdata",
-        StormLocale.DEDE => "dede.stormdata",
-        StormLocale.ESES => "eses.stormdata",
-        StormLocale.ESMX => "esmx.stormdata",
-        StormLocale.FRFR => "frfr.stormdata",
-        StormLocale.ITIT => "itit.stormdata",
-        StormLocale.KOKR => "kokr.stormdata",
-        StormLocale.PLPL => "plpl.stormdata",
-        StormLocale.PTBR => "ptbr.stormdata",
-        StormLocale.RURU => "ruru.stormdata",
-        StormLocale.ZHCN => "zhcn.stormdata",
-        StormLocale.ZHTW => "zhtw.stormdata",
-
-        _ => "_",
-    };
-
-    /// <summary>
     /// Gets the <see cref="CultureInfo"/>.
     /// </summary>
     /// <param name="stormLocale">The locale.</param>
