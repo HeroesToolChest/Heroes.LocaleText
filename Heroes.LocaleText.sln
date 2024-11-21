@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Heroes.LocaleText.Tests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Heroes.LocaleText.Benchmarks", "Heroes.LocaleText.Benchmarks\Heroes.LocaleText.Benchmarks.csproj", "{80E97147-3763-4022-8A88-E63B2E40241C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7A5B036A-A211-4D67-BA99-5E3D1ACCDD20}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DCDE5DB4-D153-47C4-9B20-4933F8242D9E}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
