@@ -30,7 +30,7 @@ string g = tooltipDescription.ColoredTextWithScaling;
 ```
 
 ### Localization
-The localization of the gamestring can also be passed in using `StormLocale`. By default it is ENUS. The localization is used for only the scaling text (e.g. (+4% per level)).
+The localization of the gamestring can also be passed in using `StormLocale`. By default it is ENUS. The localization is used only for the scaling text (e.g. (+4% per level)).
 
 ```C#
 TooltipDescription tooltipDescription = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"bfd4fd\">147~~0.035~~</c> Schaden zufügen. Die Geschosse fügen Gebäuden <c val=\"bfd4fd\">50%</c> des Schadens zu.", StormLocale.DEDE);
