@@ -399,7 +399,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+        List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -418,7 +418,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
+        List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -437,7 +437,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+        List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -457,7 +457,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
+        List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -478,7 +478,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+        List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -498,7 +498,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
+        List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -518,7 +518,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+        List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -537,7 +537,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
+        List<string> styleTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -556,8 +556,8 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
-        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
+        List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
+        List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -597,7 +597,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleTagVars = descriptionParser.StyleTagVariables!.ToList();
+        List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -615,7 +615,7 @@ public class DescriptionParserTests
 
         // act
         descriptionParser.GetRawDescription();
-        List<string> styleConstantTagVars = descriptionParser.StyleConstantTagVariables!.ToList();
+        List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
         CollectionAssert.AreEquivalent(
@@ -630,7 +630,7 @@ public class DescriptionParserTests
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
-        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445");
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", false);
 
         // act
         string result = descriptionParser.GetColoredText(false);
@@ -644,7 +644,7 @@ public class DescriptionParserTests
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
-        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707");
+        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", false);
 
         // act
         string result = descriptionParser.GetColoredText(false);
@@ -654,11 +654,39 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
+    public void GetColoredText_WithReplacementStyleVarsAndPreserve_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", true);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"F50707-F64445\" hlt-name=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
+    }
+
+    [TestMethod]
+    public void GetColoredText_WithReplacementStyleConstantVarsAndPreserve_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", true);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("Every <c val=\"F50707\" hlt-name=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
+    }
+
+    [TestMethod]
     public void GetRawDescription_WithReplacementStyleVars_ReturnsReplacement()
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
-        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445");
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", false);
 
         // act
         string result = descriptionParser.GetRawDescription();
@@ -672,7 +700,7 @@ public class DescriptionParserTests
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
-        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707");
+        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", false);
 
         // act
         string result = descriptionParser.GetRawDescription();
@@ -682,11 +710,41 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void GetPlainText_WithReplacementStyleVars_ReturnsNoReplacement()
+    public void GetRawDescription_WithReplacementStyleVarsPreserve_ReturnsReplacement()
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
-        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445");
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", true);
+
+        // act
+        string result = descriptionParser.GetRawDescription();
+
+        // assert
+        Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"F50707-F64445\" hlt-name=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
+    }
+
+    [TestMethod]
+    public void GetRawDescription_WithReplacementStyleConstantVarsPreserve_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", true);
+
+        // act
+        string result = descriptionParser.GetRawDescription();
+
+        // assert
+        Assert.AreEqual("Every <c val=\"F50707\" hlt-name=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
+    }
+
+    [TestMethod]
+    [DataRow(true)]
+    [DataRow(false)]
+    public void GetPlainText_WithReplacementStyleVars_ReturnsNoReplacement(bool preserve)
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", preserve);
 
         // act
         string result = descriptionParser.GetPlainText(false, false);
@@ -696,11 +754,13 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void GetPlainText_WithReplacementStyleCosntantVars_ReturnsNoReplacement()
+    [DataRow(true)]
+    [DataRow(false)]
+    public void GetPlainText_WithReplacementStyleConstantVars_ReturnsNoReplacement(bool preserve)
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
-        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707");
+        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", preserve);
 
         // act
         string result = descriptionParser.GetPlainText(false, false);
@@ -710,11 +770,13 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void GetColoredText_WithReplacementStyleVarsAndEmptyStyleVar_ReturnsOriginal()
+    [DataRow(true)]
+    [DataRow(false)]
+    public void GetColoredText_WithReplacementStyleVarsAndEmptyStyleVar_ReturnsOriginal(bool preserve)
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"\">18</c> seconds", extractFontVars: true);
-        descriptionParser.AddStyleVarsWithReplacement(string.Empty, "00a2ff");
+        descriptionParser.AddStyleVarsWithReplacement(string.Empty, "00a2ff", preserve);
 
         // act
         string result = descriptionParser.GetColoredText(false);
@@ -728,8 +790,8 @@ public class DescriptionParserTests
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"#this-is-a-long-constant-name\">18</c>", extractFontVars: true);
-        descriptionParser.AddStyleVarsWithReplacement("this-is-a-long-style-name", "short");
-        descriptionParser.AddStyleConstantVarsWithReplacement("#this-is-a-long-constant-name", "short");
+        descriptionParser.AddStyleVarsWithReplacement("this-is-a-long-style-name", "short", false);
+        descriptionParser.AddStyleConstantVarsWithReplacement("#this-is-a-long-constant-name", "short", false);
 
         // act
         string result = descriptionParser.GetColoredText(false);
@@ -743,14 +805,44 @@ public class DescriptionParserTests
     {
         // arrange
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"short\">125</s><c val=\"short\">18</c>", extractFontVars: true);
-        descriptionParser.AddStyleVarsWithReplacement("short", "this-is-a-long-style-name");
-        descriptionParser.AddStyleConstantVarsWithReplacement("short", "this-is-a-long-constant-name");
+        descriptionParser.AddStyleVarsWithReplacement("short", "this-is-a-long-style-name", false);
+        descriptionParser.AddStyleConstantVarsWithReplacement("short", "this-is-a-long-constant-name", false);
 
         // act
         string result = descriptionParser.GetColoredText(false);
 
         // assert
         Assert.AreEqual("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"this-is-a-long-constant-name\">18</c>", result);
+    }
+
+    [TestMethod]
+    public void GetColoredText_WithReplacementVarsThatIsSmallerThanOriginalPreserve_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"#this-is-a-long-constant-name\">18</c>", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("this-is-a-long-style-name", "short", true);
+        descriptionParser.AddStyleConstantVarsWithReplacement("#this-is-a-long-constant-name", "short", true);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("deals <s val=\"short\" hlt-name=\"this-is-a-long-style-name\">125</s><c val=\"short\" hlt-name=\"#this-is-a-long-constant-name\">18</c>", result);
+    }
+
+    [TestMethod]
+    public void GetColoredText_WithReplacementVarsThatIsLargerThanOriginalPreserve_ReturnsReplacement()
+    {
+        // arrange
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"short\">125</s><c val=\"short\">18</c>", extractFontVars: true);
+        descriptionParser.AddStyleVarsWithReplacement("short", "this-is-a-long-style-name", true);
+        descriptionParser.AddStyleConstantVarsWithReplacement("short", "this-is-a-long-constant-name", true);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("deals <s val=\"this-is-a-long-style-name\" hlt-name=\"short\">125</s><c val=\"this-is-a-long-constant-name\" hlt-name=\"short\">18</c>", result);
     }
 
     [TestMethod]

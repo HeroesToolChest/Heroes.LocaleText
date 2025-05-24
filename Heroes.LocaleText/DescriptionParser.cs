@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace Heroes.LocaleText;
 
@@ -8,6 +9,8 @@ namespace Heroes.LocaleText;
 /// </summary>
 internal class DescriptionParser
 {
+    private const string _ltNameAttribute = "hlt-name=";
+
     private readonly string _description;
 
     private readonly StormLocale _gameStringLocale;
@@ -16,8 +19,8 @@ internal class DescriptionParser
     private readonly HashSet<string>? _styleTagVariables;
     private readonly HashSet<string>? _styleConstantTagVariables;
 
-    private Dictionary<string, string>? _valueByStyleVar;
-    private Dictionary<string, string>? _valueByStyleConstantVar;
+    private Dictionary<string, (string Value, bool Preserve)>? _valueByStyleVar;
+    private Dictionary<string, (string Value, bool Preserve)>? _valueByStyleConstantVar;
 
     private bool _isContructed = false;
     private int _startingIndex = 0;
@@ -65,16 +68,16 @@ internal class DescriptionParser
         return ParseToColoredText(_description, includeScaling);
     }
 
-    public void AddStyleVarsWithReplacement(string styleVar, string replacement)
+    public void AddStyleVarsWithReplacement(string styleVar, string replacement, bool preserve)
     {
         _valueByStyleVar ??= new(StringComparer.Ordinal);
-        _valueByStyleVar.TryAdd(styleVar, replacement);
+        _valueByStyleVar.TryAdd(styleVar, (replacement, preserve));
     }
 
-    public void AddStyleConstantVarsWithReplacement(string styleConstantVar, string replacement)
+    public void AddStyleConstantVarsWithReplacement(string styleConstantVar, string replacement, bool preserve)
     {
         _valueByStyleConstantVar ??= new(StringComparer.Ordinal);
-        _valueByStyleConstantVar.TryAdd(styleConstantVar, replacement);
+        _valueByStyleConstantVar.TryAdd(styleConstantVar, (replacement, preserve));
     }
 
     private static void CopyIntoBuffer(Span<char> buffer, ref int offset, ReadOnlySpan<char> item, bool cleanTheTag)
@@ -710,14 +713,18 @@ internal class DescriptionParser
         ReadOnlySpan<char> fontTagVal = GetFontTagVal(startTag);
 
         if (fontTagVal.IsEmpty is false &&
-            ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c") && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out string? newValue)) ||
+            ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c") && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
             (_valueByStyleVar is not null && startTag.StartsWith("<s") && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
         {
             int indexOfStyleVar = startTag.IndexOf(fontTagVal);
 
             currentOffset = currentOffset - startTag.Length + indexOfStyleVar;
 
-            CopyIntoBuffer(buffer, ref currentOffset, newValue, false);
+            CopyIntoBuffer(buffer, ref currentOffset, newValue.Value, false);
+
+            if (newValue.Preserve)
+                CopyIntoBuffer(buffer, ref currentOffset, $"\" {_ltNameAttribute}\"{fontTagVal}", false);
+
             CopyIntoBuffer(buffer, ref currentOffset, "\">", false);
         }
     }
@@ -760,21 +767,31 @@ internal class DescriptionParser
 
                             if (currentSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar is not null)
                             {
-                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan);
+                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan); // #TooltipNumbers
 
-                                if (_valueByStyleConstantVar.TryGetValue(tagVarVal.ToString(), out string? newValue))
+                                if (_valueByStyleConstantVar.TryGetValue(tagVarVal.ToString(), out var newValue))
                                 {
-                                    sum += currentSpan.Length - tagVarVal.Length + Math.Max(tagVarVal.Length, newValue.Length);
+                                    int tagVarValLength = tagVarVal.Length;
+                                    sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
+
+                                    if (newValue.Preserve)
+                                        sum += 3 + _ltNameAttribute.Length + tagVarValLength; // lt-name="#TooltipNumbers" +3 for space and quotes
+
                                     break;
                                 }
                             }
                             else if (currentSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar is not null)
                             {
-                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan);
+                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan); // "StandardTooltipHeader"
 
-                                if (_valueByStyleVar.TryGetValue(tagVarVal.ToString(), out string? newValue))
+                                if (_valueByStyleVar.TryGetValue(tagVarVal.ToString(), out var newValue))
                                 {
-                                    sum += currentSpan.Length - tagVarVal.Length + Math.Max(tagVarVal.Length, newValue.Length);
+                                    int tagVarValLength = tagVarVal.Length;
+                                    sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
+
+                                    if (newValue.Preserve)
+                                        sum += 3 + _ltNameAttribute.Length + tagVarValLength; // lt-name="StandardTooltipHeader" +3 for space and quotes
+
                                     break;
                                 }
                             }

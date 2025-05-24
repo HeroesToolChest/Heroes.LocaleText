@@ -174,50 +174,53 @@ public class TooltipDescription
     }
 
     /// <summary>
-    /// Adds a dictionary of values that will be replaced by new values.
+    /// Adds a dictionary of values that will be replaced by new values. Used to replace the variables in the font style tags.
     /// </summary>
     /// <param name="newValuesByValue">A dictionary of values and their replacement values. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
+        /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced value.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(IDictionary<string, string> newValuesByValue, FontTagType fontTagType)
+    public TooltipDescription AddFontValueReplacements(IDictionary<string, string> newValuesByValue, FontTagType fontTagType, bool preserveValues = false)
     {
         foreach (var item in newValuesByValue)
         {
-            AddFontValueReplacements(item.Key, item.Value, fontTagType);
+            AddFontValueReplacements(item.Key, item.Value, fontTagType, preserveValues);
         }
 
         return this;
     }
 
     /// <summary>
-    /// Adds a collection of values that will be replaced by new values.
+    /// Adds a collection of values that will be replaced by new values. Used to replace the variables in the font style tags.
     /// </summary>
     /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
+    /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced value.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(IEnumerable<(string Value, string Replacement)> newValuesByValue, FontTagType fontTagType)
+    public TooltipDescription AddFontValueReplacements(IEnumerable<(string Value, string Replacement)> newValuesByValue, FontTagType fontTagType, bool preserveValues = false)
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacements(value, replacement, fontTagType);
+            AddFontValueReplacements(value, replacement, fontTagType, preserveValues);
         }
 
         return this;
     }
 
     /// <summary>
-    /// Adds a value that will be replaced by a new value.
+    /// Adds a value that will be replaced by a new value.  Used to replace the variables in the font style tags.
     /// </summary>
     /// <param name="value">The value of the val attribute of the tag. Is case-sensitive.</param>
     /// <param name="replacement">The new value that will replace <paramref name="value"/>. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the <paramref name="value"/>.</param>
+    /// <param name="preserveValue">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced <paramref name="value"/>.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(string value, string replacement, FontTagType fontTagType)
+    public TooltipDescription AddFontValueReplacements(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
     {
         if (fontTagType == FontTagType.Constant)
-            _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement);
+            _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);
         else if (fontTagType == FontTagType.Style)
-            _descriptionParser.AddStyleVarsWithReplacement(value, replacement);
+            _descriptionParser.AddStyleVarsWithReplacement(value, replacement, preserveValue);
 
         return this;
     }

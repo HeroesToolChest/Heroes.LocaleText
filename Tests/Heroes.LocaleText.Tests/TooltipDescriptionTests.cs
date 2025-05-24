@@ -314,6 +314,46 @@ public class TooltipDescriptionTests
     }
 
     [TestMethod]
+    public void AddFontVarReplacements_WithDictionaryConstantPreserve_ReturnsResultWithReplace()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+
+        Dictionary<string, string> keyValuePairs = [];
+        keyValuePairs.Add("#TooltipNumbers", "123456");
+        keyValuePairs.Add("TooltipNumbers", "123456");
+        keyValuePairs.Add("TooltipNumbers2", "222222");
+        keyValuePairs.Add("TooltipNumbers3", "333333");
+
+        tooltipDescription.AddFontValueReplacements(keyValuePairs, FontTagType.Constant, preserveValues: true);
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreEqual("Every <c val=\"123456\" hlt-name=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"123456\" hlt-name=\"TooltipNumbers\">125</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", result);
+    }
+
+    [TestMethod]
+    public void AddFontVarReplacements_WithDictionaryStylePreserve_ReturnsResultWithReplace()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: false);
+
+        Dictionary<string, string> keyValuePairs = [];
+        keyValuePairs.Add("StandardTooltipHeader", "123456");
+        keyValuePairs.Add("StandardTooltipDetails2", "222222");
+
+        tooltipDescription.AddFontValueReplacements(keyValuePairs, FontTagType.Style, preserveValues: true);
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>", result);
+    }
+
+    [TestMethod]
     public void AddFontVarReplacements_WithTupleConstant_ReturnsResultWithReplace()
     {
         // arrange
@@ -353,6 +393,45 @@ public class TooltipDescriptionTests
     }
 
     [TestMethod]
+    public void AddFontVarReplacements_WithTupleConstantPreserve_ReturnsResultWithReplace()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+
+        List<(string, string)> values = [];
+        values.Add(("#TooltipNumbers", "123456"));
+        values.Add(("TooltipNumbers2", "123456"));
+        values.Add(("TooltipNumbers3", "123456"));
+
+        tooltipDescription.AddFontValueReplacements(values, FontTagType.Constant, preserveValues: true);
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreEqual("Every <c val=\"123456\" hlt-name=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"123456\" hlt-name=\"#TooltipNumbers\">125</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", result);
+    }
+
+    [TestMethod]
+    public void AddFontVarReplacements_WithTupleStylePreserve_ReturnsResultWithReplace()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: false);
+
+        List<(string, string)> values = [];
+        values.Add(("StandardTooltipHeader", "123456"));
+        values.Add(("StandardTooltipDetails2", "222222"));
+
+        tooltipDescription.AddFontValueReplacements(values, FontTagType.Style, preserveValues: true);
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>", result);
+    }
+
+    [TestMethod]
     public void AddFontVarReplacements_SingleConstant_ReturnsResultWithReplace()
     {
         // arrange
@@ -367,6 +446,20 @@ public class TooltipDescriptionTests
     }
 
     [TestMethod]
+    public void AddFontVarReplacements_SingleConstantPreserve_ReturnsResultWithReplace()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new TooltipDescription("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false)
+            .AddFontValueReplacements("#TooltipNumbers", "123456", FontTagType.Constant, preserveValue: true);
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreEqual("Every <c val=\"123456\" hlt-name=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"123456\" hlt-name=\"#TooltipNumbers\">125</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", result);
+    }
+
+    [TestMethod]
     public void AddFontVarReplacements_SingleStyle_ReturnsResultWithReplace()
     {
         // arrange
@@ -378,5 +471,19 @@ public class TooltipDescriptionTests
 
         // assert
         Assert.AreEqual("<s val=\"123456\">Archon </s><n/><s val=\"123456\">Cooldown: </s>", result);
+    }
+
+    [TestMethod]
+    public void AddFontVarReplacements_SingleStylePreserve_ReturnsResultWithReplace()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new TooltipDescription("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipHeader\">Cooldown: </s>", extractFontValues: false)
+            .AddFontValueReplacements("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Cooldown: </s>", result);
     }
 }
