@@ -30,7 +30,7 @@ string g = tooltipDescription.ColoredTextWithScaling;
 ```
 
 ### Localization
-The localization of the gamestring can also be passed in using `StormLocale`. By default it is ENUS. The localization is used only for the scaling text (e.g. (+4% per level)).
+The localization of the gamestring can also be passed in using `StormLocale`. By default it is ENUS. The localization is used only for the scaling text (e.g. (+4% per level)). If the scaling text is not needed, then the `StormLocale` may be left as the default.
 
 ```C#
 TooltipDescription tooltipDescription = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"bfd4fd\">147~~0.035~~</c> Schaden zufügen. Die Geschosse fügen Gebäuden <c val=\"bfd4fd\">50%</c> des Schadens zu.", StormLocale.DEDE);
@@ -44,33 +44,51 @@ To get all the values of the constant tags `<c val=""/>` and style tags `<s val=
 ```C#
 TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <s val=\"StandardTooltipHeader\">2.75</s> seconds.", extractFontValues: true);
 
-IEnumerable<string>? constantValues = tooltipDescription.FontStyleConstantValues;
-IEnumerable<string>? styleValues = tooltipDescription.FontStyleValues;
+if (tooltipDescription.IsFontValuesExtracted)
+{
+    IEnumerable<string>? constantValues = tooltipDescription.FontStyleConstantValues;
+    IEnumerable<string>? styleValues = tooltipDescription.FontStyleValues;
 
-// constantValues: { "#TooltipNumbers" }
-// styleValues: { "StandardTooltipHeader" }
-
+    // constantValues: { "#TooltipNumbers" }
+    // styleValues: { "StandardTooltipHeader" }
+}
 ```
 
 To replace the values of the constant tags and style tags, use the `AddFontValueReplacements` methods. Specify the key, the `val` that should be replaced, and the value which is the new value.
 
 ```C#
-// note: extractFontValues does not need to be set to true 
-TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <s val=\"StandardTooltipHeader\">2.75</s> seconds.", extractFontValues: false);
+// note: extractFontValues does not need to be set
+TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <s val=\"StandardTooltipHeader\">2.75</s> seconds.");
 
 Dictionary<string, string> constantKeyValuePairs = [];
 constantKeyValuePairs.Add("#TooltipNumbers", "123456");
 
-tooltipDescription.AddFontValueReplacements(constantKeyValuePairs, FontTagType.Constant);
+tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, constantKeyValuePairs);
 
 Dictionary<string, string> styleKeyValuePairs = [];
 styleKeyValuePairs.Add("StandardTooltipHeader", "789012");
 
-tooltipDescription.AddFontValueReplacements(styleKeyValuePairs, FontTagType.Style);
+tooltipDescription.AddFontValueReplacements(FontTagType.Style, false, styleKeyValuePairs);
 
 string result = tooltipDescription.ColoredText;
 
-result: "Every <c val="123456">18</c> seconds, deals <c val="123456">125</c><n/> extra damage every <s val="789012">2.75</s> seconds."
+// result: "Every <c val="123456">18</c> seconds, deals <c val="123456">125</c><n/> extra damage every <s val="789012">2.75</s> seconds."
+```
+
+To keep the original value of the constant tags or style tags while replacing the value, set the `preserveValues` parameter to `true`. This will create a new attribute `hlt-name` with the original value.
+
+```C#
+TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>");
+
+Dictionary<string, string> keyValuePairs = [];
+keyValuePairs.Add("StandardTooltipHeader", "123456");
+keyValuePairs.Add("StandardTooltipDetails2", "222222");
+
+tooltipDescription.AddFontValueReplacements(FontTagType.Style, true, keyValuePairs);
+
+string result = tooltipDescription.ColoredText;
+
+// result: "<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>"
 ```
 
 ## Developing
