@@ -8,6 +8,7 @@ jobs:
     with:
       dotnet-sdk: |
         8.0.X
+        9.0.X
       main-project: Heroes.LocaleText/Heroes.LocaleText.csproj
       artifact-name-prefix: Heroes.LocaleText
       is-tool: false
