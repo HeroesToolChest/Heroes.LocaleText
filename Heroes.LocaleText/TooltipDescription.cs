@@ -215,7 +215,7 @@ public class TooltipDescription
     /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced value.</param>
     /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues = false, params IEnumerable<(string Value, string Replacement)> newValuesByValue)
+    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params IEnumerable<(string Value, string Replacement)> newValuesByValue)
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
