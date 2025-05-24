@@ -486,4 +486,78 @@ public class TooltipDescriptionTests
         // assert
         Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Cooldown: </s>", result);
     }
+
+#if NET9_0_OR_GREATER
+    [TestMethod]
+    public void AddFontVarReplacements_WithParamsConstant_ReturnsResultWithReplace()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+
+        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, ("#TooltipNumbers", "123456"), ("TooltipNumbers2", "123456"), ("TooltipNumbers3", "123456"));
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreEqual("Every <c val=\"123456\">18</c> seconds, deals <c val=\"123456\">125</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", result);
+    }
+#endif
+    //[TestMethod]
+    //public void AddFontVarReplacements_WithTupleStyle_ReturnsResultWithReplace()
+    //{
+    //    // arrange
+    //    TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: false);
+
+    //    List<(string, string)> values = [];
+    //    values.Add(("StandardTooltipHeader", "123456"));
+    //    values.Add(("StandardTooltipDetails2", "222222"));
+
+    //    tooltipDescription.AddFontValueReplacements(values, FontTagType.Style);
+
+    //    // act
+    //    string result = tooltipDescription.ColoredText;
+
+    //    // assert
+    //    Assert.AreEqual("<s val=\"123456\">Archon </s><n/><s val=\"222222\">Cooldown: </s>", result);
+    //}
+
+    //[TestMethod]
+    //public void AddFontVarReplacements_WithTupleConstantPreserve_ReturnsResultWithReplace()
+    //{
+    //    // arrange
+    //    TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+
+    //    List<(string, string)> values = [];
+    //    values.Add(("#TooltipNumbers", "123456"));
+    //    values.Add(("TooltipNumbers2", "123456"));
+    //    values.Add(("TooltipNumbers3", "123456"));
+
+    //    tooltipDescription.AddFontValueReplacements(values, FontTagType.Constant, preserveValues: true);
+
+    //    // act
+    //    string result = tooltipDescription.ColoredText;
+
+    //    // assert
+    //    Assert.AreEqual("Every <c val=\"123456\" hlt-name=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"123456\" hlt-name=\"#TooltipNumbers\">125</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", result);
+    //}
+
+    //[TestMethod]
+    //public void AddFontVarReplacements_WithTupleStylePreserve_ReturnsResultWithReplace()
+    //{
+    //    // arrange
+    //    TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: false);
+
+    //    List<(string, string)> values = [];
+    //    values.Add(("StandardTooltipHeader", "123456"));
+    //    values.Add(("StandardTooltipDetails2", "222222"));
+
+    //    tooltipDescription.AddFontValueReplacements(values, FontTagType.Style, preserveValues: true);
+
+    //    // act
+    //    string result = tooltipDescription.ColoredText;
+
+    //    // assert
+    //    Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>", result);
+    //}
 }

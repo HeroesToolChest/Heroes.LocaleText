@@ -22,6 +22,11 @@ internal class DescriptionParser
     private Dictionary<string, (string Value, bool Preserve)>? _valueByStyleVar;
     private Dictionary<string, (string Value, bool Preserve)>? _valueByStyleConstantVar;
 
+#if NET9_0_OR_GREATER
+    private Dictionary<string, (string Value, bool Preserve)>.AlternateLookup<ReadOnlySpan<char>>? _valueByStyleVarAltLookup;
+    private Dictionary<string, (string Value, bool Preserve)>.AlternateLookup<ReadOnlySpan<char>>? _valueByStyleConstantVarAltLookup;
+#endif
+
     private bool _isContructed = false;
     private int _startingIndex = 0;
     private int _index = 0;
@@ -71,12 +76,18 @@ internal class DescriptionParser
     public void AddStyleVarsWithReplacement(string styleVar, string replacement, bool preserve)
     {
         _valueByStyleVar ??= new(StringComparer.Ordinal);
+#if NET9_0_OR_GREATER
+        _valueByStyleVarAltLookup ??= _valueByStyleVar.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
         _valueByStyleVar.TryAdd(styleVar, (replacement, preserve));
     }
 
     public void AddStyleConstantVarsWithReplacement(string styleConstantVar, string replacement, bool preserve)
     {
         _valueByStyleConstantVar ??= new(StringComparer.Ordinal);
+#if NET9_0_OR_GREATER
+        _valueByStyleConstantVarAltLookup ??= _valueByStyleConstantVar.GetAlternateLookup<ReadOnlySpan<char>>();
+#endif
         _valueByStyleConstantVar.TryAdd(styleConstantVar, (replacement, preserve));
     }
 
@@ -713,8 +724,13 @@ internal class DescriptionParser
         ReadOnlySpan<char> fontTagVal = GetFontTagVal(startTag);
 
         if (fontTagVal.IsEmpty is false &&
+#if NET9_0_OR_GREATER
+            ((_valueByStyleConstantVarAltLookup is not null && startTag.StartsWith("<c") && _valueByStyleConstantVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
+            (_valueByStyleVarAltLookup is not null && startTag.StartsWith("<s") && _valueByStyleVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out newValue))))
+#else
             ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c") && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
             (_valueByStyleVar is not null && startTag.StartsWith("<s") && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
+#endif
         {
             int indexOfStyleVar = startTag.IndexOf(fontTagVal);
 
@@ -764,12 +780,18 @@ internal class DescriptionParser
                         if (flags.ColorTags == TagFlag.Include)
                         {
                             ReadOnlySpan<char> currentSpan = gameString[current.Range];
-
+#if NET9_0_OR_GREATER
+                            if (currentSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVarAltLookup is not null)
+#else
                             if (currentSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar is not null)
+#endif
                             {
                                 ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan); // #TooltipNumbers
-
+#if NET9_0_OR_GREATER
+                                if (_valueByStyleConstantVarAltLookup.Value.TryGetValue(tagVarVal, out var newValue))
+#else
                                 if (_valueByStyleConstantVar.TryGetValue(tagVarVal.ToString(), out var newValue))
+#endif
                                 {
                                     int tagVarValLength = tagVarVal.Length;
                                     sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
@@ -780,11 +802,18 @@ internal class DescriptionParser
                                     break;
                                 }
                             }
+#if NET9_0_OR_GREATER
+                            else if (currentSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVarAltLookup is not null)
+#else
                             else if (currentSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar is not null)
+#endif
                             {
                                 ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan); // "StandardTooltipHeader"
-
+#if NET9_0_OR_GREATER
+                                if (_valueByStyleVarAltLookup.Value.TryGetValue(tagVarVal, out var newValue))
+#else
                                 if (_valueByStyleVar.TryGetValue(tagVarVal.ToString(), out var newValue))
+#endif
                                 {
                                     int tagVarValLength = tagVarVal.Length;
                                     sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
