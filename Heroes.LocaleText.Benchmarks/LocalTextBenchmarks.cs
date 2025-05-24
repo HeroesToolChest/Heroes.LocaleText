@@ -53,7 +53,7 @@ public class LocalTextBenchmarks
     {
         TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        tooltipDescription.AddFontValueReplacements(_keyValuePairs2, FontTagType.Constant);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, _keyValuePairs2);
 
         return tooltipDescription.ColoredText;
     }
@@ -75,7 +75,7 @@ public class LocalTextBenchmarks
     {
         TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        tooltipDescription.AddFontValueReplacements(_keyValuePairs, FontTagType.Constant, preserveValues: true);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, true, _keyValuePairs);
 
         return tooltipDescription.ColoredText;
     }

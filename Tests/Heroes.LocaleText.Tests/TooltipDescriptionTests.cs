@@ -285,7 +285,7 @@ public class TooltipDescriptionTests
         keyValuePairs.Add("TooltipNumbers2", "222222");
         keyValuePairs.Add("TooltipNumbers3", "333333");
 
-        tooltipDescription.AddFontValueReplacements(keyValuePairs, FontTagType.Constant);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, keyValuePairs);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -304,7 +304,7 @@ public class TooltipDescriptionTests
         keyValuePairs.Add("StandardTooltipHeader", "123456");
         keyValuePairs.Add("StandardTooltipDetails2", "222222");
 
-        tooltipDescription.AddFontValueReplacements(keyValuePairs, FontTagType.Style);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Style, false, keyValuePairs);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -325,7 +325,7 @@ public class TooltipDescriptionTests
         keyValuePairs.Add("TooltipNumbers2", "222222");
         keyValuePairs.Add("TooltipNumbers3", "333333");
 
-        tooltipDescription.AddFontValueReplacements(keyValuePairs, FontTagType.Constant, preserveValues: true);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, true, keyValuePairs);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -344,7 +344,7 @@ public class TooltipDescriptionTests
         keyValuePairs.Add("StandardTooltipHeader", "123456");
         keyValuePairs.Add("StandardTooltipDetails2", "222222");
 
-        tooltipDescription.AddFontValueReplacements(keyValuePairs, FontTagType.Style, preserveValues: true);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Style, true, keyValuePairs);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -364,7 +364,7 @@ public class TooltipDescriptionTests
         values.Add(("TooltipNumbers2", "123456"));
         values.Add(("TooltipNumbers3", "123456"));
 
-        tooltipDescription.AddFontValueReplacements(values, FontTagType.Constant);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, values);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -383,7 +383,7 @@ public class TooltipDescriptionTests
         values.Add(("StandardTooltipHeader", "123456"));
         values.Add(("StandardTooltipDetails2", "222222"));
 
-        tooltipDescription.AddFontValueReplacements(values, FontTagType.Style);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Style, false, values);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -403,7 +403,7 @@ public class TooltipDescriptionTests
         values.Add(("TooltipNumbers2", "123456"));
         values.Add(("TooltipNumbers3", "123456"));
 
-        tooltipDescription.AddFontValueReplacements(values, FontTagType.Constant, preserveValues: true);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, true, values);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -422,7 +422,7 @@ public class TooltipDescriptionTests
         values.Add(("StandardTooltipHeader", "123456"));
         values.Add(("StandardTooltipDetails2", "222222"));
 
-        tooltipDescription.AddFontValueReplacements(values, FontTagType.Style, preserveValues: true);
+        tooltipDescription.AddFontValueReplacements(FontTagType.Style, true, values);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -436,7 +436,7 @@ public class TooltipDescriptionTests
     {
         // arrange
         TooltipDescription tooltipDescription = new TooltipDescription("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false)
-            .AddFontValueReplacements("#TooltipNumbers", "123456", FontTagType.Constant);
+            .AddFontValueReplacement("#TooltipNumbers", "123456", FontTagType.Constant);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -450,7 +450,7 @@ public class TooltipDescriptionTests
     {
         // arrange
         TooltipDescription tooltipDescription = new TooltipDescription("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false)
-            .AddFontValueReplacements("#TooltipNumbers", "123456", FontTagType.Constant, preserveValue: true);
+            .AddFontValueReplacement("#TooltipNumbers", "123456", FontTagType.Constant, preserveValue: true);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -464,7 +464,7 @@ public class TooltipDescriptionTests
     {
         // arrange
         TooltipDescription tooltipDescription = new TooltipDescription("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipHeader\">Cooldown: </s>", extractFontValues: false)
-            .AddFontValueReplacements("StandardTooltipHeader", "123456", FontTagType.Style);
+            .AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style);
 
         // act
         string result = tooltipDescription.ColoredText;
@@ -478,7 +478,7 @@ public class TooltipDescriptionTests
     {
         // arrange
         TooltipDescription tooltipDescription = new TooltipDescription("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipHeader\">Cooldown: </s>", extractFontValues: false)
-            .AddFontValueReplacements("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
+            .AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
 
         // act
         string result = tooltipDescription.ColoredText;

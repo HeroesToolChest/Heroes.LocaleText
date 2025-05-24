@@ -176,15 +176,15 @@ public class TooltipDescription
     /// <summary>
     /// Adds a dictionary of values that will be replaced by new values. Used to replace the variables in the font style tags.
     /// </summary>
-    /// <param name="newValuesByValue">A dictionary of values and their replacement values. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
-        /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced value.</param>
+    /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) value.</param>
+    /// <param name="newValuesByValue">A dictionary of values and their replacement values. Is case-sensitive.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(IDictionary<string, string> newValuesByValue, FontTagType fontTagType, bool preserveValues = false)
+    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IDictionary<string, string> newValuesByValue)
     {
         foreach (var item in newValuesByValue)
         {
-            AddFontValueReplacements(item.Key, item.Value, fontTagType, preserveValues);
+            AddFontValueReplacement(item.Key, item.Value, fontTagType, preserveValues);
         }
 
         return this;
@@ -193,38 +193,36 @@ public class TooltipDescription
     /// <summary>
     /// Adds a collection of values that will be replaced by new values. Used to replace the variables in the font style tags.
     /// </summary>
-    /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
-    /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced value.</param>
+    /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) value.</param>
+    /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(IEnumerable<(string Value, string Replacement)> newValuesByValue, FontTagType fontTagType, bool preserveValues = false)
+    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IEnumerable<(string Value, string Replacement)> newValuesByValue)
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacements(value, replacement, fontTagType, preserveValues);
+            AddFontValueReplacement(value, replacement, fontTagType, preserveValues);
         }
 
         return this;
     }
 
-#if NET9_0_OR_GREATER
     /// <summary>
     /// Adds a collection of values that will be replaced by new values. Used to replace the variables in the font style tags.
     /// </summary>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
-    /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced value.</param>
+    /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) value.</param>
     /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params IEnumerable<(string Value, string Replacement)> newValuesByValue)
+    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params (string Value, string Replacement)[] newValuesByValue)
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacements(value, replacement, fontTagType, preserveValues);
+            AddFontValueReplacement(value, replacement, fontTagType, preserveValues);
         }
 
         return this;
     }
-#endif
 
     /// <summary>
     /// Adds a value that will be replaced by a new value.  Used to replace the variables in the font style tags.
@@ -232,9 +230,9 @@ public class TooltipDescription
     /// <param name="value">The value of the val attribute of the tag. Is case-sensitive.</param>
     /// <param name="replacement">The new value that will replace <paramref name="value"/>. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the <paramref name="value"/>.</param>
-    /// <param name="preserveValue">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced <paramref name="value"/>.</param>
+    /// <param name="preserveValue">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) <paramref name="value"/>.</param>
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
+    public TooltipDescription AddFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
     {
         if (fontTagType == FontTagType.Constant)
             _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);

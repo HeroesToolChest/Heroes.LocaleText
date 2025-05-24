@@ -79,7 +79,7 @@ internal class DescriptionParser
 #if NET9_0_OR_GREATER
         _valueByStyleVarAltLookup ??= _valueByStyleVar.GetAlternateLookup<ReadOnlySpan<char>>();
 #endif
-        _valueByStyleVar.TryAdd(styleVar, (replacement, preserve));
+        _valueByStyleVar[styleVar] = (replacement, preserve);
     }
 
     public void AddStyleConstantVarsWithReplacement(string styleConstantVar, string replacement, bool preserve)
@@ -88,7 +88,7 @@ internal class DescriptionParser
 #if NET9_0_OR_GREATER
         _valueByStyleConstantVarAltLookup ??= _valueByStyleConstantVar.GetAlternateLookup<ReadOnlySpan<char>>();
 #endif
-        _valueByStyleConstantVar.TryAdd(styleConstantVar, (replacement, preserve));
+        _valueByStyleConstantVar[styleConstantVar] = (replacement, preserve);
     }
 
     private static void CopyIntoBuffer(Span<char> buffer, ref int offset, ReadOnlySpan<char> item, bool cleanTheTag)
