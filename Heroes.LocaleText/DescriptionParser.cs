@@ -46,9 +46,9 @@ internal class DescriptionParser
         }
     }
 
-    public IEnumerable<string>? StyleTagVariables => _styleTagVariables;
+    public HashSet<string>? StyleTagVariables => _styleTagVariables;
 
-    public IEnumerable<string>? StyleConstantTagVariables => _styleConstantTagVariables;
+    public HashSet<string>? StyleConstantTagVariables => _styleConstantTagVariables;
 
     [MemberNotNullWhen(true, nameof(_styleTagVariables), nameof(StyleTagVariables), nameof(_styleConstantTagVariables), nameof(StyleConstantTagVariables))]
     public bool ExtractFontVars { get; }

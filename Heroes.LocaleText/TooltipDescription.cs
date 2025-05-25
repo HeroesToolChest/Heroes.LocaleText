@@ -14,6 +14,8 @@ public class TooltipDescription
     public const string ErrorTag = "##ERROR##";
 
     private readonly DescriptionParser _descriptionParser;
+    private HashSet<string>? _fontStyleValues;
+    private HashSet<string>? _fontStyleConstantValues;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _rawDescription;
@@ -39,7 +41,7 @@ public class TooltipDescription
     /// <summary>
     /// Initializes a new instance of the <see cref="TooltipDescription"/> class.
     /// </summary>
-    /// <param name="text">A parsed description that has not been modified into a readable verbiage (e.g. PlainText or ColorText from this class should not be used).</param>
+    /// <param name="text">A parsed description that has not been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
     /// <param name="gameStringLocale">The localization of the <paramref name="text"/>.</param>
     /// <param name="extractFontValues">
     /// If <see langword="true"/>, then the font style and constant tags will have their val values saved in <see cref="FontStyleValues"/> and  <see cref="FontStyleConstantValues"/>.
@@ -153,7 +155,7 @@ public class TooltipDescription
             if (_rawDescription is null)
                 _ = RawDescription; // trigger the parsing
 
-            return _descriptionParser.StyleTagVariables;
+            return _fontStyleValues ??= _descriptionParser.StyleTagVariables;
         }
     }
 
@@ -172,7 +174,7 @@ public class TooltipDescription
             if (_rawDescription is null)
                 _ = RawDescription; // trigger the parsing
 
-            return _descriptionParser.StyleConstantTagVariables;
+            return _fontStyleConstantValues ??= _descriptionParser.StyleConstantTagVariables;
         }
     }
 
@@ -187,8 +189,10 @@ public class TooltipDescription
     {
         foreach (var item in newValuesByValue)
         {
-            AddFontValueReplacement(item.Key, item.Value, fontTagType, preserveValues);
+            AddFontValueReplacementInternal(item.Key, item.Value, fontTagType, preserveValues);
         }
+
+        ClearDescriptionsCaches();
 
         return this;
     }
@@ -204,8 +208,10 @@ public class TooltipDescription
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacement(value, replacement, fontTagType, preserveValues);
+            AddFontValueReplacementInternal(value, replacement, fontTagType, preserveValues);
         }
+
+        ClearDescriptionsCaches();
 
         return this;
     }
@@ -221,8 +227,10 @@ public class TooltipDescription
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacement(value, replacement, fontTagType, preserveValues);
+            AddFontValueReplacementInternal(value, replacement, fontTagType, preserveValues);
         }
+
+        ClearDescriptionsCaches();
 
         return this;
     }
@@ -237,10 +245,9 @@ public class TooltipDescription
     /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
     public TooltipDescription AddFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
     {
-        if (fontTagType == FontTagType.Constant)
-            _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);
-        else if (fontTagType == FontTagType.Style)
-            _descriptionParser.AddStyleVarsWithReplacement(value, replacement, preserveValue);
+        ApplyFontValueReplacement(value, replacement, fontTagType, preserveValue);
+
+        ClearDescriptionsCaches();
 
         return this;
     }
@@ -252,5 +259,35 @@ public class TooltipDescription
     public override string ToString()
     {
         return PlainTextWithScaling;
+    }
+
+    private void AddFontValueReplacementInternal(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
+    {
+        ApplyFontValueReplacement(value, replacement, fontTagType, preserveValue);
+    }
+
+    private void ApplyFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue)
+    {
+        if (fontTagType == FontTagType.Constant)
+        {
+            _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);
+
+            _fontStyleConstantValues?.Remove(value);
+            _fontStyleConstantValues?.Add(replacement);
+        }
+        else if (fontTagType == FontTagType.Style)
+        {
+            _descriptionParser.AddStyleVarsWithReplacement(value, replacement, preserveValue);
+
+            _fontStyleValues?.Remove(value);
+            _fontStyleValues?.Add(replacement);
+        }
+    }
+
+    private void ClearDescriptionsCaches()
+    {
+        _rawDescription = null;
+        _coloredText = null;
+        _coloredTextWithScaling = null;
     }
 }

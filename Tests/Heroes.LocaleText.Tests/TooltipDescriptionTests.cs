@@ -1,4 +1,6 @@
-﻿namespace Heroes.LocaleText.Tests;
+﻿using Newtonsoft.Json.Linq;
+
+namespace Heroes.LocaleText.Tests;
 
 [TestClass]
 public class TooltipDescriptionTests
@@ -557,4 +559,115 @@ public class TooltipDescriptionTests
         Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>", result);
     }
 #endif
+
+    [TestMethod]
+    public void AddFontVarReplacement_ExtractFontValuesThenAddReplacements_ColorDescriptionsShouldBeUpdated()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: true);
+        if (tooltipDescription.IsFontValuesExtracted)
+        {
+            // extract
+            _ = tooltipDescription.FontStyleValues.ToList();
+        }
+
+        // then add
+        tooltipDescription.AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
+
+        // act
+        string resultRaw = tooltipDescription.RawDescription;
+        string resultPlainText = tooltipDescription.PlainText;
+        string resultPlainTextWithScaling = tooltipDescription.PlainTextWithScaling;
+        string resultPlainTextWithNewlines = tooltipDescription.PlainTextWithNewlines;
+        string resultPlainTextWithScalingWithNewlines = tooltipDescription.PlainTextWithScalingWithNewlines;
+        string resultColorText = tooltipDescription.ColoredText;
+        string resultColoredTextWithScaling = tooltipDescription.ColoredTextWithScaling;
+
+        // assert
+        Assert.IsTrue(tooltipDescription.IsFontValuesExtracted);
+        Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", resultRaw);
+        Assert.AreEqual("Archon  Cooldown: ", resultPlainText);
+        Assert.AreEqual("Archon  Cooldown: ", resultPlainTextWithScaling);
+        Assert.AreEqual("Archon <n/>Cooldown: ", resultPlainTextWithNewlines);
+        Assert.AreEqual("Archon <n/>Cooldown: ", resultPlainTextWithScalingWithNewlines);
+        Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", resultColorText);
+        Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", resultColoredTextWithScaling);
+    }
+
+    [TestMethod]
+    public void AddFontVarReplacement_GetColoredTextThenAddReplacements_ColorTextShouldBeUpdated()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: false);
+        string originalColorText = tooltipDescription.ColoredText;
+
+        // then add
+        tooltipDescription.AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
+
+        // act
+        string result = tooltipDescription.ColoredText;
+
+        // assert
+        Assert.AreNotEqual(originalColorText, result);
+        Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", result);
+    }
+
+    [TestMethod]
+    public void AddFontVarReplacement_PlainTextThenAddReplacements_NoChanges()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: false);
+        string originalPlainText = tooltipDescription.PlainText;
+        string originalPlaintTextWithScaling = tooltipDescription.PlainTextWithScaling;
+        string originalPlainTextWithNewlines = tooltipDescription.PlainTextWithNewlines;
+        string originalPlainTextWithScalingWithNewlines = tooltipDescription.PlainTextWithScalingWithNewlines;
+
+        // then add
+        tooltipDescription.AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
+
+        // act
+        string result = tooltipDescription.PlainText;
+        string resultPlainTextWithScaling = tooltipDescription.PlainTextWithScaling;
+        string resultPlainTextWithNewlines = tooltipDescription.PlainTextWithNewlines;
+        string resultPlainTextWithScalingWithNewlines = tooltipDescription.PlainTextWithScalingWithNewlines;
+
+        // assert
+        Assert.AreEqual(originalPlainText, result);
+        Assert.AreEqual(originalPlaintTextWithScaling, resultPlainTextWithScaling);
+        Assert.AreEqual(originalPlainTextWithNewlines, resultPlainTextWithNewlines);
+        Assert.AreEqual(originalPlainTextWithScalingWithNewlines, resultPlainTextWithScalingWithNewlines);
+    }
+
+    [TestMethod]
+    public void FontStyleValues_AddedFontValueReplacement_UpdatedFontStyleValues()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, <s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: true);
+
+        List<string> originalFontStyleValues = [.. tooltipDescription.FontStyleValues!];
+        List<string> originalFontStyleConstantValues = [.. tooltipDescription.FontStyleConstantValues!];
+
+        // then add
+        tooltipDescription.AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
+        tooltipDescription.AddFontValueReplacement("#TooltipNumbers", "aaaaaaaa", FontTagType.Constant, preserveValue: true);
+        _ = tooltipDescription.RawDescription;
+
+        // act
+        List<string> fontStyleValues = [.. tooltipDescription.FontStyleValues!];
+        List<string> fontStyleConstantValues = [.. tooltipDescription.FontStyleConstantValues!];
+
+        // assert
+        Assert.HasCount(2, originalFontStyleValues);
+        Assert.Contains("StandardTooltipHeader", originalFontStyleValues);
+        Assert.Contains("StandardTooltipDetails2", originalFontStyleValues);
+        Assert.HasCount(1, originalFontStyleConstantValues);
+        Assert.Contains("#TooltipNumbers", originalFontStyleConstantValues);
+
+        Assert.HasCount(2, fontStyleValues);
+        Assert.DoesNotContain("StandardTooltipHeader", fontStyleValues);
+        Assert.Contains("StandardTooltipDetails2", fontStyleValues);
+        Assert.Contains("123456", fontStyleValues);
+        Assert.HasCount(1, fontStyleConstantValues);
+        Assert.Contains("aaaaaaaa", fontStyleConstantValues);
+    }
 }
