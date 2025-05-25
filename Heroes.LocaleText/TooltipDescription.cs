@@ -131,6 +131,9 @@ public class TooltipDescription
 
     /// <summary>
     /// Gets a value indicating whether the font style and constant values have been extracted.
+    /// <para>
+    /// If <see langword="true"/>, <see cref="FontStyleValues"/> and <see cref="FontStyleConstantValues"/> will not be <see langword="null"/>.
+    /// </para>
     /// </summary>
     [MemberNotNullWhen(true, nameof(FontStyleValues), nameof(FontStyleConstantValues))]
     public bool IsFontValuesExtracted { get; }
@@ -142,7 +145,7 @@ public class TooltipDescription
     /// With &lt;s val=\"StandardTooltipHeader\"&gt;&lt;/s&gt; returns StandardTooltipHeader.
     /// </para>
     /// </summary>
-    /// <returns>A collection of text style values.</returns>
+    /// <returns>A collection of text style values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
     public IEnumerable<string>? FontStyleValues
     {
         get
@@ -161,7 +164,7 @@ public class TooltipDescription
     /// With &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt; returns #TooltipNumbers.
     /// </para>
     /// </summary>
-    /// <returns>A collection of text style constant values.</returns>
+    /// <returns>A collection of text style constant values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
     public IEnumerable<string>? FontStyleConstantValues
     {
         get
