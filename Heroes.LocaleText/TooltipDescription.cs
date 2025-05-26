@@ -277,7 +277,6 @@ public class TooltipDescription
                 _fontStyleConstantValues.Remove(value);
                 _fontStyleConstantValues.Add(replacement);
             }
-
         }
         else if (fontTagType == FontTagType.Style)
         {
