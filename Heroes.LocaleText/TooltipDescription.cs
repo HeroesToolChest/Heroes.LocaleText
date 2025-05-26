@@ -272,15 +272,22 @@ public class TooltipDescription
         {
             _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);
 
-            _fontStyleConstantValues?.Remove(value);
-            _fontStyleConstantValues?.Add(replacement);
+            if (_fontStyleConstantValues is not null)
+            {
+                _fontStyleConstantValues.Remove(value);
+                _fontStyleConstantValues.Add(replacement);
+            }
+
         }
         else if (fontTagType == FontTagType.Style)
         {
             _descriptionParser.AddStyleVarsWithReplacement(value, replacement, preserveValue);
 
-            _fontStyleValues?.Remove(value);
-            _fontStyleValues?.Add(replacement);
+            if (_fontStyleValues is not null)
+            {
+                _fontStyleValues.Remove(value);
+                _fontStyleValues.Add(replacement);
+            }
         }
     }
 
