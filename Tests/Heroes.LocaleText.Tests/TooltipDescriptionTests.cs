@@ -670,4 +670,18 @@ public class TooltipDescriptionTests
         Assert.HasCount(1, fontStyleConstantValues);
         Assert.Contains("aaaaaaaa", fontStyleConstantValues);
     }
+
+    [TestMethod]
+    public void FontStyleValues_FrenchQuoteAtEndOfCVal_ReturnsFontStyleValue()
+    {
+        // arrange
+        TooltipDescription tooltipDescription = new("Attaquer un héros ralenti, immobilisé ou étourdi augmente les dégâts des attaques de base de Grisetête de <c val=\"#TooltipNumbers\">0 %</c> pendant <c val=\"#TooltipNumbers\">0</c> secondes. Ce bonus passe à <c val=\"#TooltipNumbers\">0 %</c> en forme de <c val=\"#ColorViolet »>worgen</c>.", gameStringLocale: StormLocale.DEDE, extractFontValues: true);
+
+        // act
+        List<string> originalFontStyleConstantValues = [.. tooltipDescription.FontStyleConstantValues!];
+
+        // assert
+        Assert.HasCount(1, originalFontStyleConstantValues); // only one, the other is broken by the french quote
+        Assert.Contains("#TooltipNumbers", originalFontStyleConstantValues);
+    }
 }

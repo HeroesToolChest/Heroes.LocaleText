@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 
 namespace Heroes.LocaleText;
 
@@ -203,12 +202,16 @@ internal class DescriptionParser
     {
         // <c val=\"#TooltipNumbers\">
         // <s val=\"StandardTooltipHeader\">
+        Console.WriteLine(tag.ToString());
         int indexOfVal = tag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
         if (indexOfVal < 0)
             return [];
 
         int startIndexOfQuote = tag.IndexOf("\"");
         int endIndexOfQuote = tag[(startIndexOfQuote + 1)..].IndexOf("\"");
+
+        if (endIndexOfQuote < 1)
+            return []; // no end quote found, return empty
 
         return tag[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
     }
@@ -705,13 +708,15 @@ internal class DescriptionParser
         {
             ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
 
-            _styleConstantTagVariables.Add(fontTagVal.ToString());
+            if (!fontTagVal.IsEmpty)
+                _styleConstantTagVariables.Add(fontTagVal.ToString());
         }
         else if (fontSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase))
         {
             ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
 
-            _styleTagVariables.Add(fontTagVal.ToString());
+            if (!fontTagVal.IsEmpty)
+                _styleTagVariables.Add(fontTagVal.ToString());
         }
         else
         {
