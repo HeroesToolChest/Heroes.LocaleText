@@ -202,7 +202,6 @@ internal class DescriptionParser
     {
         // <c val=\"#TooltipNumbers\">
         // <s val=\"StandardTooltipHeader\">
-        Console.WriteLine(tag.ToString());
         int indexOfVal = tag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
         if (indexOfVal < 0)
             return [];
