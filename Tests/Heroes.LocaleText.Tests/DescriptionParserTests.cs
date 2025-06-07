@@ -101,6 +101,8 @@ public class DescriptionParserTests
     private readonly string _plainText6 = "<c val=\"#TooltipNumbers\">100~~no-scale~~</c> damage per second ~~0.05~~";
     private readonly string _plainText6Corrected = "100~~no-scale~~ damage per second ";
     private readonly string _plainTextMeiSnowBlindDeDECorrected = "Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern 70 Schaden zu, verlangsamt sie um 35% und blendet sie 1,75 Sek. lang.";
+    private readonly string _plainTextWithImg = "<img path=\"@UI/StormTalentInTextQuestIcon\" alignment=\"uppermiddle\" color=\"B48E4C\" width=\"20\" height=\"22\"/><c val=\"#TooltipQuest\">Repeatable Quest:</c>";
+    private readonly string _plainTextWithImgCorrected = "Repeatable Quest:";
 
     // plain text with newlines
     private readonly string _plainTextNewline1 = "Max Health Bonus: 0%<n/>5%Health 0"; // NestedNewLineTagDescription1Corrected
@@ -126,6 +128,8 @@ public class DescriptionParserTests
     private readonly string _coloredText1Corrected = "<c val=\"#TooltipNumbers\">100</c><n/> damage per second<n/>";
     private readonly string _coloredText2 = "<c val=\"#TooltipNumbers\">100~~0.04~~</c> damage per second ~~0.05~~";
     private readonly string _coloredText2Corrected = "<c val=\"#TooltipNumbers\">100</c> damage per second ";
+    private readonly string _coloredTextWithImg = "<img path=\"@UI/StormTalentInTextQuestIcon\" alignment=\"uppermiddle\" color=\"B48E4C\" width=\"20\" height=\"22\"/><c val=\"#TooltipQuest\">Repeatable Quest:</c>";
+    private readonly string _coloredTextWithImgCorrected = "<img path=\"@UI/StormTalentInTextQuestIcon\" alignment=\"uppermiddle\" color=\"B48E4C\" width=\"20\" height=\"22\"/><c val=\"#TooltipQuest\">Repeatable Quest:</c>";
 
     // colored text with scaling
     private readonly string _coloredTextScaling1 = "<c val=\"#TooltipNumbers\">100~~0.04~~</c><n/> damage per second<n/>";
@@ -282,6 +286,7 @@ public class DescriptionParserTests
         Assert.AreEqual(_plainText5Corrected, DescriptionParser.GetInstance(_plainText5).GetPlainText(false, false));
         Assert.AreEqual(_plainText6Corrected, DescriptionParser.GetInstance(_plainText6).GetPlainText(false, false));
         Assert.AreEqual(_plainTextMeiSnowBlindDeDECorrected, DescriptionParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetPlainText(false, false));
+        Assert.AreEqual(_plainTextWithImgCorrected, DescriptionParser.GetInstance(_plainTextWithImg).GetPlainText(false, false));
     }
 
     [TestMethod]
@@ -312,6 +317,7 @@ public class DescriptionParserTests
     {
         Assert.AreEqual(_coloredText1Corrected, DescriptionParser.GetInstance(_coloredText1).GetColoredText(false));
         Assert.AreEqual(_coloredText2Corrected, DescriptionParser.GetInstance(_coloredText2).GetColoredText(false));
+        Assert.AreEqual(_coloredTextWithImgCorrected, DescriptionParser.GetInstance(_coloredTextWithImg).GetColoredText(false));
     }
 
     [TestMethod]

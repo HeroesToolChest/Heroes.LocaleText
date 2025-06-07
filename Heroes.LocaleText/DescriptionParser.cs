@@ -332,6 +332,16 @@ internal class DescriptionParser
                         break;
                     }
 
+                case TextType.SelfCloseTag:
+                    {
+                        if (flags.ColorTags == TagFlag.Include)
+                        {
+                            CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
+                        }
+                    }
+
+                    break;
+
                 default:
                     if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                     {
