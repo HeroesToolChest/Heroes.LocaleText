@@ -862,7 +862,7 @@ internal class DescriptionParser
             StormLocale.DEDE => " (+0.##% pro Stufe)",
             StormLocale.ESES => " (+0.##% por nivel)",
             StormLocale.ESMX => " (+0.##% por nivel)",
-            StormLocale.FRFR => " (+0.##% par niveau)",
+            StormLocale.FRFR => " (+0.## % par niveau)",
             StormLocale.ITIT => " (+0.##% per livello)",
             StormLocale.KOKR => " (레벨당 +0.##%)",
             StormLocale.PLPL => " (+0.##% na poziom)",
