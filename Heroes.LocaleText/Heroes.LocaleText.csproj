@@ -41,8 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-      <_Parameter1>Heroes.LocaleText.Tests</_Parameter1>
-    </AssemblyAttribute>
+    <InternalsVisibleTo Include="Heroes.LocaleText.Tests"/>
   </ItemGroup>
+  
 </Project>
