@@ -705,7 +705,7 @@ public class DescriptionParserTests
     public void GetRawDescription_WithReplacementStyleConstantVars_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <C val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", false);
 
         // act

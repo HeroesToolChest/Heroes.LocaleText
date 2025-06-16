@@ -739,11 +739,11 @@ internal class DescriptionParser
 
         if (fontTagVal.IsEmpty is false &&
 #if NET9_0_OR_GREATER
-            ((_valueByStyleConstantVarAltLookup is not null && startTag.StartsWith("<c") && _valueByStyleConstantVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
-            (_valueByStyleVarAltLookup is not null && startTag.StartsWith("<s") && _valueByStyleVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out newValue))))
+            ((_valueByStyleConstantVarAltLookup is not null && startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
+            (_valueByStyleVarAltLookup is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out newValue))))
 #else
-            ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c") && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
-            (_valueByStyleVar is not null && startTag.StartsWith("<s") && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
+            ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
+            (_valueByStyleVar is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
 #endif
         {
             int indexOfStyleVar = startTag.IndexOf(fontTagVal);
