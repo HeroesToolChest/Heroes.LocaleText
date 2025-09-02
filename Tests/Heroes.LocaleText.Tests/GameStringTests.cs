@@ -17,7 +17,7 @@ public class GameStringTests
         Action act = () => new GameStringText(null!);
 
         // assert
-        Assert.ThrowsException<ArgumentNullException>(act);
+        Assert.ThrowsExactly<ArgumentNullException>(act);
     }
 
     [TestMethod]
