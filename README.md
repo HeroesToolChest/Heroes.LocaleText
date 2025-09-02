@@ -3,22 +3,22 @@
 [![Release](https://img.shields.io/github/release/HeroesToolChest/Heroes.LocaleText.svg)](https://github.com/HeroesToolChest/Heroes.LocaleText/releases/latest) 
 [![NuGet](https://img.shields.io/nuget/v/Heroes.LocaleText.svg)](https://www.nuget.org/packages/Heroes.LocaleText/)
 
-Heroes Locale Text is a .NET library used to parse tooltip descriptions and provide readable friendly verbiage. Descriptions must already be xml parsed out and it's values computed. 
+Heroes Locale Text is a .NET library used to parse Heroes of the Storm gamestrings and provide readable friendly verbiage. Gamestrings must already have their data references parsed. 
 
-Valid descriptions are the gamestrings from [heroes-data](https://github.com/HeroesToolChest/heroes-data).
+Valid gamestring are from [heroes-data](https://github.com/HeroesToolChest/heroes-data).
 
 ## Usage
-Parse a provided gamestring using `TooltipDescription` and call one of the properties.
+Parse a provided gamestring using `GameStringText` and call one of the properties.
 ```C#
-TooltipDescription tooltipDescription = new("Spawn a mine that becomes active after a short time. Deals <c val=\"bfd4fd\">153~~0.04~~</c> damage and reveals the enemy for <c val=\"bfd4fd\">4</c> seconds. Lasts <c val=\"bfd4fd\">90</c> seconds.<n/><n/>Stores up to <c val=\"bfd4fd\">3</c> charges.");
+GameStringText gameStringText = new("Spawn a mine that becomes active after a short time. Deals <c val=\"bfd4fd\">153~~0.04~~</c> damage and reveals the enemy for <c val=\"bfd4fd\">4</c> seconds. Lasts <c val=\"bfd4fd\">90</c> seconds.<n/><n/>Stores up to <c val=\"bfd4fd\">3</c> charges.");
 
-string a = tooltipDescription.RawDescription;
-string b = tooltipDescription.PlainText;
-string d = tooltipDescription.PlainTextWithNewlines;
-string c = tooltipDescription.PlainTextWithScaling;
-string e = tooltipDescription.PlainTextWithScalingWithNewlines;
-string f = tooltipDescription.ColoredText;
-string g = tooltipDescription.ColoredTextWithScaling;
+string a = gameStringText.RawDescription;
+string b = gameStringText.PlainText;
+string d = gameStringText.PlainTextWithNewlines;
+string c = gameStringText.PlainTextWithScaling;
+string e = gameStringText.PlainTextWithScalingWithNewlines;
+string f = gameStringText.ColoredText;
+string g = gameStringText.ColoredTextWithScaling;
 
 // a: "Spawn a mine that becomes active after a short time. Deals <c val=\"bfd4fd\">153~~0.04~~</c> damage and reveals the enemy for <c val=\"bfd4fd\">4</c> seconds. Lasts <c val=\"bfd4fd\">90</c> seconds.<n/><n/>Stores up to <c val=\"bfd4fd\">3</c> charges."
 // b: "Spawn a mine that becomes active after a short time. Deals 153 damage and reveals the enemy for 4 seconds. Lasts 90 seconds.  Stores up to 3 charges."
@@ -33,21 +33,21 @@ string g = tooltipDescription.ColoredTextWithScaling;
 The localization of the gamestring can also be passed in using `StormLocale`. By default it is ENUS. The localization is used only for the scaling text (e.g. (+4% per level)). If the scaling text is not needed, then the `StormLocale` may be left as the default.
 
 ```C#
-TooltipDescription tooltipDescription = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"bfd4fd\">147~~0.035~~</c> Schaden zufügen. Die Geschosse fügen Gebäuden <c val=\"bfd4fd\">50%</c> des Schadens zu.", StormLocale.DEDE);
+GameStringText gameStringText = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"bfd4fd\">147~~0.035~~</c> Schaden zufügen. Die Geschosse fügen Gebäuden <c val=\"bfd4fd\">50%</c> des Schadens zu.", StormLocale.DEDE);
 
-string result = tooltipDescription.PlainTextWithScaling;
+string result = gameStringText.PlainTextWithScaling;
 // result: "Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils 147 (+3,5% pro Stufe) Schaden zufügen. Die Geschosse fügen Gebäuden 50% des Schadens zu."
 ```
 
 ### Font Styles
 To get all the values of the constant tags `<c val=""/>` and style tags `<s val=""/>`, pass in `true` to the `extractFontValues` parameter.
 ```C#
-TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <s val=\"StandardTooltipHeader\">2.75</s> seconds.", extractFontValues: true);
+GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <s val=\"StandardTooltipHeader\">2.75</s> seconds.", extractFontValues: true);
 
-if (tooltipDescription.IsFontValuesExtracted)
+if (gameStringText.IsFontValuesExtracted)
 {
-    IEnumerable<string>? constantValues = tooltipDescription.FontStyleConstantValues;
-    IEnumerable<string>? styleValues = tooltipDescription.FontStyleValues;
+    IEnumerable<string>? constantValues = gameStringText.FontStyleConstantValues;
+    IEnumerable<string>? styleValues = gameStringText.FontStyleValues;
 
     // constantValues: { "#TooltipNumbers" }
     // styleValues: { "StandardTooltipHeader" }
@@ -58,19 +58,19 @@ To replace the values of the constant tags and style tags, use the `AddFontValue
 
 ```C#
 // note: extractFontValues does not need to be set
-TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <s val=\"StandardTooltipHeader\">2.75</s> seconds.");
+GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <s val=\"StandardTooltipHeader\">2.75</s> seconds.");
 
 Dictionary<string, string> constantKeyValuePairs = [];
 constantKeyValuePairs.Add("#TooltipNumbers", "123456");
 
-tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, constantKeyValuePairs);
+gameStringText.AddFontValueReplacements(FontTagType.Constant, false, constantKeyValuePairs);
 
 Dictionary<string, string> styleKeyValuePairs = [];
 styleKeyValuePairs.Add("StandardTooltipHeader", "789012");
 
-tooltipDescription.AddFontValueReplacements(FontTagType.Style, false, styleKeyValuePairs);
+gameStringText.AddFontValueReplacements(FontTagType.Style, false, styleKeyValuePairs);
 
-string result = tooltipDescription.ColoredText;
+string result = gameStringText.ColoredText;
 
 // result: "Every <c val="123456">18</c> seconds, deals <c val="123456">125</c><n/> extra damage every <s val="789012">2.75</s> seconds."
 ```
@@ -78,15 +78,15 @@ string result = tooltipDescription.ColoredText;
 To keep the original value of the constant tags or style tags while replacing the value, set the `preserveValues` parameter to `true`. This will create a new attribute `hlt-name` with the original value.
 
 ```C#
-TooltipDescription tooltipDescription = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>");
+GameStringText gameStringText = new("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>");
 
 Dictionary<string, string> keyValuePairs = [];
 keyValuePairs.Add("StandardTooltipHeader", "123456");
 keyValuePairs.Add("StandardTooltipDetails2", "222222");
 
-tooltipDescription.AddFontValueReplacements(FontTagType.Style, true, keyValuePairs);
+gameStringText.AddFontValueReplacements(FontTagType.Style, true, keyValuePairs);
 
-string result = tooltipDescription.ColoredText;
+string result = gameStringText.ColoredText;
 
 // result: "<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>"
 ```
