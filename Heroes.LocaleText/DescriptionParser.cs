@@ -57,7 +57,7 @@ internal class DescriptionParser
         return new DescriptionParser(gameString, gameStringLocale, extractFontVars);
     }
 
-    public string GetRawDescription()
+    public string GetRawText()
     {
         return Parse(_description);
     }
@@ -668,11 +668,11 @@ internal class DescriptionParser
         ReadOnlySpan<char> currentTextSpan = gameString[_index..];
         int lengthOffset = gameString.Length - currentTextSpan.Length;
 
-        if (currentTextSpan.StartsWith(TooltipDescription.ErrorTag, StringComparison.Ordinal))
+        if (currentTextSpan.StartsWith(GameStringText.ErrorTag, StringComparison.Ordinal))
         {
-            tag = new Range(lengthOffset, TooltipDescription.ErrorTag.Length + lengthOffset);
+            tag = new Range(lengthOffset, GameStringText.ErrorTag.Length + lengthOffset);
 
-            _index += TooltipDescription.ErrorTag.Length;
+            _index += GameStringText.ErrorTag.Length;
 
             return true;
         }

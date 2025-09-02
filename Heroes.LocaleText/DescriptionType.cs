@@ -1,7 +1,7 @@
 ﻿namespace Heroes.LocaleText;
 
 /// <summary>
-/// Specifies the tooltip description type.
+/// Specifies the gamestring type.
 /// </summary>
 public enum DescriptionType
 {

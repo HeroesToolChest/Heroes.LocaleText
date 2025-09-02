@@ -25,58 +25,58 @@ public class LocalTextBenchmarks
     [Benchmark]
     public string NoReplacementRawDescription()
     {
-        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        return tooltipDescription.RawDescription;
+        return gameStringText.RawText;
     }
 
     [Benchmark]
     public string NoReplacementColorText()
     {
-        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        return tooltipDescription.ColoredText;
+        return gameStringText.ColoredText;
     }
 
     [Benchmark]
     public string NoReplacementColorText2()
     {
-        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        string x = tooltipDescription.RawDescription;
+        string x = gameStringText.RawText;
 
-        return tooltipDescription.ColoredText;
+        return gameStringText.ColoredText;
     }
 
     [Benchmark]
     public string WithReplacement()
     {
-        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, _keyValuePairs2);
+        gameStringText.AddFontValueReplacements(FontTagType.Constant, false, _keyValuePairs2);
 
-        return tooltipDescription.ColoredText;
+        return gameStringText.ColoredText;
     }
 
 #if NET9_0_OR_GREATER
     [Benchmark]
     public string WithReplacementParams()
     {
-        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, false, _keyValuePairs2);
+        gameStringText.AddFontValueReplacements(FontTagType.Constant, false, _keyValuePairs2);
 
-        return tooltipDescription.ColoredText;
+        return gameStringText.ColoredText;
     }
 #endif
 
     [Benchmark]
     public string WithReplacementPreserve()
     {
-        TooltipDescription tooltipDescription = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipOther\">2.75</c> seconds.", extractFontValues: false);
 
-        tooltipDescription.AddFontValueReplacements(FontTagType.Constant, true, _keyValuePairs);
+        gameStringText.AddFontValueReplacements(FontTagType.Constant, true, _keyValuePairs);
 
-        return tooltipDescription.ColoredText;
+        return gameStringText.ColoredText;
     }
 }

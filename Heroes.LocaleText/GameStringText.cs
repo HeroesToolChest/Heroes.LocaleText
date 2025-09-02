@@ -4,9 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 namespace Heroes.LocaleText;
 
 /// <summary>
-/// Contains the information for tooltip descriptions.
+/// Contains the information for a gamestring.
 /// </summary>
-public class TooltipDescription
+public class GameStringText
 {
     /// <summary>
     /// The error tag string.
@@ -18,7 +18,7 @@ public class TooltipDescription
     private HashSet<string>? _fontStyleConstantValues;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    private string? _rawDescription;
+    private string? _rawText;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _plainText;
@@ -39,15 +39,15 @@ public class TooltipDescription
     private string? _coloredTextWithScaling;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="TooltipDescription"/> class.
+    /// Initializes a new instance of the <see cref="GameStringText"/> class.
     /// </summary>
-    /// <param name="text">A parsed description that has not been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
+    /// <param name="text">A parsed gamestring that has not been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
     /// <param name="gameStringLocale">The localization of the <paramref name="text"/>.</param>
     /// <param name="extractFontValues">
     /// If <see langword="true"/>, then the font style and constant tags will have their val values saved in <see cref="FontStyleValues"/> and  <see cref="FontStyleConstantValues"/>.
     /// If not needing the output with color tags, then set to <see langword="false"/> for faster parsing performance.
     /// </param>
-    public TooltipDescription(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontValues = false)
+    public GameStringText(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontValues = false)
     {
         ArgumentNullException.ThrowIfNull(text);
 
@@ -58,17 +58,17 @@ public class TooltipDescription
     }
 
     /// <summary>
-    /// <para>Gets the raw description. Unmatched tags have been fixed and nested tag have been modified into unnested tags.</para>
+    /// <para>Gets the raw text. Unmatched tags have been fixed and nested tag have been modified into unnested tags.</para>
     /// <para>Contains the color tags &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt;, scaling data ~~x~~, and newlines &lt;n/&gt;. It can also contain error tags ##ERROR##.</para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200~~0.04~~&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
-    public string RawDescription => _rawDescription ??= _descriptionParser.GetRawDescription();
+    public string RawText => _rawText ??= _descriptionParser.GetRawText();
 
     /// <summary>
-    /// <para>Gets the description with text only.</para>
+    /// <para>Gets the gamestring as text only.</para>
     /// <para>No color tags, scaling info, or newlines. Newlines are replaced with a single space.</para>
     /// <para>
     /// Example:<br/>
@@ -78,7 +78,7 @@ public class TooltipDescription
     public string PlainText => _plainText ??= _descriptionParser.GetPlainText(false, false);
 
     /// <summary>
-    /// <para>Gets the validated description with text only.</para>
+    /// <para>Gets the gamestring as text only.</para>
     /// <para>Same as <see cref="PlainText"/> but contains newlines.</para>
     /// <para>
     /// Example:<br/>
@@ -88,7 +88,7 @@ public class TooltipDescription
     public string PlainTextWithNewlines => _plainTextWithNewlines ??= _descriptionParser.GetPlainText(true, false);
 
     /// <summary>
-    /// <para>Gets the description with text only.</para>
+    /// <para>Gets the gamestring with text only.</para>
     /// <para>Same as <see cref="PlainText"/> but contains the scaling info (+x% per level).</para>
     /// <para>
     /// Example:<br/>
@@ -98,7 +98,7 @@ public class TooltipDescription
     public string PlainTextWithScaling => _plainTextWithScaling ??= _descriptionParser.GetPlainText(false, true);
 
     /// <summary>
-    /// <para>Gets the description with text only.</para>
+    /// <para>Gets the gamestring with text only.</para>
     /// <para>Same as <see cref="PlainTextWithScaling"/> but contains the newlines.</para>
     /// <para>
     /// Example:<br/>
@@ -108,7 +108,7 @@ public class TooltipDescription
     public string PlainTextWithScalingWithNewlines => _plainTextWithScalingWithNewlines ??= _descriptionParser.GetPlainText(true, true);
 
     /// <summary>
-    /// <para>Gets the description with colored tags and new lines, when parsed this is what appears ingame for tooltips.</para>
+    /// <para>Gets the gamestring with colored tags and new lines, when parsed this is what appears ingame for text and tooltips.</para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
@@ -117,7 +117,7 @@ public class TooltipDescription
     public string ColoredText => _coloredText ??= _descriptionParser.GetColoredText(false);
 
     /// <summary>
-    /// <para>Gets the description with colored tags, newlines, and scaling info.</para>
+    /// <para>Gets the gamestring with colored tags, newlines, and scaling info.</para>
     /// <para>Same as <see cref="ColoredText"/> but contains the scaling info (+x% per level).</para>
     /// <para>
     /// Example:<br/>
@@ -127,7 +127,7 @@ public class TooltipDescription
     public string ColoredTextWithScaling => _coloredTextWithScaling ??= _descriptionParser.GetColoredText(true);
 
     /// <summary>
-    /// Gets the localization used for the description text.
+    /// Gets the localization used for the gamestring.
     /// </summary>
     public StormLocale GameStringLocale { get; }
 
@@ -141,7 +141,7 @@ public class TooltipDescription
     public bool IsFontValuesExtracted { get; }
 
     /// <summary>
-    /// <para>Gets a collection of text style values used in the tooltip description.</para>
+    /// <para>Gets a collection of text style values used in the gamestring.</para>
     /// <para>
     /// Example:<br/>
     /// With &lt;s val=\"StandardTooltipHeader\"&gt;&lt;/s&gt; returns StandardTooltipHeader.
@@ -152,15 +152,15 @@ public class TooltipDescription
     {
         get
         {
-            if (_rawDescription is null)
-                _ = RawDescription; // trigger the parsing
+            if (_rawText is null)
+                _ = RawText; // trigger the parsing
 
             return _fontStyleValues ??= _descriptionParser.StyleTagVariables;
         }
     }
 
     /// <summary>
-    /// <para>Gets a collection of text style constant values used in the tooltip description.</para>
+    /// <para>Gets a collection of text style constant values used in the gamestring.</para>
     /// <para>
     /// Example:<br/>
     /// With &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt; returns #TooltipNumbers.
@@ -171,8 +171,8 @@ public class TooltipDescription
     {
         get
         {
-            if (_rawDescription is null)
-                _ = RawDescription; // trigger the parsing
+            if (_rawText is null)
+                _ = RawText; // trigger the parsing
 
             return _fontStyleConstantValues ??= _descriptionParser.StyleConstantTagVariables;
         }
@@ -184,8 +184,8 @@ public class TooltipDescription
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
     /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) value.</param>
     /// <param name="newValuesByValue">A dictionary of values and their replacement values. Is case-sensitive.</param>
-    /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IDictionary<string, string> newValuesByValue)
+    /// <returns>The current <see cref="GameStringText"/> instance.</returns>
+    public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IDictionary<string, string> newValuesByValue)
     {
         foreach (var item in newValuesByValue)
         {
@@ -203,8 +203,8 @@ public class TooltipDescription
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
     /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) value.</param>
     /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
-    /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IEnumerable<(string Value, string Replacement)> newValuesByValue)
+    /// <returns>The current <see cref="GameStringText"/> instance.</returns>
+    public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IEnumerable<(string Value, string Replacement)> newValuesByValue)
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
@@ -222,8 +222,8 @@ public class TooltipDescription
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
     /// <param name="preserveValues">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) value.</param>
     /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
-    /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params (string Value, string Replacement)[] newValuesByValue)
+    /// <returns>The current <see cref="GameStringText"/> instance.</returns>
+    public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params (string Value, string Replacement)[] newValuesByValue)
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
@@ -242,8 +242,8 @@ public class TooltipDescription
     /// <param name="replacement">The new value that will replace <paramref name="value"/>. Is case-sensitive.</param>
     /// <param name="fontTagType">The tag type for the replacement of the <paramref name="value"/>.</param>
     /// <param name="preserveValue">If <see langword="true"/> creates a new attribute 'hlt-name' with the name of the replaced (the original) <paramref name="value"/>.</param>
-    /// <returns>The current <see cref="TooltipDescription"/> instance.</returns>
-    public TooltipDescription AddFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
+    /// <returns>The current <see cref="GameStringText"/> instance.</returns>
+    public GameStringText AddFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
     {
         ApplyFontValueReplacement(value, replacement, fontTagType, preserveValue);
 
@@ -292,7 +292,7 @@ public class TooltipDescription
 
     private void ClearDescriptionsCaches()
     {
-        _rawDescription = null;
+        _rawText = null;
         _coloredText = null;
         _coloredTextWithScaling = null;
     }

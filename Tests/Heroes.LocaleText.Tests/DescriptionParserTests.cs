@@ -191,89 +191,89 @@ public class DescriptionParserTests
     [TestMethod]
     public void ValidateTest()
     {
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_noTagsDescription).GetRawDescription()); // no changes
-        Assert.AreEqual(_normalTagsDescription1, DescriptionParser.GetInstance(_normalTagsDescription1).GetRawDescription()); // no changes
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_normalTagsDescription2).GetRawDescription()); // no changes
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription1).GetRawDescription());
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription2).GetRawDescription());
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription3).GetRawDescription());
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription4).GetRawDescription());
-        Assert.AreEqual(_newLineTagDescription1, DescriptionParser.GetInstance(_newLineTagDescription1).GetRawDescription()); // no changes
-        Assert.AreEqual(_newLineTagDescription2, DescriptionParser.GetInstance(_newLineTagDescription2).GetRawDescription()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription1, DescriptionParser.GetInstance(_selfCloseTagDescription1).GetRawDescription()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription2, DescriptionParser.GetInstance(_selfCloseTagDescription2).GetRawDescription()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription3, DescriptionParser.GetInstance(_selfCloseTagDescription3).GetRawDescription()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription4, DescriptionParser.GetInstance(_selfCloseTagDescription4).GetRawDescription()); // no changes
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_duplicateTagsDescription1).GetRawDescription());
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_duplicateTagsDescription2).GetRawDescription());
-        Assert.AreEqual(_spaceTagDescription1, DescriptionParser.GetInstance(_spaceTagDescription1).GetRawDescription()); // no changes
-        Assert.AreEqual(_spaceTagDescription2, DescriptionParser.GetInstance(_spaceTagDescription2).GetRawDescription()); // no changes
-        Assert.AreEqual(_scaleTagDescription1, DescriptionParser.GetInstance(_scaleTagDescription1).GetRawDescription()); // no changes
+        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_noTagsDescription).GetRawText()); // no changes
+        Assert.AreEqual(_normalTagsDescription1, DescriptionParser.GetInstance(_normalTagsDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_normalTagsDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription1).GetRawText());
+        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription2).GetRawText());
+        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription3).GetRawText());
+        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription4).GetRawText());
+        Assert.AreEqual(_newLineTagDescription1, DescriptionParser.GetInstance(_newLineTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_newLineTagDescription2, DescriptionParser.GetInstance(_newLineTagDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription1, DescriptionParser.GetInstance(_selfCloseTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription2, DescriptionParser.GetInstance(_selfCloseTagDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription3, DescriptionParser.GetInstance(_selfCloseTagDescription3).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription4, DescriptionParser.GetInstance(_selfCloseTagDescription4).GetRawText()); // no changes
+        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_duplicateTagsDescription1).GetRawText());
+        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_duplicateTagsDescription2).GetRawText());
+        Assert.AreEqual(_spaceTagDescription1, DescriptionParser.GetInstance(_spaceTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_spaceTagDescription2, DescriptionParser.GetInstance(_spaceTagDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_scaleTagDescription1, DescriptionParser.GetInstance(_scaleTagDescription1).GetRawText()); // no changes
     }
 
     [TestMethod]
     public void ValidateBrokenTagsTest()
     {
-        Assert.AreEqual(_incompleteTagDescription1Corrected, DescriptionParser.GetInstance(_incompleteTagDescription1).GetRawDescription());
-        Assert.AreEqual(_incompleteTagDescription2Corrected, DescriptionParser.GetInstance(_incompleteTagDescription2).GetRawDescription());
-        Assert.AreEqual(_incompleteTagDescription3Corrected, DescriptionParser.GetInstance(_incompleteTagDescription3).GetRawDescription());
-        Assert.AreEqual(_incompleteTagDescription4Corrected, DescriptionParser.GetInstance(_incompleteTagDescription4).GetRawDescription());
-        Assert.AreEqual(_incompleteTagDescription5Corrected, DescriptionParser.GetInstance(_incompleteTagDescription5).GetRawDescription());
+        Assert.AreEqual(_incompleteTagDescription1Corrected, DescriptionParser.GetInstance(_incompleteTagDescription1).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription2Corrected, DescriptionParser.GetInstance(_incompleteTagDescription2).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription3Corrected, DescriptionParser.GetInstance(_incompleteTagDescription3).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription4Corrected, DescriptionParser.GetInstance(_incompleteTagDescription4).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription5Corrected, DescriptionParser.GetInstance(_incompleteTagDescription5).GetRawText());
     }
 
     [TestMethod]
     public void ValidateConvertedNewlineTagsTest()
     {
-        Assert.AreEqual(_convertNewLineTagDescription1Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription1).GetRawDescription());
-        Assert.AreEqual(_convertNewLineTagDescription2Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription2).GetRawDescription());
-        Assert.AreEqual(_convertNewLineTagDescription3Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription3).GetRawDescription());
+        Assert.AreEqual(_convertNewLineTagDescription1Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription1).GetRawText());
+        Assert.AreEqual(_convertNewLineTagDescription2Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription2).GetRawText());
+        Assert.AreEqual(_convertNewLineTagDescription3Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription3).GetRawText());
     }
 
     [TestMethod]
     public void ValidateCaseTagsTest()
     {
-        Assert.AreEqual(_upperCaseTagDescription1Corrected, DescriptionParser.GetInstance(_upperCaseTagDescription1).GetRawDescription());
+        Assert.AreEqual(_upperCaseTagDescription1Corrected, DescriptionParser.GetInstance(_upperCaseTagDescription1).GetRawText());
     }
 
     [TestMethod]
     public void ValidateExtraSpaceInTagsTest()
     {
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_extraSpacesTagDescription1).GetRawDescription());
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_extraSpacesTagDescription2).GetRawDescription());
+        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_extraSpacesTagDescription1).GetRawText());
+        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_extraSpacesTagDescription2).GetRawText());
     }
 
     [TestMethod]
     public void ValidateEmptyTagsTest()
     {
-        Assert.AreEqual(_emptyTagsDescription1Corrected, DescriptionParser.GetInstance(_emptyTagsDescription1).GetRawDescription());
-        Assert.AreEqual(_emptyTagsDescription2Corrected, DescriptionParser.GetInstance(_emptyTagsDescription2).GetRawDescription());
-        Assert.AreEqual(_emptyTagsDescription3Corrected, DescriptionParser.GetInstance(_emptyTagsDescription3).GetRawDescription());
+        Assert.AreEqual(_emptyTagsDescription1Corrected, DescriptionParser.GetInstance(_emptyTagsDescription1).GetRawText());
+        Assert.AreEqual(_emptyTagsDescription2Corrected, DescriptionParser.GetInstance(_emptyTagsDescription2).GetRawText());
+        Assert.AreEqual(_emptyTagsDescription3Corrected, DescriptionParser.GetInstance(_emptyTagsDescription3).GetRawText());
     }
 
     [TestMethod]
     public void ValidateNestedTagsTest()
     {
-        Assert.AreEqual(_nestedTagDescription1Corrected, DescriptionParser.GetInstance(_nestedTagDescription1).GetRawDescription());
-        Assert.AreEqual(_nestedTagDescription2Corrected, DescriptionParser.GetInstance(_nestedTagDescription2).GetRawDescription());
-        Assert.AreEqual(_nestedTagDescription3Corrected, DescriptionParser.GetInstance(_nestedTagDescription3).GetRawDescription());
-        Assert.AreEqual(_nestedTagDescription4Corrected, DescriptionParser.GetInstance(_nestedTagDescription4).GetRawDescription());
+        Assert.AreEqual(_nestedTagDescription1Corrected, DescriptionParser.GetInstance(_nestedTagDescription1).GetRawText());
+        Assert.AreEqual(_nestedTagDescription2Corrected, DescriptionParser.GetInstance(_nestedTagDescription2).GetRawText());
+        Assert.AreEqual(_nestedTagDescription3Corrected, DescriptionParser.GetInstance(_nestedTagDescription3).GetRawText());
+        Assert.AreEqual(_nestedTagDescription4Corrected, DescriptionParser.GetInstance(_nestedTagDescription4).GetRawText());
     }
 
     [TestMethod]
     public void ValidateNestedNewLineTagsTest()
     {
-        Assert.AreEqual(_nestedNewLineTagDescription1Corrected, DescriptionParser.GetInstance(_nestedNewLineTagDescription1).GetRawDescription());
-        Assert.AreEqual(_nestedNewLineTagDescription2Corrected, DescriptionParser.GetInstance(_nestedNewLineTagDescription2).GetRawDescription());
+        Assert.AreEqual(_nestedNewLineTagDescription1Corrected, DescriptionParser.GetInstance(_nestedNewLineTagDescription1).GetRawText());
+        Assert.AreEqual(_nestedNewLineTagDescription2Corrected, DescriptionParser.GetInstance(_nestedNewLineTagDescription2).GetRawText());
     }
 
     [TestMethod]
     public void ValidateRealDescriptionTest()
     {
-        Assert.AreEqual(_diabloBlackSoulstoneCorrected, DescriptionParser.GetInstance(_diabloBlackSoulstone).GetRawDescription());
-        Assert.AreEqual(_dvaMechSelfDestructCorrected, DescriptionParser.GetInstance(_dvaMechSelfDestruct).GetRawDescription());
-        Assert.AreEqual(_valeeraCheapShotCorrected, DescriptionParser.GetInstance(_valeeraCheapShot).GetRawDescription());
-        Assert.AreEqual(_crusaderPunishSame, DescriptionParser.GetInstance(_crusaderPunish).GetRawDescription());
-        Assert.AreEqual(_meiSnowBlindDeDECorrected, DescriptionParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetRawDescription());
+        Assert.AreEqual(_diabloBlackSoulstoneCorrected, DescriptionParser.GetInstance(_diabloBlackSoulstone).GetRawText());
+        Assert.AreEqual(_dvaMechSelfDestructCorrected, DescriptionParser.GetInstance(_dvaMechSelfDestruct).GetRawText());
+        Assert.AreEqual(_valeeraCheapShotCorrected, DescriptionParser.GetInstance(_valeeraCheapShot).GetRawText());
+        Assert.AreEqual(_crusaderPunishSame, DescriptionParser.GetInstance(_crusaderPunish).GetRawText());
+        Assert.AreEqual(_meiSnowBlindDeDECorrected, DescriptionParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetRawText());
     }
 
     [TestMethod]
@@ -333,7 +333,7 @@ public class DescriptionParserTests
     [TestMethod]
     public void ValidateErrorTextTest()
     {
-        Assert.AreEqual(_errorText1, DescriptionParser.GetInstance(_errorText1).GetRawDescription());
+        Assert.AreEqual(_errorText1, DescriptionParser.GetInstance(_errorText1).GetRawText());
         Assert.AreEqual(_errorText1Corrected, DescriptionParser.GetInstance(_errorText1).GetColoredText(true));
         Assert.AreEqual(_errorText2Corrected, DescriptionParser.GetInstance(_errorText2).GetPlainText(false, false));
         Assert.AreEqual(_errorText3Corrected, DescriptionParser.GetInstance(_errorText3).GetPlainText(true, false));
@@ -384,11 +384,11 @@ public class DescriptionParserTests
     [TestMethod]
     public void NoErrorTagsTest()
     {
-        Assert.AreEqual(_noErrorText1, DescriptionParser.GetInstance(_noErrorText1).GetRawDescription());
-        Assert.AreEqual(_noErrorText2, DescriptionParser.GetInstance(_noErrorText2).GetRawDescription());
-        Assert.AreEqual(_noErrorText3, DescriptionParser.GetInstance(_noErrorText3).GetRawDescription());
-        Assert.AreEqual(_noErrorText4, DescriptionParser.GetInstance(_noErrorText4).GetRawDescription());
-        Assert.AreEqual(_noErrorText5, DescriptionParser.GetInstance(_noErrorText5).GetRawDescription());
+        Assert.AreEqual(_noErrorText1, DescriptionParser.GetInstance(_noErrorText1).GetRawText());
+        Assert.AreEqual(_noErrorText2, DescriptionParser.GetInstance(_noErrorText2).GetRawText());
+        Assert.AreEqual(_noErrorText3, DescriptionParser.GetInstance(_noErrorText3).GetRawText());
+        Assert.AreEqual(_noErrorText4, DescriptionParser.GetInstance(_noErrorText4).GetRawText());
+        Assert.AreEqual(_noErrorText5, DescriptionParser.GetInstance(_noErrorText5).GetRawText());
 
         Assert.AreEqual(_noErrorText1, DescriptionParser.GetInstance(_noErrorText1).GetPlainText(true, false));
         Assert.AreEqual(_noErrorText2, DescriptionParser.GetInstance(_noErrorText2).GetPlainText(true, false));
@@ -404,7 +404,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipHeader\">Cooldown: <s/>", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
@@ -423,7 +423,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance(_normalTagsDescription1, extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
@@ -442,7 +442,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails\">Cooldown: </s>", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
@@ -462,7 +462,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers1\">18</c> seconds, deals <c val=\"#TooltipNumbers2\">125</c> bonus by <c val=\"#TooltipNumbers3\">2</c> seconds.", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
@@ -483,7 +483,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"standardtooltipheader\">Cooldown: </s>", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
@@ -503,7 +503,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\" #TooltipNumbers \">18</c> seconds, deals <c val=\"#tooltipnumbers\">125</c> bonus by <c val=\"#TooltipNumbers\">2</c> seconds.", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
@@ -523,7 +523,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance($"<s val=\"#other\">Archon </s>", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
@@ -542,7 +542,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance($"Every <c val=\"other\">18</c> seconds", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
@@ -561,7 +561,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every 18 seconds.", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
@@ -586,7 +586,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: false);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         IEnumerable<string>? styleTagVars = descriptionParser.StyleTagVariables;
         IEnumerable<string>? styleConstantTagVars = descriptionParser.StyleConstantTagVariables;
 
@@ -602,7 +602,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c>18</c> seconds", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
@@ -620,7 +620,7 @@ public class DescriptionParserTests
         DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <s>18</s> seconds", extractFontVars: true);
 
         // act
-        descriptionParser.GetRawDescription();
+        descriptionParser.GetRawText();
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
@@ -695,7 +695,7 @@ public class DescriptionParserTests
         descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", false);
 
         // act
-        string result = descriptionParser.GetRawDescription();
+        string result = descriptionParser.GetRawText();
 
         // assert
         Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"F50707-F64445\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
@@ -709,7 +709,7 @@ public class DescriptionParserTests
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", false);
 
         // act
-        string result = descriptionParser.GetRawDescription();
+        string result = descriptionParser.GetRawText();
 
         // assert
         Assert.AreEqual("Every <c val=\"F50707\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
@@ -723,7 +723,7 @@ public class DescriptionParserTests
         descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", true);
 
         // act
-        string result = descriptionParser.GetRawDescription();
+        string result = descriptionParser.GetRawText();
 
         // assert
         Assert.AreEqual("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"F50707-F64445\" hlt-name=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
@@ -737,7 +737,7 @@ public class DescriptionParserTests
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", true);
 
         // act
-        string result = descriptionParser.GetRawDescription();
+        string result = descriptionParser.GetRawText();
 
         // assert
         Assert.AreEqual("Every <c val=\"F50707\" hlt-name=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", result);
