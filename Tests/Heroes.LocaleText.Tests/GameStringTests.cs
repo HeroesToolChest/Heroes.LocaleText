@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-
-namespace Heroes.LocaleText.Tests;
+﻿namespace Heroes.LocaleText.Tests;
 
 [TestClass]
 public class GameStringTests
