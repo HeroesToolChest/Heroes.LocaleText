@@ -1,6 +1,6 @@
 ﻿namespace Heroes.LocaleText;
 
-internal readonly struct DescriptionFlags
+internal readonly struct GameStringFlags
 {
     public TagFlag ColorTags { get; init; }
 

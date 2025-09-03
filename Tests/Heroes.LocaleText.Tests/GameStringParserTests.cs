@@ -1,7 +1,7 @@
 ﻿namespace Heroes.LocaleText.Tests;
 
 [TestClass]
-public class DescriptionParserTests
+public class GameStringParserTests
 {
     private readonly string _noTagsDescription = "previous location.";
     private readonly string _normalTagsDescription1 = "Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125</c> bonus by <c val=\"#TooltipNumbers\">2</c> seconds.";
@@ -191,217 +191,217 @@ public class DescriptionParserTests
     [TestMethod]
     public void ValidateTest()
     {
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_noTagsDescription).GetRawText()); // no changes
-        Assert.AreEqual(_normalTagsDescription1, DescriptionParser.GetInstance(_normalTagsDescription1).GetRawText()); // no changes
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_normalTagsDescription2).GetRawText()); // no changes
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription1).GetRawText());
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription2).GetRawText());
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription3).GetRawText());
-        Assert.AreEqual(_noTagsDescription, DescriptionParser.GetInstance(_extraTagDescription4).GetRawText());
-        Assert.AreEqual(_newLineTagDescription1, DescriptionParser.GetInstance(_newLineTagDescription1).GetRawText()); // no changes
-        Assert.AreEqual(_newLineTagDescription2, DescriptionParser.GetInstance(_newLineTagDescription2).GetRawText()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription1, DescriptionParser.GetInstance(_selfCloseTagDescription1).GetRawText()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription2, DescriptionParser.GetInstance(_selfCloseTagDescription2).GetRawText()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription3, DescriptionParser.GetInstance(_selfCloseTagDescription3).GetRawText()); // no changes
-        Assert.AreEqual(_selfCloseTagDescription4, DescriptionParser.GetInstance(_selfCloseTagDescription4).GetRawText()); // no changes
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_duplicateTagsDescription1).GetRawText());
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_duplicateTagsDescription2).GetRawText());
-        Assert.AreEqual(_spaceTagDescription1, DescriptionParser.GetInstance(_spaceTagDescription1).GetRawText()); // no changes
-        Assert.AreEqual(_spaceTagDescription2, DescriptionParser.GetInstance(_spaceTagDescription2).GetRawText()); // no changes
-        Assert.AreEqual(_scaleTagDescription1, DescriptionParser.GetInstance(_scaleTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_noTagsDescription, GameStringParser.GetInstance(_noTagsDescription).GetRawText()); // no changes
+        Assert.AreEqual(_normalTagsDescription1, GameStringParser.GetInstance(_normalTagsDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_normalTagsDescription2, GameStringParser.GetInstance(_normalTagsDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_noTagsDescription, GameStringParser.GetInstance(_extraTagDescription1).GetRawText());
+        Assert.AreEqual(_noTagsDescription, GameStringParser.GetInstance(_extraTagDescription2).GetRawText());
+        Assert.AreEqual(_noTagsDescription, GameStringParser.GetInstance(_extraTagDescription3).GetRawText());
+        Assert.AreEqual(_noTagsDescription, GameStringParser.GetInstance(_extraTagDescription4).GetRawText());
+        Assert.AreEqual(_newLineTagDescription1, GameStringParser.GetInstance(_newLineTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_newLineTagDescription2, GameStringParser.GetInstance(_newLineTagDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription1, GameStringParser.GetInstance(_selfCloseTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription2, GameStringParser.GetInstance(_selfCloseTagDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription3, GameStringParser.GetInstance(_selfCloseTagDescription3).GetRawText()); // no changes
+        Assert.AreEqual(_selfCloseTagDescription4, GameStringParser.GetInstance(_selfCloseTagDescription4).GetRawText()); // no changes
+        Assert.AreEqual(_normalTagsDescription2, GameStringParser.GetInstance(_duplicateTagsDescription1).GetRawText());
+        Assert.AreEqual(_normalTagsDescription2, GameStringParser.GetInstance(_duplicateTagsDescription2).GetRawText());
+        Assert.AreEqual(_spaceTagDescription1, GameStringParser.GetInstance(_spaceTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_spaceTagDescription2, GameStringParser.GetInstance(_spaceTagDescription2).GetRawText()); // no changes
+        Assert.AreEqual(_scaleTagDescription1, GameStringParser.GetInstance(_scaleTagDescription1).GetRawText()); // no changes
     }
 
     [TestMethod]
     public void ValidateBrokenTagsTest()
     {
-        Assert.AreEqual(_incompleteTagDescription1Corrected, DescriptionParser.GetInstance(_incompleteTagDescription1).GetRawText());
-        Assert.AreEqual(_incompleteTagDescription2Corrected, DescriptionParser.GetInstance(_incompleteTagDescription2).GetRawText());
-        Assert.AreEqual(_incompleteTagDescription3Corrected, DescriptionParser.GetInstance(_incompleteTagDescription3).GetRawText());
-        Assert.AreEqual(_incompleteTagDescription4Corrected, DescriptionParser.GetInstance(_incompleteTagDescription4).GetRawText());
-        Assert.AreEqual(_incompleteTagDescription5Corrected, DescriptionParser.GetInstance(_incompleteTagDescription5).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription1Corrected, GameStringParser.GetInstance(_incompleteTagDescription1).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription2Corrected, GameStringParser.GetInstance(_incompleteTagDescription2).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription3Corrected, GameStringParser.GetInstance(_incompleteTagDescription3).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription4Corrected, GameStringParser.GetInstance(_incompleteTagDescription4).GetRawText());
+        Assert.AreEqual(_incompleteTagDescription5Corrected, GameStringParser.GetInstance(_incompleteTagDescription5).GetRawText());
     }
 
     [TestMethod]
     public void ValidateConvertedNewlineTagsTest()
     {
-        Assert.AreEqual(_convertNewLineTagDescription1Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription1).GetRawText());
-        Assert.AreEqual(_convertNewLineTagDescription2Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription2).GetRawText());
-        Assert.AreEqual(_convertNewLineTagDescription3Corrected, DescriptionParser.GetInstance(_convertNewLineTagDescription3).GetRawText());
+        Assert.AreEqual(_convertNewLineTagDescription1Corrected, GameStringParser.GetInstance(_convertNewLineTagDescription1).GetRawText());
+        Assert.AreEqual(_convertNewLineTagDescription2Corrected, GameStringParser.GetInstance(_convertNewLineTagDescription2).GetRawText());
+        Assert.AreEqual(_convertNewLineTagDescription3Corrected, GameStringParser.GetInstance(_convertNewLineTagDescription3).GetRawText());
     }
 
     [TestMethod]
     public void ValidateCaseTagsTest()
     {
-        Assert.AreEqual(_upperCaseTagDescription1Corrected, DescriptionParser.GetInstance(_upperCaseTagDescription1).GetRawText());
+        Assert.AreEqual(_upperCaseTagDescription1Corrected, GameStringParser.GetInstance(_upperCaseTagDescription1).GetRawText());
     }
 
     [TestMethod]
     public void ValidateExtraSpaceInTagsTest()
     {
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_extraSpacesTagDescription1).GetRawText());
-        Assert.AreEqual(_normalTagsDescription2, DescriptionParser.GetInstance(_extraSpacesTagDescription2).GetRawText());
+        Assert.AreEqual(_normalTagsDescription2, GameStringParser.GetInstance(_extraSpacesTagDescription1).GetRawText());
+        Assert.AreEqual(_normalTagsDescription2, GameStringParser.GetInstance(_extraSpacesTagDescription2).GetRawText());
     }
 
     [TestMethod]
     public void ValidateEmptyTagsTest()
     {
-        Assert.AreEqual(_emptyTagsDescription1Corrected, DescriptionParser.GetInstance(_emptyTagsDescription1).GetRawText());
-        Assert.AreEqual(_emptyTagsDescription2Corrected, DescriptionParser.GetInstance(_emptyTagsDescription2).GetRawText());
-        Assert.AreEqual(_emptyTagsDescription3Corrected, DescriptionParser.GetInstance(_emptyTagsDescription3).GetRawText());
+        Assert.AreEqual(_emptyTagsDescription1Corrected, GameStringParser.GetInstance(_emptyTagsDescription1).GetRawText());
+        Assert.AreEqual(_emptyTagsDescription2Corrected, GameStringParser.GetInstance(_emptyTagsDescription2).GetRawText());
+        Assert.AreEqual(_emptyTagsDescription3Corrected, GameStringParser.GetInstance(_emptyTagsDescription3).GetRawText());
     }
 
     [TestMethod]
     public void ValidateNestedTagsTest()
     {
-        Assert.AreEqual(_nestedTagDescription1Corrected, DescriptionParser.GetInstance(_nestedTagDescription1).GetRawText());
-        Assert.AreEqual(_nestedTagDescription2Corrected, DescriptionParser.GetInstance(_nestedTagDescription2).GetRawText());
-        Assert.AreEqual(_nestedTagDescription3Corrected, DescriptionParser.GetInstance(_nestedTagDescription3).GetRawText());
-        Assert.AreEqual(_nestedTagDescription4Corrected, DescriptionParser.GetInstance(_nestedTagDescription4).GetRawText());
+        Assert.AreEqual(_nestedTagDescription1Corrected, GameStringParser.GetInstance(_nestedTagDescription1).GetRawText());
+        Assert.AreEqual(_nestedTagDescription2Corrected, GameStringParser.GetInstance(_nestedTagDescription2).GetRawText());
+        Assert.AreEqual(_nestedTagDescription3Corrected, GameStringParser.GetInstance(_nestedTagDescription3).GetRawText());
+        Assert.AreEqual(_nestedTagDescription4Corrected, GameStringParser.GetInstance(_nestedTagDescription4).GetRawText());
     }
 
     [TestMethod]
     public void ValidateNestedNewLineTagsTest()
     {
-        Assert.AreEqual(_nestedNewLineTagDescription1Corrected, DescriptionParser.GetInstance(_nestedNewLineTagDescription1).GetRawText());
-        Assert.AreEqual(_nestedNewLineTagDescription2Corrected, DescriptionParser.GetInstance(_nestedNewLineTagDescription2).GetRawText());
+        Assert.AreEqual(_nestedNewLineTagDescription1Corrected, GameStringParser.GetInstance(_nestedNewLineTagDescription1).GetRawText());
+        Assert.AreEqual(_nestedNewLineTagDescription2Corrected, GameStringParser.GetInstance(_nestedNewLineTagDescription2).GetRawText());
     }
 
     [TestMethod]
     public void ValidateRealDescriptionTest()
     {
-        Assert.AreEqual(_diabloBlackSoulstoneCorrected, DescriptionParser.GetInstance(_diabloBlackSoulstone).GetRawText());
-        Assert.AreEqual(_dvaMechSelfDestructCorrected, DescriptionParser.GetInstance(_dvaMechSelfDestruct).GetRawText());
-        Assert.AreEqual(_valeeraCheapShotCorrected, DescriptionParser.GetInstance(_valeeraCheapShot).GetRawText());
-        Assert.AreEqual(_crusaderPunishSame, DescriptionParser.GetInstance(_crusaderPunish).GetRawText());
-        Assert.AreEqual(_meiSnowBlindDeDECorrected, DescriptionParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetRawText());
+        Assert.AreEqual(_diabloBlackSoulstoneCorrected, GameStringParser.GetInstance(_diabloBlackSoulstone).GetRawText());
+        Assert.AreEqual(_dvaMechSelfDestructCorrected, GameStringParser.GetInstance(_dvaMechSelfDestruct).GetRawText());
+        Assert.AreEqual(_valeeraCheapShotCorrected, GameStringParser.GetInstance(_valeeraCheapShot).GetRawText());
+        Assert.AreEqual(_crusaderPunishSame, GameStringParser.GetInstance(_crusaderPunish).GetRawText());
+        Assert.AreEqual(_meiSnowBlindDeDECorrected, GameStringParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetRawText());
     }
 
     [TestMethod]
     public void ValidatePlainTextTest()
     {
-        Assert.AreEqual(_plainText1, DescriptionParser.GetInstance(_nestedTagDescription1).GetPlainText(false, false));
-        Assert.AreEqual(_plainText2, DescriptionParser.GetInstance(_nestedNewLineTagDescription2Corrected).GetPlainText(false, false));
-        Assert.AreEqual(_plainText3, DescriptionParser.GetInstance(_valeeraCheapShotCorrected).GetPlainText(false, false));
-        Assert.AreEqual(_plainText4Corrected, DescriptionParser.GetInstance(_plainText4).GetPlainText(false, false));
-        Assert.AreEqual(_plainText5Corrected, DescriptionParser.GetInstance(_plainText5).GetPlainText(false, false));
-        Assert.AreEqual(_plainText6Corrected, DescriptionParser.GetInstance(_plainText6).GetPlainText(false, false));
-        Assert.AreEqual(_plainTextMeiSnowBlindDeDECorrected, DescriptionParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetPlainText(false, false));
-        Assert.AreEqual(_plainTextWithImgCorrected, DescriptionParser.GetInstance(_plainTextWithImg).GetPlainText(false, false));
+        Assert.AreEqual(_plainText1, GameStringParser.GetInstance(_nestedTagDescription1).GetPlainText(false, false));
+        Assert.AreEqual(_plainText2, GameStringParser.GetInstance(_nestedNewLineTagDescription2Corrected).GetPlainText(false, false));
+        Assert.AreEqual(_plainText3, GameStringParser.GetInstance(_valeeraCheapShotCorrected).GetPlainText(false, false));
+        Assert.AreEqual(_plainText4Corrected, GameStringParser.GetInstance(_plainText4).GetPlainText(false, false));
+        Assert.AreEqual(_plainText5Corrected, GameStringParser.GetInstance(_plainText5).GetPlainText(false, false));
+        Assert.AreEqual(_plainText6Corrected, GameStringParser.GetInstance(_plainText6).GetPlainText(false, false));
+        Assert.AreEqual(_plainTextMeiSnowBlindDeDECorrected, GameStringParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetPlainText(false, false));
+        Assert.AreEqual(_plainTextWithImgCorrected, GameStringParser.GetInstance(_plainTextWithImg).GetPlainText(false, false));
     }
 
     [TestMethod]
     public void ValidatePlainTextNewlineTest()
     {
-        Assert.AreEqual(_plainTextNewline1, DescriptionParser.GetInstance(_nestedNewLineTagDescription1Corrected).GetPlainText(true, false));
-        Assert.AreEqual(_plainTextNewline2, DescriptionParser.GetInstance(_valeeraCheapShotCorrected).GetPlainText(true, false));
-        Assert.AreEqual(_plainTextNewline3Corrected, DescriptionParser.GetInstance(_plainTextNewline3).GetPlainText(true, false));
+        Assert.AreEqual(_plainTextNewline1, GameStringParser.GetInstance(_nestedNewLineTagDescription1Corrected).GetPlainText(true, false));
+        Assert.AreEqual(_plainTextNewline2, GameStringParser.GetInstance(_valeeraCheapShotCorrected).GetPlainText(true, false));
+        Assert.AreEqual(_plainTextNewline3Corrected, GameStringParser.GetInstance(_plainTextNewline3).GetPlainText(true, false));
     }
 
     [TestMethod]
     public void ValidatePlainTextScalingTest()
     {
-        Assert.AreEqual(_plainTextScaling1Corrected, DescriptionParser.GetInstance(_plainTextScaling1).GetPlainText(false, true));
-        Assert.AreEqual(_plainTextScaling2Corrected, DescriptionParser.GetInstance(_plainTextScaling2).GetPlainText(false, true));
-        Assert.AreEqual(_plainTextScalingMeiSnowBlindDeDECorrected, DescriptionParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetPlainText(false, true));
+        Assert.AreEqual(_plainTextScaling1Corrected, GameStringParser.GetInstance(_plainTextScaling1).GetPlainText(false, true));
+        Assert.AreEqual(_plainTextScaling2Corrected, GameStringParser.GetInstance(_plainTextScaling2).GetPlainText(false, true));
+        Assert.AreEqual(_plainTextScalingMeiSnowBlindDeDECorrected, GameStringParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetPlainText(false, true));
     }
 
     [TestMethod]
     public void ValidatePlainTextScalingNewlineTest()
     {
-        Assert.AreEqual(_plainTextScalingNewline1Corrected, DescriptionParser.GetInstance(_plainTextScalingNewline1).GetPlainText(true, true));
-        Assert.AreEqual(_plainTextScalingNewline2Corrected, DescriptionParser.GetInstance(_plainTextScalingNewline2).GetPlainText(true, true));
+        Assert.AreEqual(_plainTextScalingNewline1Corrected, GameStringParser.GetInstance(_plainTextScalingNewline1).GetPlainText(true, true));
+        Assert.AreEqual(_plainTextScalingNewline2Corrected, GameStringParser.GetInstance(_plainTextScalingNewline2).GetPlainText(true, true));
     }
 
     [TestMethod]
     public void ValidateColoredTextTest()
     {
-        Assert.AreEqual(_coloredText1Corrected, DescriptionParser.GetInstance(_coloredText1).GetColoredText(false));
-        Assert.AreEqual(_coloredText2Corrected, DescriptionParser.GetInstance(_coloredText2).GetColoredText(false));
-        Assert.AreEqual(_coloredTextWithImgCorrected, DescriptionParser.GetInstance(_coloredTextWithImg).GetColoredText(false));
+        Assert.AreEqual(_coloredText1Corrected, GameStringParser.GetInstance(_coloredText1).GetColoredText(false));
+        Assert.AreEqual(_coloredText2Corrected, GameStringParser.GetInstance(_coloredText2).GetColoredText(false));
+        Assert.AreEqual(_coloredTextWithImgCorrected, GameStringParser.GetInstance(_coloredTextWithImg).GetColoredText(false));
     }
 
     [TestMethod]
     public void ValidateColoredTextScalingTest()
     {
-        Assert.AreEqual(_coloredTextScaling1Corrected, DescriptionParser.GetInstance(_coloredTextScaling1).GetColoredText(true));
-        Assert.AreEqual(_coloredTextScaling2Corrected, DescriptionParser.GetInstance(_coloredTextScaling2).GetColoredText(true));
-        Assert.AreEqual(_coloredTextScaling3Corrected, DescriptionParser.GetInstance(_coloredTextScaling3).GetColoredText(true));
-        Assert.AreEqual(_coloredTextScaling4Corrected, DescriptionParser.GetInstance(_coloredTextScaling4).GetColoredText(true));
-        Assert.AreEqual(_coloredTextScaling5Corrected, DescriptionParser.GetInstance(_coloredTextScaling5).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling1Corrected, GameStringParser.GetInstance(_coloredTextScaling1).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling2Corrected, GameStringParser.GetInstance(_coloredTextScaling2).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling3Corrected, GameStringParser.GetInstance(_coloredTextScaling3).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling4Corrected, GameStringParser.GetInstance(_coloredTextScaling4).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScaling5Corrected, GameStringParser.GetInstance(_coloredTextScaling5).GetColoredText(true));
     }
 
     [TestMethod]
     public void ValidateErrorTextTest()
     {
-        Assert.AreEqual(_errorText1, DescriptionParser.GetInstance(_errorText1).GetRawText());
-        Assert.AreEqual(_errorText1Corrected, DescriptionParser.GetInstance(_errorText1).GetColoredText(true));
-        Assert.AreEqual(_errorText2Corrected, DescriptionParser.GetInstance(_errorText2).GetPlainText(false, false));
-        Assert.AreEqual(_errorText3Corrected, DescriptionParser.GetInstance(_errorText3).GetPlainText(true, false));
+        Assert.AreEqual(_errorText1, GameStringParser.GetInstance(_errorText1).GetRawText());
+        Assert.AreEqual(_errorText1Corrected, GameStringParser.GetInstance(_errorText1).GetColoredText(true));
+        Assert.AreEqual(_errorText2Corrected, GameStringParser.GetInstance(_errorText2).GetPlainText(false, false));
+        Assert.AreEqual(_errorText3Corrected, GameStringParser.GetInstance(_errorText3).GetPlainText(true, false));
     }
 
     [TestMethod]
     public void ValidateSpaceTagsTest()
     {
-        Assert.AreEqual(_spaceTagNormalDescription1, DescriptionParser.GetInstance(_spaceTagDescription1).GetColoredText(true));
-        Assert.AreEqual(_spaceTagNormalDescription2, DescriptionParser.GetInstance(_spaceTagDescription2).GetColoredText(true));
-        Assert.AreEqual(_spaceTagNormalDescription3, DescriptionParser.GetInstance(_spaceTagDescription3).GetColoredText(true));
-        Assert.AreEqual(_spaceTagNormalDescription1, DescriptionParser.GetInstance(_spaceTagDescription1).GetPlainText(false, true));
-        Assert.AreEqual(_spaceTagNormalDescription2, DescriptionParser.GetInstance(_spaceTagDescription2).GetPlainText(true, true));
-        Assert.AreEqual(_spaceTagNormalDescription3, DescriptionParser.GetInstance(_spaceTagDescription3).GetPlainText(true, true));
+        Assert.AreEqual(_spaceTagNormalDescription1, GameStringParser.GetInstance(_spaceTagDescription1).GetColoredText(true));
+        Assert.AreEqual(_spaceTagNormalDescription2, GameStringParser.GetInstance(_spaceTagDescription2).GetColoredText(true));
+        Assert.AreEqual(_spaceTagNormalDescription3, GameStringParser.GetInstance(_spaceTagDescription3).GetColoredText(true));
+        Assert.AreEqual(_spaceTagNormalDescription1, GameStringParser.GetInstance(_spaceTagDescription1).GetPlainText(false, true));
+        Assert.AreEqual(_spaceTagNormalDescription2, GameStringParser.GetInstance(_spaceTagDescription2).GetPlainText(true, true));
+        Assert.AreEqual(_spaceTagNormalDescription3, GameStringParser.GetInstance(_spaceTagDescription3).GetPlainText(true, true));
     }
 
     [TestMethod]
     public void LanguageTest()
     {
-        Assert.AreEqual(_meiSnowBlindEsESColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindEsES, StormLocale.ESES).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindEsMXColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindEsMX, StormLocale.ESMX).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindFrFRColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindFrFR, StormLocale.FRFR).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindItITColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindItIT, StormLocale.ITIT).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindKoKRColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindKoKR, StormLocale.KOKR).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindPlPLColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindPlPL, StormLocale.PLPL).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindPtBRColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindPtBR, StormLocale.PTBR).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindRuRUColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindRuRU, StormLocale.RURU).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindZhCNColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindZhCN, StormLocale.ZHCN).GetColoredText(true));
-        Assert.AreEqual(_meiSnowBlindZhTWColorWithScaling, DescriptionParser.GetInstance(_meiSnowBlindZhTW, StormLocale.ZHTW).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindEsESColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindEsES, StormLocale.ESES).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindEsMXColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindEsMX, StormLocale.ESMX).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindFrFRColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindFrFR, StormLocale.FRFR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindItITColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindItIT, StormLocale.ITIT).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindKoKRColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindKoKR, StormLocale.KOKR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindPlPLColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindPlPL, StormLocale.PLPL).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindPtBRColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindPtBR, StormLocale.PTBR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindRuRUColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindRuRU, StormLocale.RURU).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindZhCNColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindZhCN, StormLocale.ZHCN).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindZhTWColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindZhTW, StormLocale.ZHTW).GetColoredText(true));
     }
 
     [TestMethod]
     public void NoScaleTagTest()
     {
-        Assert.AreEqual(_noScaleText1, DescriptionParser.GetInstance(_noScaleText1).GetColoredText(true));
-        Assert.AreEqual(_noScaleText2, DescriptionParser.GetInstance(_noScaleText2).GetColoredText(true));
-        Assert.AreEqual(_noScaleText3, DescriptionParser.GetInstance(_noScaleText3).GetColoredText(true));
-        Assert.AreEqual(_noScaleText4, DescriptionParser.GetInstance(_noScaleText4).GetColoredText(true));
-        Assert.AreEqual(_noScaleText5, DescriptionParser.GetInstance(_noScaleText5).GetColoredText(true));
+        Assert.AreEqual(_noScaleText1, GameStringParser.GetInstance(_noScaleText1).GetColoredText(true));
+        Assert.AreEqual(_noScaleText2, GameStringParser.GetInstance(_noScaleText2).GetColoredText(true));
+        Assert.AreEqual(_noScaleText3, GameStringParser.GetInstance(_noScaleText3).GetColoredText(true));
+        Assert.AreEqual(_noScaleText4, GameStringParser.GetInstance(_noScaleText4).GetColoredText(true));
+        Assert.AreEqual(_noScaleText5, GameStringParser.GetInstance(_noScaleText5).GetColoredText(true));
 
-        Assert.AreEqual(_noScaleText1, DescriptionParser.GetInstance(_noScaleText1).GetPlainText(false, true));
-        Assert.AreEqual(_noScaleText2, DescriptionParser.GetInstance(_noScaleText2).GetPlainText(false, true));
-        Assert.AreEqual(_noScaleText3, DescriptionParser.GetInstance(_noScaleText3).GetPlainText(false, true));
-        Assert.AreEqual(_noScaleText4, DescriptionParser.GetInstance(_noScaleText4).GetPlainText(false, true));
-        Assert.AreEqual(_noScaleText5, DescriptionParser.GetInstance(_noScaleText5).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText1, GameStringParser.GetInstance(_noScaleText1).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText2, GameStringParser.GetInstance(_noScaleText2).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText3, GameStringParser.GetInstance(_noScaleText3).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText4, GameStringParser.GetInstance(_noScaleText4).GetPlainText(false, true));
+        Assert.AreEqual(_noScaleText5, GameStringParser.GetInstance(_noScaleText5).GetPlainText(false, true));
     }
 
     [TestMethod]
     public void NoErrorTagsTest()
     {
-        Assert.AreEqual(_noErrorText1, DescriptionParser.GetInstance(_noErrorText1).GetRawText());
-        Assert.AreEqual(_noErrorText2, DescriptionParser.GetInstance(_noErrorText2).GetRawText());
-        Assert.AreEqual(_noErrorText3, DescriptionParser.GetInstance(_noErrorText3).GetRawText());
-        Assert.AreEqual(_noErrorText4, DescriptionParser.GetInstance(_noErrorText4).GetRawText());
-        Assert.AreEqual(_noErrorText5, DescriptionParser.GetInstance(_noErrorText5).GetRawText());
+        Assert.AreEqual(_noErrorText1, GameStringParser.GetInstance(_noErrorText1).GetRawText());
+        Assert.AreEqual(_noErrorText2, GameStringParser.GetInstance(_noErrorText2).GetRawText());
+        Assert.AreEqual(_noErrorText3, GameStringParser.GetInstance(_noErrorText3).GetRawText());
+        Assert.AreEqual(_noErrorText4, GameStringParser.GetInstance(_noErrorText4).GetRawText());
+        Assert.AreEqual(_noErrorText5, GameStringParser.GetInstance(_noErrorText5).GetRawText());
 
-        Assert.AreEqual(_noErrorText1, DescriptionParser.GetInstance(_noErrorText1).GetPlainText(true, false));
-        Assert.AreEqual(_noErrorText2, DescriptionParser.GetInstance(_noErrorText2).GetPlainText(true, false));
-        Assert.AreEqual(_noErrorText3, DescriptionParser.GetInstance(_noErrorText3).GetPlainText(true, false));
-        Assert.AreEqual(_noErrorText4, DescriptionParser.GetInstance(_noErrorText4).GetPlainText(true, false));
-        Assert.AreEqual(_noErrorText5, DescriptionParser.GetInstance(_noErrorText5).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText1, GameStringParser.GetInstance(_noErrorText1).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText2, GameStringParser.GetInstance(_noErrorText2).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText3, GameStringParser.GetInstance(_noErrorText3).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText4, GameStringParser.GetInstance(_noErrorText4).GetPlainText(true, false));
+        Assert.AreEqual(_noErrorText5, GameStringParser.GetInstance(_noErrorText5).GetPlainText(true, false));
     }
 
     [TestMethod]
     public void StyleTagVariables_MultipleOfSameStyleVars_ReturnsOne()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipHeader\">Cooldown: <s/>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipHeader\">Cooldown: <s/>", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -420,7 +420,7 @@ public class DescriptionParserTests
     public void StyleConstantTagVariables_MultipleOfSameStyleVars_ReturnsOne()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance(_normalTagsDescription1, extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance(_normalTagsDescription1, extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -439,7 +439,7 @@ public class DescriptionParserTests
     public void StyleTagVariables_DifferentStyleVars_ReturnsAll()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails\">Cooldown: </s>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails\">Cooldown: </s>", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -459,7 +459,7 @@ public class DescriptionParserTests
     public void StyleTagConstantVariables_DifferentStyleVars_ReturnsAll()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers1\">18</c> seconds, deals <c val=\"#TooltipNumbers2\">125</c> bonus by <c val=\"#TooltipNumbers3\">2</c> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers1\">18</c> seconds, deals <c val=\"#TooltipNumbers2\">125</c> bonus by <c val=\"#TooltipNumbers3\">2</c> seconds.", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -480,7 +480,7 @@ public class DescriptionParserTests
     public void StyleTagVariables_CaseSensitive_Returns2()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"standardtooltipheader\">Cooldown: </s>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("<s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"standardtooltipheader\">Cooldown: </s>", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -500,7 +500,7 @@ public class DescriptionParserTests
     public void StyleConstantTagVariables_CaseSensitive_Returns2()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\" #TooltipNumbers \">18</c> seconds, deals <c val=\"#tooltipnumbers\">125</c> bonus by <c val=\"#TooltipNumbers\">2</c> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\" #TooltipNumbers \">18</c> seconds, deals <c val=\"#tooltipnumbers\">125</c> bonus by <c val=\"#TooltipNumbers\">2</c> seconds.", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -520,7 +520,7 @@ public class DescriptionParserTests
     public void StyleTagVariables_ValHasAPoundSign_ReturnsVal()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance($"<s val=\"#other\">Archon </s>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance($"<s val=\"#other\">Archon </s>", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -539,7 +539,7 @@ public class DescriptionParserTests
     public void StyleConstantTagVariables_ValHasNoPoundSign_ReturnsVal()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance($"Every <c val=\"other\">18</c> seconds", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance($"Every <c val=\"other\">18</c> seconds", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -558,7 +558,7 @@ public class DescriptionParserTests
     public void StyleVariables_NoTags_ReturnsEmpty()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every 18 seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every 18 seconds.", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -583,7 +583,7 @@ public class DescriptionParserTests
     public void StyleTagVariables_ExtractSetToFalse_ReturnsEmpty()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: false);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: false);
 
         // act
         descriptionParser.GetRawText();
@@ -599,7 +599,7 @@ public class DescriptionParserTests
     public void StyleTagVariables_StyleTagHasNoValAttribute_ReturnsEmpty()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c>18</c> seconds", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c>18</c> seconds", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -617,7 +617,7 @@ public class DescriptionParserTests
     public void StyleConstantTagVariables_StyleTagHasNoValAttribute_ReturnsEmpty()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <s>18</s> seconds", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <s>18</s> seconds", extractFontVars: true);
 
         // act
         descriptionParser.GetRawText();
@@ -635,7 +635,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementStyleVars_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", false);
 
         // act
@@ -649,7 +649,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementStyleConstantVars_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", false);
 
         // act
@@ -663,7 +663,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementStyleVarsAndPreserve_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", true);
 
         // act
@@ -677,7 +677,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementStyleConstantVarsAndPreserve_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", true);
 
         // act
@@ -688,10 +688,10 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void GetRawDescription_WithReplacementStyleVars_ReturnsReplacement()
+    public void GetRawText_WithReplacementStyleVars_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", false);
 
         // act
@@ -702,10 +702,10 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void GetRawDescription_WithReplacementStyleConstantVars_ReturnsReplacement()
+    public void GetRawText_WithReplacementStyleConstantVars_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <C val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <C val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", false);
 
         // act
@@ -716,10 +716,10 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void GetRawDescription_WithReplacementStyleVarsPreserve_ReturnsReplacement()
+    public void GetRawText_WithReplacementStyleVarsPreserve_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", true);
 
         // act
@@ -730,10 +730,10 @@ public class DescriptionParserTests
     }
 
     [TestMethod]
-    public void GetRawDescription_WithReplacementStyleConstantVarsPreserve_ReturnsReplacement()
+    public void GetRawText_WithReplacementStyleConstantVarsPreserve_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", true);
 
         // act
@@ -749,7 +749,7 @@ public class DescriptionParserTests
     public void GetPlainText_WithReplacementStyleVars_ReturnsNoReplacement(bool preserve)
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("style", "F50707-F64445", preserve);
 
         // act
@@ -765,7 +765,7 @@ public class DescriptionParserTests
     public void GetPlainText_WithReplacementStyleConstantVars_ReturnsNoReplacement(bool preserve)
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <s val=\"style\">125</s> bonus by <x val=\"#other\">2</x> seconds.", extractFontVars: true);
         descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "F50707", preserve);
 
         // act
@@ -781,7 +781,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementStyleVarsAndEmptyStyleVar_ReturnsOriginal(bool preserve)
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("Every <c val=\"\">18</c> seconds", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("Every <c val=\"\">18</c> seconds", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement(string.Empty, "00a2ff", preserve);
 
         // act
@@ -795,7 +795,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementVarsThatIsSmallerThanOriginal_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"#this-is-a-long-constant-name\">18</c>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"#this-is-a-long-constant-name\">18</c>", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("this-is-a-long-style-name", "short", false);
         descriptionParser.AddStyleConstantVarsWithReplacement("#this-is-a-long-constant-name", "short", false);
 
@@ -810,7 +810,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementVarsThatIsLargerThanOriginal_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"short\">125</s><c val=\"short\">18</c>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("deals <s val=\"short\">125</s><c val=\"short\">18</c>", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("short", "this-is-a-long-style-name", false);
         descriptionParser.AddStyleConstantVarsWithReplacement("short", "this-is-a-long-constant-name", false);
 
@@ -825,7 +825,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementVarsThatIsSmallerThanOriginalPreserve_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"#this-is-a-long-constant-name\">18</c>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("deals <s val=\"this-is-a-long-style-name\">125</s><c val=\"#this-is-a-long-constant-name\">18</c>", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("this-is-a-long-style-name", "short", true);
         descriptionParser.AddStyleConstantVarsWithReplacement("#this-is-a-long-constant-name", "short", true);
 
@@ -840,7 +840,7 @@ public class DescriptionParserTests
     public void GetColoredText_WithReplacementVarsThatIsLargerThanOriginalPreserve_ReturnsReplacement()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("deals <s val=\"short\">125</s><c val=\"short\">18</c>", extractFontVars: true);
+        GameStringParser descriptionParser = GameStringParser.GetInstance("deals <s val=\"short\">125</s><c val=\"short\">18</c>", extractFontVars: true);
         descriptionParser.AddStyleVarsWithReplacement("short", "this-is-a-long-style-name", true);
         descriptionParser.AddStyleConstantVarsWithReplacement("short", "this-is-a-long-constant-name", true);
 
@@ -857,7 +857,7 @@ public class DescriptionParserTests
     public void GetColoredText_ValueHasAScalingPercent_ReturnsScalingAfterPercent(string text)
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance(text);
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
 
         // act
         string result = descriptionParser.GetColoredText(true);
@@ -872,7 +872,7 @@ public class DescriptionParserTests
     public void GetColoredText_ValueHasAScalingPercentAndColoredTextWithNoScaling_ReturnsNoScalingText(string text)
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance(text);
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
 
         // act
         string result = descriptionParser.GetColoredText(false);
@@ -885,7 +885,7 @@ public class DescriptionParserTests
     public void GetPlainText_HasPercentSign_ReturnsPlainText()
     {
         // arrange
-        DescriptionParser descriptionParser = DescriptionParser.GetInstance("RefName[%1] did not return a valid actor.");
+        GameStringParser descriptionParser = GameStringParser.GetInstance("RefName[%1] did not return a valid actor.");
 
         // act
         string result = descriptionParser.GetPlainText(false, false);

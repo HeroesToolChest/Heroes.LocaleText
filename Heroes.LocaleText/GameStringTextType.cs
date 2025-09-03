@@ -3,12 +3,12 @@
 /// <summary>
 /// Specifies the gamestring type.
 /// </summary>
-public enum DescriptionType
+public enum GameStringTextType
 {
     /// <summary>
-    /// Indicates raw description.
+    /// Indicates raw text.
     /// </summary>
-    RawDescription = 0,
+    RawText = 0,
 
     /// <summary>
     /// Indicates plain text.

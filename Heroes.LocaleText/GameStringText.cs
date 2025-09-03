@@ -13,7 +13,7 @@ public class GameStringText
     /// </summary>
     public const string ErrorTag = "##ERROR##";
 
-    private readonly DescriptionParser _descriptionParser;
+    private readonly GameStringParser _descriptionParser;
     private HashSet<string>? _fontStyleValues;
     private HashSet<string>? _fontStyleConstantValues;
 
@@ -41,8 +41,8 @@ public class GameStringText
     /// <summary>
     /// Initializes a new instance of the <see cref="GameStringText"/> class.
     /// </summary>
-    /// <param name="text">A parsed gamestring that has not been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
-    /// <param name="gameStringLocale">The localization of the <paramref name="text"/>.</param>
+    /// <param name="text">An already parsed gamestring that has had it's data references computed and has not yet been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
+    /// <param name="gameStringLocale">The localization of the <paramref name="text"/>. This is just used for the scaling text, if not needing the scaling text then this may be left as the default.</param>
     /// <param name="extractFontValues">
     /// If <see langword="true"/>, then the font style and constant tags will have their val values saved in <see cref="FontStyleValues"/> and  <see cref="FontStyleConstantValues"/>.
     /// If not needing the output with color tags, then set to <see langword="false"/> for faster parsing performance.
@@ -54,7 +54,7 @@ public class GameStringText
         GameStringLocale = gameStringLocale;
         IsFontValuesExtracted = extractFontValues;
 
-        _descriptionParser = DescriptionParser.GetInstance(text, gameStringLocale, extractFontValues);
+        _descriptionParser = GameStringParser.GetInstance(text, gameStringLocale, extractFontValues);
     }
 
     /// <summary>

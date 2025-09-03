@@ -6,7 +6,7 @@ namespace Heroes.LocaleText;
 /// <summary>
 /// Used for parsing through a gamestring that has been already been xml parsed out and computed for values.
 /// </summary>
-internal class DescriptionParser
+internal class GameStringParser
 {
     private const string _ltNameAttribute = "hlt-name=";
 
@@ -32,7 +32,7 @@ internal class DescriptionParser
 
     private CultureInfo? _culture;
 
-    private DescriptionParser(string description, StormLocale gameStringLocale, bool extractFontVars)
+    private GameStringParser(string description, StormLocale gameStringLocale, bool extractFontVars)
     {
         _description = description;
         _gameStringLocale = gameStringLocale;
@@ -52,9 +52,9 @@ internal class DescriptionParser
     [MemberNotNullWhen(true, nameof(_styleTagVariables), nameof(StyleTagVariables), nameof(_styleConstantTagVariables), nameof(StyleConstantTagVariables))]
     public bool ExtractFontVars { get; }
 
-    public static DescriptionParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontVars = false)
+    public static GameStringParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontVars = false)
     {
-        return new DescriptionParser(gameString, gameStringLocale, extractFontVars);
+        return new GameStringParser(gameString, gameStringLocale, extractFontVars);
     }
 
     public string GetRawText()
@@ -223,7 +223,7 @@ internal class DescriptionParser
             _isContructed = true;
         }
 
-        return BuildDescription(gameString, new DescriptionFlags()
+        return BuildDescription(gameString, new GameStringFlags()
         {
             ColorTags = TagFlag.Include,
             ScalingTag = TagFlag.Include,
@@ -241,7 +241,7 @@ internal class DescriptionParser
             _isContructed = true;
         }
 
-        return BuildDescription(gameString, new DescriptionFlags()
+        return BuildDescription(gameString, new GameStringFlags()
         {
             ColorTags = TagFlag.None,
             ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
@@ -259,7 +259,7 @@ internal class DescriptionParser
             _isContructed = true;
         }
 
-        return BuildDescription(gameString, new DescriptionFlags()
+        return BuildDescription(gameString, new GameStringFlags()
         {
             ColorTags = TagFlag.Include,
             ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
@@ -269,7 +269,7 @@ internal class DescriptionParser
         });
     }
 
-    private string BuildDescription(ReadOnlySpan<char> gameString, DescriptionFlags flags)
+    private string BuildDescription(ReadOnlySpan<char> gameString, GameStringFlags flags)
     {
         if (_textStack.Count < 1)
             return string.Empty;
@@ -759,7 +759,7 @@ internal class DescriptionParser
         }
     }
 
-    private int GetSizeOfBuffer(ReadOnlySpan<char> gameString, DescriptionFlags flags)
+    private int GetSizeOfBuffer(ReadOnlySpan<char> gameString, GameStringFlags flags)
     {
         int sum = 0;
 
