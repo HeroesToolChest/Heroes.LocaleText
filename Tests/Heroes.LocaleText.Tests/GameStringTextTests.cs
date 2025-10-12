@@ -1,7 +1,10 @@
-﻿namespace Heroes.LocaleText.Tests;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Heroes.LocaleText;
+
+namespace Heroes.LocaleText.Tests;
 
 [TestClass]
-public class GameStringTests
+public class GameStringTextTests
 {
     private readonly string _testText = "Every <c val=\"#TooltipNumbers\">18</c> seconds, deals <c val=\"#TooltipNumbers\">125~~0.045~~</c><n/> extra damage every <c val=\"#TooltipNumbers\">2.75</c> seconds.";
     private readonly string _testTextDeDE = "Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern <c val=\"bfd4fd\">70~~0.045~~</c> Schaden zu, verlangsamt sie um <c val=\"bfd4fd\">35%</c> und blendet sie <c val=\"bfd4fd\">1,75</c> Sek. lang.";
