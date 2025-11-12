@@ -1,7 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Heroes.LocaleText;
-
-namespace Heroes.LocaleText.Tests;
+﻿namespace Heroes.LocaleText.Tests;
 
 [TestClass]
 public class GameStringTextTests
