@@ -8,7 +8,7 @@ namespace Heroes.LocaleText;
 /// </summary>
 internal class GameStringParser
 {
-    private const string _ltNameAttribute = "hlt-name=";
+    private const string _hltNameAttribute = "hlt-name=";
 
     private readonly string _description;
 
@@ -739,8 +739,8 @@ internal class GameStringParser
 
         if (fontTagVal.IsEmpty is false &&
 #if NET9_0_OR_GREATER
-            ((_valueByStyleConstantVarAltLookup is not null && startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
-            (_valueByStyleVarAltLookup is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVarAltLookup.Value.TryGetValue(fontTagVal.ToString(), out newValue))))
+            ((_valueByStyleConstantVarAltLookup is not null && startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVarAltLookup.Value.TryGetValue(fontTagVal, out var newValue)) ||
+            (_valueByStyleVarAltLookup is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVarAltLookup.Value.TryGetValue(fontTagVal, out newValue))))
 #else
             ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
             (_valueByStyleVar is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
@@ -753,7 +753,7 @@ internal class GameStringParser
             CopyIntoBuffer(buffer, ref currentOffset, newValue.Value, false);
 
             if (newValue.Preserve)
-                CopyIntoBuffer(buffer, ref currentOffset, $"\" {_ltNameAttribute}\"{fontTagVal}", false);
+                CopyIntoBuffer(buffer, ref currentOffset, $"\" {_hltNameAttribute}\"{fontTagVal}", false);
 
             CopyIntoBuffer(buffer, ref currentOffset, "\">", false);
         }
@@ -811,7 +811,7 @@ internal class GameStringParser
                                     sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
 
                                     if (newValue.Preserve)
-                                        sum += 3 + _ltNameAttribute.Length + tagVarValLength; // lt-name="#TooltipNumbers" +3 for space and quotes
+                                        sum += 3 + _hltNameAttribute.Length + tagVarValLength; // hlt-name="#TooltipNumbers" +3 for space and quotes
 
                                     break;
                                 }
@@ -833,7 +833,7 @@ internal class GameStringParser
                                     sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
 
                                     if (newValue.Preserve)
-                                        sum += 3 + _ltNameAttribute.Length + tagVarValLength; // lt-name="StandardTooltipHeader" +3 for space and quotes
+                                        sum += 3 + _hltNameAttribute.Length + tagVarValLength; // hlt-name="StandardTooltipHeader" +3 for space and quotes
 
                                     break;
                                 }
