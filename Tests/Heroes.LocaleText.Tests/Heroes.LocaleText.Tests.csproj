@@ -1,7 +1,7 @@
-﻿<Project Sdk="MSTest.Sdk/3.10.4">
+﻿<Project Sdk="MSTest.Sdk/4.0.2">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <NoWarn>EnableGenerateDocumentationFile</NoWarn>
@@ -24,6 +24,15 @@
   
   <ItemGroup>
     <ProjectReference Include="..\..\Heroes.LocaleText\Heroes.LocaleText.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="Microsoft.VisualStudio.TestTools.UnitTesting.Parallelize">
+      <_Parameter1>Workers = 0</_Parameter1>
+      <_Parameter1_IsLiteral>true</_Parameter1_IsLiteral>
+      <_Parameter2>Scope = Microsoft.VisualStudio.TestTools.UnitTesting.ExecutionScope.MethodLevel</_Parameter2>
+      <_Parameter2_IsLiteral>true</_Parameter2_IsLiteral>
+    </AssemblyAttribute>
   </ItemGroup>
   
 </Project>

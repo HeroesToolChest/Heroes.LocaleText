@@ -6,6 +6,7 @@ namespace Heroes.LocaleText.Benchmarks;
 [MemoryDiagnoser]
 [SimpleJob(RuntimeMoniker.Net80)]
 [SimpleJob(RuntimeMoniker.Net90)]
+[SimpleJob(RuntimeMoniker.Net10_0)]
 public class LocalTextBenchmarks
 {
     private readonly Dictionary<string, string> _keyValuePairs = [];
