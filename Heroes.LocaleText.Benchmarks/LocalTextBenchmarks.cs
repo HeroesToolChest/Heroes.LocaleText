@@ -4,8 +4,6 @@ using BenchmarkDotNet.Jobs;
 namespace Heroes.LocaleText.Benchmarks;
 
 [MemoryDiagnoser]
-[SimpleJob(RuntimeMoniker.Net80)]
-[SimpleJob(RuntimeMoniker.Net90)]
 [SimpleJob(RuntimeMoniker.Net10_0)]
 public class LocalTextBenchmarks
 {
@@ -79,5 +77,15 @@ public class LocalTextBenchmarks
         gameStringText.AddFontValueReplacements(FontTagType.Constant, true, _keyValuePairs);
 
         return gameStringText.ColoredText;
+    }
+
+    [Benchmark]
+    public string NestTags()
+    {
+        GameStringText gameStringText = new("<c val=\"FF8000\">Gain <c val=\"#TooltipNumbers\">30%</c> points</c>");
+
+        string x = gameStringText.RawText;
+
+        return gameStringText.PlainText;
     }
 }

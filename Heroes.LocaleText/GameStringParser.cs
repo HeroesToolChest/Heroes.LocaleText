@@ -1,5 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace Heroes.LocaleText;
 
@@ -10,8 +12,9 @@ internal class GameStringParser
 {
     private const string _hltNameAttribute = "hlt-name=";
 
-    private readonly string _description;
+    private static readonly SearchValues<char> _specialChars = SearchValues.Create(['<', '~', '#', '%']);
 
+    private readonly string _description;
     private readonly StormLocale _gameStringLocale;
     private readonly List<TextRange> _textStack = [];
 
@@ -215,6 +218,15 @@ internal class GameStringParser
         return tag[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
     }
 
+    private static void CopyEndTag(Span<char> buffer, ref int offset, ReadOnlySpan<char> tagType)
+    {
+        buffer[offset++] = '<';
+        buffer[offset++] = '/';
+        tagType.CopyTo(buffer[offset..]);
+        offset += tagType.Length;
+        buffer[offset++] = '>';
+    }
+
     private string Parse(ReadOnlySpan<char> gameString)
     {
         if (!_isContructed)
@@ -282,8 +294,10 @@ internal class GameStringParser
         int currentOffset = 0;
 
         // loop through and build string
-        foreach (TextRange item in _textStack)
+        ReadOnlySpan<TextRange> textStack = CollectionsMarshal.AsSpan(_textStack);
+        for (int i = 0; i < textStack.Length; i++)
         {
+            TextRange item = textStack[i];
             ReadOnlySpan<char> itemText = gameString[item.Range];
 
             switch (item.Type)
@@ -312,7 +326,7 @@ internal class GameStringParser
                             if (item.Type == TextType.EndTag)
                                 CopyIntoBuffer(buffer, ref currentOffset, itemText, true);
                             else
-                                CopyIntoBuffer(buffer, ref currentOffset, $"</{GetEndTagCharType(itemText)}>", false);
+                                CopyEndTag(buffer, ref currentOffset, GetEndTagCharType(itemText));
                         }
                         else
                         {
@@ -376,6 +390,18 @@ internal class GameStringParser
 
         while (_index < gameString.Length)
         {
+            // Fast path: skip to next special character
+            int nextSpecialIndex = gameString[_index..].IndexOfAny(_specialChars);
+            if (nextSpecialIndex > 0)
+            {
+                _index += nextSpecialIndex;
+            }
+            else if (nextSpecialIndex < 0)
+            {
+                _index = gameString.Length;
+                break;
+            }
+
             if (gameString[_index] == '<' && _index + 1 < gameString.Length && gameString[_index + 1] != ' ')
             {
 #if DEBUG
@@ -545,9 +571,11 @@ internal class GameStringParser
             }
             else
             {
-                Range existing = _textStack[^1].Range;
+                int lastIndex = _textStack.Count - 1;
 
-                _textStack.RemoveAt(_textStack.Count - 1);
+                Range existing = _textStack[lastIndex].Range;
+
+                _textStack.RemoveAt(lastIndex);
                 _textStack.Add(new TextRange(new Range(existing.Start, _index), TextType.Text));
             }
         }
@@ -564,9 +592,11 @@ internal class GameStringParser
             }
             else
             {
-                Range existing = _textStack[^1].Range;
+                int lastIndex = _textStack.Count - 1;
 
-                _textStack.RemoveAt(_textStack.Count - 1);
+                Range existing = _textStack[lastIndex].Range;
+
+                _textStack.RemoveAt(lastIndex);
                 _textStack.Add(new TextRange(new Range(existing.Start, _index), TextType.Text));
             }
         }
@@ -693,12 +723,18 @@ internal class GameStringParser
         // find the tag type
         ReadOnlySpan<char> tagTypeSpan = GetEndTagCharType(startTagSpan);
 
-        int indexOfEndTag = currentTextSpan.IndexOf($"</{tagTypeSpan}>", StringComparison.OrdinalIgnoreCase);
+        int searchLength = tagTypeSpan.Length + 3; // </ + tagType + >
 
-        if (indexOfEndTag > -1)
+        for (int i = 0; i <= currentTextSpan.Length - searchLength; i++)
         {
-            endTag = new Range(_index + indexOfEndTag, _index + indexOfEndTag + tagTypeSpan.Length + 3);
-            return true;
+            if (currentTextSpan[i] == '<' &&
+                currentTextSpan[i + 1] == '/' &&
+                currentTextSpan[i + searchLength - 1] == '>' &&
+                currentTextSpan.Slice(i + 2, tagTypeSpan.Length).Equals(tagTypeSpan, StringComparison.OrdinalIgnoreCase))
+            {
+                endTag = new Range(_index + i, _index + i + searchLength);
+                return true;
+            }
         }
 
         return false;
@@ -753,7 +789,16 @@ internal class GameStringParser
             CopyIntoBuffer(buffer, ref currentOffset, newValue.Value, false);
 
             if (newValue.Preserve)
-                CopyIntoBuffer(buffer, ref currentOffset, $"\" {_hltNameAttribute}\"{fontTagVal}", false);
+            {
+                // $"\" {_hltNameAttribute}\"{fontTagVal}"
+                buffer[currentOffset++] = '"';
+                buffer[currentOffset++] = ' ';
+                _hltNameAttribute.AsSpan().CopyTo(buffer[currentOffset..]);
+                currentOffset += _hltNameAttribute.Length;
+                buffer[currentOffset++] = '"';
+                fontTagVal.CopyTo(buffer[currentOffset..]);
+                currentOffset += fontTagVal.Length;
+            }
 
             CopyIntoBuffer(buffer, ref currentOffset, "\">", false);
         }
