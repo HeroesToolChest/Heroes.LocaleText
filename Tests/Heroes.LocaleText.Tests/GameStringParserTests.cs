@@ -26,13 +26,15 @@ public class GameStringParserTests
     private readonly string _spaceTagDescription3 = "<sp/>À distance";
     private readonly string _scaleTagDescription1 = "aa ~~0.045~~ bb";
 
-    // Convert newline tags </n> to <n/>
+    // Convert newline tags </n>, <n> to <n/>
     private readonly string _convertNewLineTagDescription1 = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c></n>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c>";
     private readonly string _convertNewLineTagDescription1Corrected = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c><n/>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c>";
     private readonly string _convertNewLineTagDescription2 = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c></n></n>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c>";
     private readonly string _convertNewLineTagDescription2Corrected = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c><n/><n/>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c>";
     private readonly string _convertNewLineTagDescription3 = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c></n></n>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c></n>";
     private readonly string _convertNewLineTagDescription3Corrected = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c><n/><n/>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c><n/>";
+    private readonly string _convertNewLineTagDescription4 = "Tyrael's death timer by 10% per enemy Hero hit.<n/><n>Archangel's Wrath reduces nearby enemy Heroes' damage.";
+    private readonly string _convertNewLineTagDescription4Corrected = "Tyrael's death timer by 10% per enemy Hero hit.<n/><n/>Archangel's Wrath reduces nearby enemy Heroes' damage.";
 
     // Case tags
     private readonly string _upperCaseTagDescription1 = "<C val=\"#TooltipQuest\"> Repeatable Quest:</C> Gain<C val=\"#TooltipNumbers\">10</c>";
@@ -227,6 +229,7 @@ public class GameStringParserTests
         Assert.AreEqual(_convertNewLineTagDescription1Corrected, GameStringParser.GetInstance(_convertNewLineTagDescription1).GetRawText());
         Assert.AreEqual(_convertNewLineTagDescription2Corrected, GameStringParser.GetInstance(_convertNewLineTagDescription2).GetRawText());
         Assert.AreEqual(_convertNewLineTagDescription3Corrected, GameStringParser.GetInstance(_convertNewLineTagDescription3).GetRawText());
+        Assert.AreEqual(_convertNewLineTagDescription4Corrected, GameStringParser.GetInstance(_convertNewLineTagDescription4).GetRawText());
     }
 
     [TestMethod]

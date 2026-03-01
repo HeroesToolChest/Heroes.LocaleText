@@ -167,7 +167,7 @@ internal class GameStringParser
 
     private static bool IsNewLineTag(ReadOnlySpan<char> text, Range tag) => IsNewLineTag(text[tag]);
 
-    private static bool IsNewLineTag(ReadOnlySpan<char> text) => text.Equals("<n/>", StringComparison.OrdinalIgnoreCase) || text.Equals("</n>", StringComparison.OrdinalIgnoreCase);
+    private static bool IsNewLineTag(ReadOnlySpan<char> text) => text.Equals("<n/>", StringComparison.OrdinalIgnoreCase) || text.Equals("</n>", StringComparison.OrdinalIgnoreCase) || text.Equals("<n>", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsSpaceTag(ReadOnlySpan<char> text, Range tag) => IsSpaceTag(text[tag]);
 
@@ -411,7 +411,23 @@ internal class GameStringParser
 #endif
                 if (TryParseTag(gameString, out Range? tag, out bool isStartTag))
                 {
-                    if (isStartTag)
+                    if (IsNewLineTag(gameString, tag.Value))
+                    {
+                        // nested
+                        if (startTag.HasValue)
+                        {
+                            if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
+                                _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
+
+                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
+                            _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
+                        }
+                        else
+                        {
+                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
+                        }
+                    }
+                    else if (isStartTag)
                     {
                         PushFontVarFromTag(gameString, tag.Value);
 
@@ -431,22 +447,6 @@ internal class GameStringParser
                         // nested
                         if (startTag.HasValue)
                             _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
-                    }
-                    else if (IsNewLineTag(gameString, tag.Value))
-                    {
-                        // nested
-                        if (startTag.HasValue)
-                        {
-                            if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
-                                _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
-
-                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
-                            _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
-                        }
-                        else
-                        {
-                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
-                        }
                     }
                     else if (startTag is not null)
                     {
