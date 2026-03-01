@@ -41,7 +41,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Heroes.LocaleText.Tests"/>
+    <InternalsVisibleTo Include="Heroes.LocaleText.Tests" />
   </ItemGroup>
   
 </Project>
