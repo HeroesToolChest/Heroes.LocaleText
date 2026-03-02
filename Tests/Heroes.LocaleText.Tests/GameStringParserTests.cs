@@ -21,9 +21,13 @@ public class GameStringParserTests
     private readonly string _spaceTagNormalDescription1 = "Temps de recharge : 20 secondes";
     private readonly string _spaceTagNormalDescription2 = "À distance ";
     private readonly string _spaceTagNormalDescription3 = " À distance";
+    private readonly string _spaceTagNormalDescription4 = " À distance";
+    private readonly string _spaceTagNormalDescription5 = " À distance";
     private readonly string _spaceTagDescription1 = "Temps de recharge :<sp/>20 secondes";
     private readonly string _spaceTagDescription2 = "À distance<sp/>";
     private readonly string _spaceTagDescription3 = "<sp/>À distance";
+    private readonly string _spaceTagDescription4 = "</sp>À distance";
+    private readonly string _spaceTagDescription5 = "<sp>À distance";
     private readonly string _scaleTagDescription1 = "aa ~~0.045~~ bb";
 
     // Convert newline tags </n>, <n> to <n/>
@@ -348,9 +352,13 @@ public class GameStringParserTests
         Assert.AreEqual(_spaceTagNormalDescription1, GameStringParser.GetInstance(_spaceTagDescription1).GetColoredText(true));
         Assert.AreEqual(_spaceTagNormalDescription2, GameStringParser.GetInstance(_spaceTagDescription2).GetColoredText(true));
         Assert.AreEqual(_spaceTagNormalDescription3, GameStringParser.GetInstance(_spaceTagDescription3).GetColoredText(true));
+        Assert.AreEqual(_spaceTagNormalDescription4, GameStringParser.GetInstance(_spaceTagDescription4).GetColoredText(true));
+        Assert.AreEqual(_spaceTagNormalDescription5, GameStringParser.GetInstance(_spaceTagDescription5).GetColoredText(true));
         Assert.AreEqual(_spaceTagNormalDescription1, GameStringParser.GetInstance(_spaceTagDescription1).GetPlainText(false, true));
         Assert.AreEqual(_spaceTagNormalDescription2, GameStringParser.GetInstance(_spaceTagDescription2).GetPlainText(true, true));
         Assert.AreEqual(_spaceTagNormalDescription3, GameStringParser.GetInstance(_spaceTagDescription3).GetPlainText(true, true));
+        Assert.AreEqual(_spaceTagNormalDescription4, GameStringParser.GetInstance(_spaceTagDescription4).GetPlainText(true, true));
+        Assert.AreEqual(_spaceTagNormalDescription5, GameStringParser.GetInstance(_spaceTagDescription5).GetPlainText(true, true));
     }
 
     [TestMethod]

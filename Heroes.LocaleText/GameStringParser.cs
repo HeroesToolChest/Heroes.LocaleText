@@ -171,7 +171,7 @@ internal class GameStringParser
 
     private static bool IsSpaceTag(ReadOnlySpan<char> text, Range tag) => IsSpaceTag(text[tag]);
 
-    private static bool IsSpaceTag(ReadOnlySpan<char> text) => text.Equals("<sp/>", StringComparison.OrdinalIgnoreCase);
+    private static bool IsSpaceTag(ReadOnlySpan<char> text) => text.Equals("<sp/>", StringComparison.OrdinalIgnoreCase) || text.Equals("</sp>", StringComparison.OrdinalIgnoreCase) || text.Equals("<sp>", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsSelfCloseTag(ReadOnlySpan<char> text, Range tag)
     {
@@ -427,6 +427,10 @@ internal class GameStringParser
                             _textStack.Add(new TextRange(tag.Value, TextType.Newline));
                         }
                     }
+                    else if (IsSpaceTag(gameString, tag.Value))
+                    {
+                        _textStack.Add(new TextRange(tag.Value, TextType.SpaceTag));
+                    }
                     else if (isStartTag)
                     {
                         PushFontVarFromTag(gameString, tag.Value);
@@ -456,10 +460,6 @@ internal class GameStringParser
 
                             return;
                         }
-                    }
-                    else if (IsSpaceTag(gameString, tag.Value))
-                    {
-                        _textStack.Add(new TextRange(tag.Value, TextType.SpaceTag));
                     }
                     else if (IsSelfCloseTag(gameString, tag.Value))
                     {
