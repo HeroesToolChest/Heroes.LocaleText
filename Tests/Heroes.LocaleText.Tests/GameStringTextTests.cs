@@ -682,4 +682,95 @@ public class GameStringTextTests
         Assert.HasCount(1, originalFontStyleConstantValues); // only one, the other is broken by the french quote
         Assert.Contains("#TooltipNumbers", originalFontStyleConstantValues);
     }
+
+    [TestMethod]
+    [DataRow(true, "<s val=\"StandardTooltipHeader\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")]
+    [DataRow(false, "<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")]
+    public void FontStyleValues_RemoveHltNameStyleTags_AttributesAreRemoved(bool styleTagsUndo, string result)
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<S  val=\"123456\"  hlt-name=\"StandardTooltipHeader\"  otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")
+            .RemoveHltNameForStyleTags(styleTagsUndo);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual(result, resultRaw);
+    }
+
+    [TestMethod]
+    [DataRow(true, "<s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >Archon </s> more text <c val=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")]
+    [DataRow(false, "<s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >Archon </s> more text <c val=\"123456\" otherAtt2=\"somevalue2\">18</c> seconds")]
+    public void FontStyleValues_RemoveHltNameConstantTags_AttributesAreRemoved(bool constantTagsUndo, string result)
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s val=\"123456\"  hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >Archon </s> more text <C val=\"123456\" hlt-name=\"#TooltipNumbers\"  otherAtt2=\"somevalue2\">18</c> seconds")
+            .RemoveHltNameForConstantTags(constantTagsUndo);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual(result, resultRaw);
+    }
+
+    [TestMethod]
+    [DataRow(true, "<s val=\"StandardTooltipHeader\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")]
+    [DataRow(false, "<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" otherAtt2=\"somevalue2\">18</c> seconds")]
+    public void FontStyleValues_RemoveHltNameAttributes_AttributesAreRemoved(bool undo, string result)
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<S  val=\"123456\"  hlt-name=\"StandardTooltipHeader\"  otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")
+            .RemoveHltNameForStyleTags(undo)
+            .RemoveHltNameForConstantTags(undo);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual(result, resultRaw);
+    }
+
+    [TestMethod]
+    public void FontStyleValues_RemoveHltNameStyleTagsButHasNoHlt_NoChange()
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")
+            .RemoveHltNameForStyleTags(true);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual("<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds", resultRaw);
+    }
+
+    [TestMethod]
+    public void FontStyleValues_RemoveHltNameConstantTagsButHasNoHlt_NoChange()
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" otherAtt2=\"somevalue2\">18</c> seconds")
+            .RemoveHltNameForConstantTags(true);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual("<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" otherAtt2=\"somevalue2\">18</c> seconds", resultRaw);
+    }
+
+    [TestMethod]
+    public void FontStyleValues_RemoveHltNameStyleTagsButHasNoVal_NoChange()
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s otherAtt=\"somevalue\" hlt-name=\"StandardTooltipHeader\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")
+            .RemoveHltNameForStyleTags(true);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual("<s otherAtt=\"somevalue\" hlt-name=\"StandardTooltipHeader\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds", resultRaw);
+    }
 }

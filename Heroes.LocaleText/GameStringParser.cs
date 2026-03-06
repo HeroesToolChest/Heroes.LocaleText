@@ -55,6 +55,14 @@ internal class GameStringParser
     [MemberNotNullWhen(true, nameof(_styleTagVariables), nameof(StyleTagVariables), nameof(_styleConstantTagVariables), nameof(StyleConstantTagVariables))]
     public bool ExtractFontVars { get; }
 
+    public bool RemoveHltNameFromStyleTags { get; set; }
+
+    public bool RemoveHltNameFromConstantTags { get; set; }
+
+    public bool UndoHltNameReplacementForStyleTags { get; set; }
+
+    public bool UndoHltNameReplacementForConstantTags { get; set; }
+
     public static GameStringParser GetInstance(string gameString, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontVars = false)
     {
         return new GameStringParser(gameString, gameStringLocale, extractFontVars);
@@ -110,7 +118,7 @@ internal class GameStringParser
         int i;
         for (i = 0, position = 0; i < text.Length && position < text.Length; i++, position++)
         {
-            while (text[position] == ' ' && i < text.Length && text[position + 1] == ' ')
+            while (text[position] == ' ' && i < text.Length && position + 1 < text.Length && text[position + 1] == ' ')
             {
                 position++;
             }
@@ -203,19 +211,26 @@ internal class GameStringParser
 
     private static ReadOnlySpan<char> GetFontTagVal(ReadOnlySpan<char> tag)
     {
+        return GetAttributeValue(tag, "val=");
+    }
+
+    private static ReadOnlySpan<char> GetAttributeValue(ReadOnlySpan<char> tag, ReadOnlySpan<char> attributeName)
+    {
         // <c val=\"#TooltipNumbers\">
         // <s val=\"StandardTooltipHeader\">
-        int indexOfVal = tag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
-        if (indexOfVal < 0)
+        int indexOfAttributeName = tag.IndexOf(attributeName, StringComparison.OrdinalIgnoreCase);
+        if (indexOfAttributeName < 0)
             return [];
 
-        int startIndexOfQuote = tag.IndexOf("\"");
-        int endIndexOfQuote = tag[(startIndexOfQuote + 1)..].IndexOf("\"");
+        ReadOnlySpan<char> attributeNameSpan = tag[indexOfAttributeName..];
+
+        int startIndexOfQuote = attributeNameSpan.IndexOf("\"");
+        int endIndexOfQuote = attributeNameSpan[(startIndexOfQuote + 1)..].IndexOf("\"");
 
         if (endIndexOfQuote < 1)
             return []; // no end quote found, return empty
 
-        return tag[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
+        return attributeNameSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
     }
 
     private static void CopyEndTag(Span<char> buffer, ref int offset, ReadOnlySpan<char> tagType)
@@ -359,9 +374,8 @@ internal class GameStringParser
                 default:
                     if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                     {
-                        CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
-
-                        ReplaceFontTagVal(buffer, startTag, ref currentOffset);
+                        if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
+                            CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
 
                         startTag = null;
                         CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
@@ -769,8 +783,73 @@ internal class GameStringParser
         }
     }
 
-    private void ReplaceFontTagVal(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
+    private bool FontValueCopiedInBuffer(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
     {
+        bool isStyleTag = startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase);
+        bool isConstantTag = startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase);
+
+        if (!isStyleTag && !isConstantTag)
+            return false;
+
+        if (RemoveHltNameFromStyleTags || RemoveHltNameFromConstantTags)
+        {
+            int indexOfHltName = startTag.IndexOf(_hltNameAttribute, StringComparison.OrdinalIgnoreCase);
+            if (indexOfHltName < 0)
+                return false;
+
+            ReadOnlySpan<char> hltNameSpan = startTag[indexOfHltName..];
+
+            int startIndexOfQuote = hltNameSpan.IndexOf("\"");
+            int endIndexOfQuote = hltNameSpan[(startIndexOfQuote + 1)..].IndexOf("\"");
+
+            if (endIndexOfQuote < 0)
+                return false;
+
+            if ((isStyleTag && RemoveHltNameFromStyleTags) || (isConstantTag && RemoveHltNameFromConstantTags))
+            {
+                // <s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >
+                if ((isStyleTag && UndoHltNameReplacementForStyleTags) || (isConstantTag && UndoHltNameReplacementForConstantTags))
+                {
+                    int indexOfVal = startTag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
+
+                    if (indexOfVal < 0)
+                        return false;
+
+                    CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfVal + 4)], true);
+                    buffer[currentOffset++] = '"';
+                    CopyIntoBuffer(buffer, ref currentOffset, hltNameSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim(), false);
+                    buffer[currentOffset++] = '"';
+                }
+                else
+                {
+                    CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfHltName - 1)].Trim(), true);
+                }
+
+                ReadOnlySpan<char> remainingStartTag = startTag[(indexOfHltName + _hltNameAttribute.Length + endIndexOfQuote + 2)..];
+                CopyIntoBuffer(buffer, ref currentOffset, remainingStartTag, true);
+
+                return true;
+            }
+        }
+        else if (CopiedInFontTagVal(buffer, startTag, ref currentOffset))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    // for copy in the replacement value of the font tag, and if preserve is true then also copy in the hlt-name attribute with the original value
+    private bool CopiedInFontTagVal(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
+    {
+#if NET9_0_OR_GREATER
+        if (_valueByStyleVarAltLookup is null && _valueByStyleConstantVarAltLookup is null)
+#else
+        if (_valueByStyleVar is null && _valueByStyleConstantVar is null)
+#endif
+            return false;
+
+        // "<s val=\"StandardTooltipHeader\">"
         ReadOnlySpan<char> fontTagVal = GetFontTagVal(startTag);
 
         if (fontTagVal.IsEmpty is false &&
@@ -784,8 +863,8 @@ internal class GameStringParser
         {
             int indexOfStyleVar = startTag.IndexOf(fontTagVal);
 
-            currentOffset = currentOffset - startTag.Length + indexOfStyleVar;
-
+            // <s val=\"
+            CopyIntoBuffer(buffer, ref currentOffset, startTag[..indexOfStyleVar], true);
             CopyIntoBuffer(buffer, ref currentOffset, newValue.Value, false);
 
             if (newValue.Preserve)
@@ -801,7 +880,11 @@ internal class GameStringParser
             }
 
             CopyIntoBuffer(buffer, ref currentOffset, "\">", false);
+
+            return true;
         }
+
+        return false;
     }
 
     private int GetSizeOfBuffer(ReadOnlySpan<char> gameString, GameStringFlags flags)
