@@ -353,6 +353,14 @@ internal class GameStringParser
                     break;
                 case TextType.ScalingTag:
                     {
+                        if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
+                        {
+                            if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
+                                CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
+
+                            startTag = null;
+                        }
+
                         if (flags.ScalingTag == TagFlag.Eval && double.TryParse(itemText.Trim('~'), CultureInfo.InvariantCulture, out double scaleValue))
                             GetScalingLocaleText(buffer, ref currentOffset, scaleValue);
                         else if (flags.ScalingTag == TagFlag.Include)

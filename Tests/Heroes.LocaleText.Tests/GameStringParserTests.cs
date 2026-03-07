@@ -109,6 +109,8 @@ public class GameStringParserTests
     private readonly string _plainTextMeiSnowBlindDeDECorrected = "Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern 70 Schaden zu, verlangsamt sie um 35% und blendet sie 1,75 Sek. lang.";
     private readonly string _plainTextWithImg = "<img path=\"@UI/StormTalentInTextQuestIcon\" alignment=\"uppermiddle\" color=\"B48E4C\" width=\"20\" height=\"22\"/><c val=\"#TooltipQuest\">Repeatable Quest:</c>";
     private readonly string _plainTextWithImgCorrected = "Repeatable Quest:";
+    private readonly string _plainTextCustomScalingTag = "Deal <c val=\"#TooltipNumbers\">135<c val=\"#ColorGray\">~~0.05~~</c></c> damage to enemies in the area.";
+    private readonly string _plainTextCustomScalingTagCorrected = "Deal 135 damage to enemies in the area.";
 
     // plain text with newlines
     private readonly string _plainTextNewline1 = "Max Health Bonus: 0%<n/>5%Health 0"; // NestedNewLineTagDescription1Corrected
@@ -122,6 +124,8 @@ public class GameStringParserTests
     private readonly string _plainTextScaling2 = "<c val=\"#TooltipNumbers\">120~~0.05~~</c> damage per second ~~0.035~~<n/>";
     private readonly string _plainTextScaling2Corrected = "120 (+5% per level) damage per second  (+3.5% per level) ";
     private readonly string _plainTextScalingMeiSnowBlindDeDECorrected = "Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern 70 (+4,5% pro Stufe) Schaden zu, verlangsamt sie um 35% und blendet sie 1,75 Sek. lang.";
+    private readonly string _plainTextScalingCustomScalingTag = "Deal <c val=\"#TooltipNumbers\">135<c val=\"#ColorGray\">~~0.05~~</c></c> damage to enemies in the area.";
+    private readonly string _plainTextScalingCustomScalingTagCorrected = "Deal 135 (+5% per level) damage to enemies in the area.";
 
     // plain text with scaling newlines
     private readonly string _plainTextScalingNewline1 = "<c val=\"#TooltipNumbers\">120~~0.04~~</c><n/> damage per second";
@@ -136,6 +140,8 @@ public class GameStringParserTests
     private readonly string _coloredText2Corrected = "<c val=\"#TooltipNumbers\">100</c> damage per second ";
     private readonly string _coloredTextWithImg = "<img path=\"@UI/StormTalentInTextQuestIcon\" alignment=\"uppermiddle\" color=\"B48E4C\" width=\"20\" height=\"22\"/><c val=\"#TooltipQuest\">Repeatable Quest:</c>";
     private readonly string _coloredTextWithImgCorrected = "<img path=\"@UI/StormTalentInTextQuestIcon\" alignment=\"uppermiddle\" color=\"B48E4C\" width=\"20\" height=\"22\"/><c val=\"#TooltipQuest\">Repeatable Quest:</c>";
+    private readonly string _coloredTextCustomScalingTag = "Deal <c val=\"#TooltipNumbers\">135<c val=\"#ColorGray\">~~0.05~~</c></c> damage to enemies in the area.";
+    private readonly string _coloredTextCustomScalingTagCorrected = "Deal <c val=\"#TooltipNumbers\">135</c> damage to enemies in the area.";
 
     // colored text with scaling
     private readonly string _coloredTextScaling1 = "<c val=\"#TooltipNumbers\">100~~0.04~~</c><n/> damage per second<n/>";
@@ -148,6 +154,8 @@ public class GameStringParserTests
     private readonly string _coloredTextScaling4Corrected = "<c val=\"#TooltipNumbers\">100~~0.04</c> damage per second (+5% per level)";
     private readonly string _coloredTextScaling5 = "<c val=\"#TooltipNumbers\">100~~no-scale~~##ERROR</c> damage per second~~0.05~~";
     private readonly string _coloredTextScaling5Corrected = "<c val=\"#TooltipNumbers\">100~~no-scale~~##ERROR</c> damage per second (+5% per level)";
+    private readonly string _coloredTextScalingCustomScalingTag = "Deal <c val=\"#TooltipNumbers\">135<c val=\"#ColorGray\">~~0.05~~</c></c> damage to enemies in the area.";
+    private readonly string _coloredTextScalingCustomScalingTagCorrected = "Deal <c val=\"#TooltipNumbers\">135</c><c val=\"#ColorGray\"> (+5% per level)</c> damage to enemies in the area.";
 
     // text with error tag
     private readonly string _errorText1 = "<c val=\"#TooltipNumbers\">100##ERROR##~~0.04~~</c> damage per second<n/>";
@@ -294,6 +302,7 @@ public class GameStringParserTests
         Assert.AreEqual(_plainText6Corrected, GameStringParser.GetInstance(_plainText6).GetPlainText(false, false));
         Assert.AreEqual(_plainTextMeiSnowBlindDeDECorrected, GameStringParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetPlainText(false, false));
         Assert.AreEqual(_plainTextWithImgCorrected, GameStringParser.GetInstance(_plainTextWithImg).GetPlainText(false, false));
+        Assert.AreEqual(_plainTextCustomScalingTagCorrected, GameStringParser.GetInstance(_plainTextCustomScalingTag).GetPlainText(false, false));
     }
 
     [TestMethod]
@@ -310,6 +319,7 @@ public class GameStringParserTests
         Assert.AreEqual(_plainTextScaling1Corrected, GameStringParser.GetInstance(_plainTextScaling1).GetPlainText(false, true));
         Assert.AreEqual(_plainTextScaling2Corrected, GameStringParser.GetInstance(_plainTextScaling2).GetPlainText(false, true));
         Assert.AreEqual(_plainTextScalingMeiSnowBlindDeDECorrected, GameStringParser.GetInstance(_meiSnowBlindDeDE, StormLocale.DEDE).GetPlainText(false, true));
+        Assert.AreEqual(_plainTextScalingCustomScalingTagCorrected, GameStringParser.GetInstance(_plainTextScalingCustomScalingTag).GetPlainText(false, true));
     }
 
     [TestMethod]
@@ -325,6 +335,7 @@ public class GameStringParserTests
         Assert.AreEqual(_coloredText1Corrected, GameStringParser.GetInstance(_coloredText1).GetColoredText(false));
         Assert.AreEqual(_coloredText2Corrected, GameStringParser.GetInstance(_coloredText2).GetColoredText(false));
         Assert.AreEqual(_coloredTextWithImgCorrected, GameStringParser.GetInstance(_coloredTextWithImg).GetColoredText(false));
+        Assert.AreEqual(_coloredTextCustomScalingTagCorrected, GameStringParser.GetInstance(_coloredTextCustomScalingTag).GetColoredText(false));
     }
 
     [TestMethod]
@@ -335,6 +346,7 @@ public class GameStringParserTests
         Assert.AreEqual(_coloredTextScaling3Corrected, GameStringParser.GetInstance(_coloredTextScaling3).GetColoredText(true));
         Assert.AreEqual(_coloredTextScaling4Corrected, GameStringParser.GetInstance(_coloredTextScaling4).GetColoredText(true));
         Assert.AreEqual(_coloredTextScaling5Corrected, GameStringParser.GetInstance(_coloredTextScaling5).GetColoredText(true));
+        Assert.AreEqual(_coloredTextScalingCustomScalingTagCorrected, GameStringParser.GetInstance(_coloredTextScalingCustomScalingTag).GetColoredText(true));
     }
 
     [TestMethod]
@@ -863,9 +875,10 @@ public class GameStringParserTests
     }
 
     [TestMethod]
-    [DataRow("by <c val=\"#TooltipNumbers\">13700~~0.04~~%</c>")]
-    [DataRow("by <c val=\"#TooltipNumbers\">13700%~~0.04~~</c>")]
-    public void GetColoredText_ValueHasAScalingPercent_ReturnsScalingAfterPercent(string text)
+    [DataRow("by <c val=\"#TooltipNumbers\">13700~~0.04~~%</c>", "by <c val=\"#TooltipNumbers\">13700% (+4% per level)</c>")]
+    [DataRow("by <c val=\"#TooltipNumbers\">13700%~~0.04~~</c>", "by <c val=\"#TooltipNumbers\">13700% (+4% per level)</c>")]
+    [DataRow("by <c val=\"#TooltipNumbers\">13700%<c val=\"#ColorGray\">~~0.04~~</c></c>", "by <c val=\"#TooltipNumbers\">13700%</c><c val=\"#ColorGray\"> (+4% per level)</c>")]
+    public void GetColoredText_ValueHasAScalingPercent_ReturnsScalingAfterPercent(string text, string correct)
     {
         // arrange
         GameStringParser descriptionParser = GameStringParser.GetInstance(text);
@@ -874,7 +887,7 @@ public class GameStringParserTests
         string result = descriptionParser.GetColoredText(true);
 
         // assert
-        Assert.AreEqual("by <c val=\"#TooltipNumbers\">13700% (+4% per level)</c>", result);
+        Assert.AreEqual(correct, result);
     }
 
     [TestMethod]
