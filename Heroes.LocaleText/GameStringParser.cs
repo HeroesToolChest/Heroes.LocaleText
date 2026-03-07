@@ -353,7 +353,7 @@ internal class GameStringParser
                     break;
                 case TextType.ScalingTag:
                     {
-                        if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
+                        if (flags.ScalingTag != TagFlag.None && flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                         {
                             if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
                                 CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
