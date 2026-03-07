@@ -33,10 +33,10 @@ string g = gameStringText.ColoredTextWithScaling;
 The localization of the gamestring can also be passed in using `StormLocale`. By default it is ENUS. The localization is used only for the scaling text (e.g. (+4% per level)). If the scaling text is not needed, then the `StormLocale` may be left as the default.
 
 ```C#
-GameStringText gameStringText = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"bfd4fd\">147~~0.035~~</c> Schaden zufügen. Die Geschosse fügen Gebäuden <c val=\"bfd4fd\">50%</c> des Schadens zu.", StormLocale.DEDE);
+GameStringText gameStringText = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"bfd4fd\">147~~0.035~~</c> Schaden zufÃ¼gen. Die Geschosse fÃ¼gen GebÃ¤uden <c val=\"bfd4fd\">50%</c> des Schadens zu.", StormLocale.DEDE);
 
 string result = gameStringText.PlainTextWithScaling;
-// result: "Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils 147 (+3,5% pro Stufe) Schaden zufügen. Die Geschosse fügen Gebäuden 50% des Schadens zu."
+// result: "Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils 147 (+3,5% pro Stufe) Schaden zufÃ¼gen. Die Geschosse fÃ¼gen GebÃ¤uden 50% des Schadens zu."
 ```
 
 ### Font Styles
@@ -89,6 +89,31 @@ gameStringText.AddFontValueReplacements(FontTagType.Style, true, keyValuePairs);
 string result = gameStringText.ColoredText;
 
 // result: "<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>"
+```
+### Remove 'hlt-name' attribute
+To remove an existing `hlt-name` attribute, call either `RemoveHltNameForStyleTags` or `RemoveHltNameForConstantTags`. Each has a parameter to "undo" the value of the style or constant tags by setting to the value of the removed `hlt-name` attribute value.
+
+```C#
+// has 'hlt-name' attributes for both style and constants, undo is set to 'false'
+GameStringText gameStringText = new GameStringText("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\">Archon</s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")
+    .RemoveHltNameForStyleTags(false)
+    .RemoveHltNameForConstantTags(false);
+
+string result = gameStringText.RawText;
+
+// both are removed
+// result: "<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"123456\" otherAtt2=\"somevalue2\">18</c> seconds"
+```
+```C#
+// has 'hlt-name' attributes for both style and constants, undo is set to 'true'
+GameStringText gameStringText = new GameStringText("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\">Archon</s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds")
+    .RemoveHltNameForStyleTags(true)
+    .RemoveHltNameForConstantTags(true);
+
+string result = gameStringText.RawText;
+
+// both are removed and the `val` of the style and constants tags have been set to the value of the removed `hlt-name` attributes
+// result: "<s val=\"StandardTooltipHeader\" otherAtt=\"somevalue\">Archon </s> more text <c val=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds"
 ```
 
 ## Developing
