@@ -15,7 +15,7 @@ public class GameStringText
 
     private readonly GameStringParser _descriptionParser;
     private HashSet<string>? _fontStyleValues;
-    private HashSet<string>? _fontStyleConstantValues;
+    private HashSet<string>? _fontConstantValues;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _rawText;
@@ -44,7 +44,7 @@ public class GameStringText
     /// <param name="text">An already parsed gamestring that has had it's data references computed and has not yet been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
     /// <param name="gameStringLocale">The localization of the <paramref name="text"/>. This is just used for the scaling text, if not needing the scaling text then this may be left as the default.</param>
     /// <param name="extractFontValues">
-    /// If <see langword="true"/>, then the font style and constant tags will have their val values saved in <see cref="FontStyleValues"/> and  <see cref="FontStyleConstantValues"/>.
+    /// If <see langword="true"/>, then the font style and constant tags will have their <c>val</c> values saved in <see cref="FontStyleValues"/> and  <see cref="FontConstantValues"/>.
     /// If not needing the output with color tags, then set to <see langword="false"/> for faster parsing performance.
     /// </param>
     public GameStringText(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontValues = false)
@@ -134,20 +134,20 @@ public class GameStringText
     /// <summary>
     /// Gets a value indicating whether the font style and constant values have been extracted.
     /// <para>
-    /// If <see langword="true"/>, <see cref="FontStyleValues"/> and <see cref="FontStyleConstantValues"/> will not be <see langword="null"/>.
+    /// If <see langword="true"/>, <see cref="FontStyleValues"/> and <see cref="FontConstantValues"/> will not be <see langword="null"/>.
     /// </para>
     /// </summary>
-    [MemberNotNullWhen(true, nameof(FontStyleValues), nameof(FontStyleConstantValues))]
+    [MemberNotNullWhen(true, nameof(FontStyleValues), nameof(FontConstantValues))]
     public bool IsFontValuesExtracted { get; }
 
     /// <summary>
-    /// <para>Gets a collection of text style values used in the gamestring.</para>
+    /// <para>Gets a collection of font style values used in the gamestring.</para>
     /// <para>
     /// Example:<br/>
     /// With &lt;s val=\"StandardTooltipHeader\"&gt;&lt;/s&gt; returns StandardTooltipHeader.
     /// </para>
     /// </summary>
-    /// <returns>A collection of text style values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
+    /// <returns>A collection of font style values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
     public IEnumerable<string>? FontStyleValues
     {
         get
@@ -160,21 +160,21 @@ public class GameStringText
     }
 
     /// <summary>
-    /// <para>Gets a collection of text style constant values used in the gamestring.</para>
+    /// <para>Gets a collection of font constant values used in the gamestring.</para>
     /// <para>
     /// Example:<br/>
     /// With &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt; returns #TooltipNumbers.
     /// </para>
     /// </summary>
-    /// <returns>A collection of text style constant values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
-    public IEnumerable<string>? FontStyleConstantValues
+    /// <returns>A collection of font constant values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
+    public IEnumerable<string>? FontConstantValues
     {
         get
         {
             if (_rawText is null)
                 _ = RawText; // trigger the parsing
 
-            return _fontStyleConstantValues ??= _descriptionParser.StyleConstantTagVariables;
+            return _fontConstantValues ??= _descriptionParser.StyleConstantTagVariables;
         }
     }
 
@@ -302,10 +302,10 @@ public class GameStringText
         {
             _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);
 
-            if (_fontStyleConstantValues is not null)
+            if (_fontConstantValues is not null)
             {
-                _fontStyleConstantValues.Remove(value);
-                _fontStyleConstantValues.Add(replacement);
+                _fontConstantValues.Remove(value);
+                _fontConstantValues.Add(replacement);
             }
         }
         else if (fontTagType == FontTagType.Style)

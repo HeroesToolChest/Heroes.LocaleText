@@ -200,7 +200,7 @@ public class GameStringTextTests
         GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds.", extractFontValues: true);
 
         // act
-        IEnumerable<string>? result = gameStringText.FontStyleConstantValues;
+        IEnumerable<string>? result = gameStringText.FontConstantValues;
 
         // assert
         CollectionAssert.AreEqual(
@@ -230,13 +230,13 @@ public class GameStringTextTests
     }
 
     [TestMethod]
-    public void FontConstantStyleVariables_DoesNotHaveStyleConstantVariables_ReturnsEmpty()
+    public void FontConstantVariables_DoesNotHaveStyleConstantVariables_ReturnsEmpty()
     {
         // arrange
         GameStringText gameStringText = new("test text", extractFontValues: true);
 
         // act
-        IEnumerable<string>? result = gameStringText.FontStyleConstantValues;
+        IEnumerable<string>? result = gameStringText.FontConstantValues;
 
         // assert
         Assert.IsTrue(gameStringText.IsFontValuesExtracted);
@@ -261,13 +261,13 @@ public class GameStringTextTests
     }
 
     [TestMethod]
-    public void FontStyleConstantVariables_ExtractSetToFalse_ReturnsEmpty()
+    public void FontConstantVariables_ExtractSetToFalse_ReturnsEmpty()
     {
         // arrange
         GameStringText gameStringText = new(_testText, extractFontValues: false);
 
         // act
-        IEnumerable<string>? result = gameStringText.FontStyleConstantValues;
+        IEnumerable<string>? result = gameStringText.FontConstantValues;
 
         // assert
         Assert.IsNull(result);
@@ -643,7 +643,7 @@ public class GameStringTextTests
         GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, <s val=\"StandardTooltipHeader\">Archon </s><n/><s val=\"StandardTooltipDetails2\">Cooldown: </s>", extractFontValues: true);
 
         List<string> originalFontStyleValues = [.. gameStringText.FontStyleValues!];
-        List<string> originalFontStyleConstantValues = [.. gameStringText.FontStyleConstantValues!];
+        List<string> originalFontConstantValues = [.. gameStringText.FontConstantValues!];
 
         // then add
         gameStringText.AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
@@ -652,14 +652,14 @@ public class GameStringTextTests
 
         // act
         List<string> fontStyleValues = [.. gameStringText.FontStyleValues!];
-        List<string> fontStyleConstantValues = [.. gameStringText.FontStyleConstantValues!];
+        List<string> fontStyleConstantValues = [.. gameStringText.FontConstantValues!];
 
         // assert
         Assert.HasCount(2, originalFontStyleValues);
         Assert.Contains("StandardTooltipHeader", originalFontStyleValues);
         Assert.Contains("StandardTooltipDetails2", originalFontStyleValues);
-        Assert.HasCount(1, originalFontStyleConstantValues);
-        Assert.Contains("#TooltipNumbers", originalFontStyleConstantValues);
+        Assert.HasCount(1, originalFontConstantValues);
+        Assert.Contains("#TooltipNumbers", originalFontConstantValues);
 
         Assert.HasCount(2, fontStyleValues);
         Assert.DoesNotContain("StandardTooltipHeader", fontStyleValues);
@@ -676,11 +676,11 @@ public class GameStringTextTests
         GameStringText gameStringText = new("Attaquer un héros ralenti, immobilisé ou étourdi augmente les dégâts des attaques de base de Grisetête de <c val=\"#TooltipNumbers\">0 %</c> pendant <c val=\"#TooltipNumbers\">0</c> secondes. Ce bonus passe à <c val=\"#TooltipNumbers\">0 %</c> en forme de <c val=\"#ColorViolet »>worgen</c>.", gameStringLocale: StormLocale.DEDE, extractFontValues: true);
 
         // act
-        List<string> originalFontStyleConstantValues = [.. gameStringText.FontStyleConstantValues!];
+        List<string> originalFontConstantValues = [.. gameStringText.FontConstantValues!];
 
         // assert
-        Assert.HasCount(1, originalFontStyleConstantValues); // only one, the other is broken by the french quote
-        Assert.Contains("#TooltipNumbers", originalFontStyleConstantValues);
+        Assert.HasCount(1, originalFontConstantValues); // only one, the other is broken by the french quote
+        Assert.Contains("#TooltipNumbers", originalFontConstantValues);
     }
 
     [TestMethod]
