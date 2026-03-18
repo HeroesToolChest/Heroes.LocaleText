@@ -668,7 +668,10 @@ internal class GameStringParser
             return true;
         }
 
-        _index += startTagIndex;
+        if (startTagIndex == 0)
+            _index++;
+        else
+            _index += startTagIndex;
 
         return false;
     }

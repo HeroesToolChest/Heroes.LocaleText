@@ -29,6 +29,8 @@ public class GameStringParserTests
     private readonly string _spaceTagDescription4 = "</sp>À distance";
     private readonly string _spaceTagDescription5 = "<sp>À distance";
     private readonly string _scaleTagDescription1 = "aa ~~0.045~~ bb";
+    private readonly string _specialCase1 = ":<3z:";
+    private readonly string _specialCase2 = "<c val=\"#TooltipNumbers\">:<3z:</c>";
 
     // Convert newline tags </n>, <n> to <n/>
     private readonly string _convertNewLineTagDescription1 = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c></n>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c>";
@@ -223,6 +225,10 @@ public class GameStringParserTests
         Assert.AreEqual(_spaceTagDescription1, GameStringParser.GetInstance(_spaceTagDescription1).GetRawText()); // no changes
         Assert.AreEqual(_spaceTagDescription2, GameStringParser.GetInstance(_spaceTagDescription2).GetRawText()); // no changes
         Assert.AreEqual(_scaleTagDescription1, GameStringParser.GetInstance(_scaleTagDescription1).GetRawText()); // no changes
+        Assert.AreEqual(_specialCase1, GameStringParser.GetInstance(_specialCase1).GetRawText()); // no changes
+        Assert.AreEqual(_specialCase2, GameStringParser.GetInstance(_specialCase2).GetRawText()); // no changes
+        Assert.AreEqual(_specialCase1, GameStringParser.GetInstance(_specialCase2).GetPlainText(false, false));
+
     }
 
     [TestMethod]
