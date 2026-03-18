@@ -228,7 +228,6 @@ public class GameStringParserTests
         Assert.AreEqual(_specialCase1, GameStringParser.GetInstance(_specialCase1).GetRawText()); // no changes
         Assert.AreEqual(_specialCase2, GameStringParser.GetInstance(_specialCase2).GetRawText()); // no changes
         Assert.AreEqual(_specialCase1, GameStringParser.GetInstance(_specialCase2).GetPlainText(false, false));
-
     }
 
     [TestMethod]
