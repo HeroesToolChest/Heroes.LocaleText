@@ -46,7 +46,7 @@ GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> sec
 
 if (gameStringText.IsFontValuesExtracted)
 {
-    IEnumerable<string>? constantValues = gameStringText.FontStyleConstantValues;
+    IEnumerable<string>? constantValues = gameStringText.FontConstantValues;
     IEnumerable<string>? styleValues = gameStringText.FontStyleValues;
 
     // constantValues: { "#TooltipNumbers" }
