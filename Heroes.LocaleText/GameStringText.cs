@@ -59,10 +59,10 @@ public class GameStringText
 
     /// <summary>
     /// <para>Gets the raw text. Unmatched tags have been fixed and nested tag have been modified into unnested tags.</para>
-    /// <para>Contains the color tags <c>&lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt;</c>, scaling data <c>~~x~~</c>, and newlines <c>&lt;n/&gt;</c>. It can also contain error tags <c>##ERROR##</c>.</para>
+    /// <para>Contains the color tags <c>&lt;c&gt;</c> and <c>&lt;s&gt;</c>, scaling data <c>~~x~~</c>, and newlines <c>&lt;n/&gt;</c>. It can also contain error tags <c>##ERROR##</c>.</para>
     /// <para>
     /// Example:<br/>
-    /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200~~0.04~~&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
+    /// Fires a laser that deals &lt;c val="#TooltipNumbers"&gt;200&lt;/c&gt;&lt;c val="#ColorGray"&gt;~~0.04~~&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
     public string RawText => _rawText ??= _descriptionParser.GetRawText();
@@ -111,7 +111,7 @@ public class GameStringText
     /// <para>Gets the gamestring with colored tags and new lines, when parsed this is what appears ingame for text and tooltips.</para>
     /// <para>
     /// Example:<br/>
-    /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
+    /// Fires a laser that deals &lt;c val="#TooltipNumbers"&gt;200&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
     public string ColoredText => _coloredText ??= _descriptionParser.GetColoredText(false);
@@ -121,7 +121,7 @@ public class GameStringText
     /// <para>Same as <see cref="ColoredText"/> but contains the scaling info <c>(+x% per level)</c>.</para>
     /// <para>
     /// Example:<br/>
-    /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200 (+4% per level)&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
+    /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200&lt;/c&gt;&lt;c val=\"#ColorGray\"&gt; (+4% per level)&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
     public string ColoredTextWithScaling => _coloredTextWithScaling ??= _descriptionParser.GetColoredText(true);
