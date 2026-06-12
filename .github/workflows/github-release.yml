@@ -10,7 +10,7 @@ jobs:
     with:
       title: 'Heroes Locale Text'
       app-name: Heroes.LocaleText
-      artificats-workflow: build.yml
+      artifacts-workflow: build.yml
       github-release-env: Github Release
       github-release-url: https://github.com/HeroesToolChest/Heroes.LocaleText/releases
     secrets:
