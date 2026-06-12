@@ -110,6 +110,19 @@ public class GameStringTextTests
     }
 
     [TestMethod]
+    public void ColoredText_LangTag_ReturnsColoredText()
+    {
+        // arrange
+        GameStringText gameStringText = new("<lang rule=\"gender\" word=\"%gender%\">Immortal Slayer,Immortal Slayer</lang>");
+
+        // act
+        string result = gameStringText.ColoredText;
+
+        // assert
+        Assert.AreEqual("<lang rule=\"gender\" word=\"%gender%\">Immortal Slayer,Immortal Slayer</lang>", result);
+    }
+
+    [TestMethod]
     public void ColoredTextWithScaling_TestText_ReturnsColoredTextWithScaling()
     {
         // arrange
