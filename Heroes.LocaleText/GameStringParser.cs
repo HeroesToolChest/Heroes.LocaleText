@@ -16,7 +16,7 @@ internal class GameStringParser
 
     private readonly string _description;
     private readonly StormLocale _gameStringLocale;
-    private readonly List<TextRange> _textStack = [];
+    private readonly List<TextRange> _textStack;
 
     private readonly HashSet<string>? _styleTagVariables;
     private readonly HashSet<string>? _styleConstantTagVariables;
@@ -29,7 +29,7 @@ internal class GameStringParser
     private Dictionary<string, (string Value, bool Preserve)>.AlternateLookup<ReadOnlySpan<char>>? _valueByStyleConstantVarAltLookup;
 #endif
 
-    private bool _isContructed = false;
+    private bool _isConstructed = false;
     private int _startingIndex = 0;
     private int _index = 0;
 
@@ -37,6 +37,8 @@ internal class GameStringParser
 
     private GameStringParser(string description, StormLocale gameStringLocale, bool extractFontVars)
     {
+        _textStack = new List<TextRange>(description.Length / 10);
+
         _description = description;
         _gameStringLocale = gameStringLocale;
 
@@ -198,7 +200,7 @@ internal class GameStringParser
 
         for (int i = 0; i < value.Length; i++)
         {
-            if (char.IsDigit(value[i]))
+            if ((uint)(value[i] - '0') <= 9)
                 continue;
             else if (dot is false && value[i] == '.')
                 dot = true;
@@ -244,10 +246,10 @@ internal class GameStringParser
 
     private string Parse(ReadOnlySpan<char> gameString)
     {
-        if (!_isContructed)
+        if (!_isConstructed)
         {
             ConstructTextStack(gameString);
-            _isContructed = true;
+            _isConstructed = true;
         }
 
         return BuildDescription(gameString, new GameStringFlags()
@@ -262,10 +264,10 @@ internal class GameStringParser
 
     private string ParseToPlainText(ReadOnlySpan<char> gameString, bool includeNewlineTags, bool includeScaling)
     {
-        if (!_isContructed)
+        if (!_isConstructed)
         {
             ConstructTextStack(gameString);
-            _isContructed = true;
+            _isConstructed = true;
         }
 
         return BuildDescription(gameString, new GameStringFlags()
@@ -280,10 +282,10 @@ internal class GameStringParser
 
     private string ParseToColoredText(ReadOnlySpan<char> gameString, bool includeScaling)
     {
-        if (!_isContructed)
+        if (!_isConstructed)
         {
             ConstructTextStack(gameString);
-            _isContructed = true;
+            _isConstructed = true;
         }
 
         return BuildDescription(gameString, new GameStringFlags()
@@ -305,7 +307,7 @@ internal class GameStringParser
 
         Span<char> buffer = totalSize < 1024 ? stackalloc char[totalSize] : new char[totalSize];
 
-        ReadOnlySpan<char> startTag = null;
+        ReadOnlySpan<char> startTag = [];
         int currentOffset = 0;
 
         // loop through and build string
@@ -346,7 +348,7 @@ internal class GameStringParser
                         else
                         {
                             // dont save, empty tag
-                            startTag = null;
+                            startTag = [];
                         }
                     }
 
@@ -358,7 +360,7 @@ internal class GameStringParser
                             if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
                                 CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
 
-                            startTag = null;
+                            startTag = [];
                         }
 
                         if (flags.ScalingTag == TagFlag.Eval && double.TryParse(itemText.Trim('~'), CultureInfo.InvariantCulture, out double scaleValue))
@@ -385,7 +387,7 @@ internal class GameStringParser
                         if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
                             CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
 
-                        startTag = null;
+                        startTag = [];
                         CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
                     }
                     else if (item.Type == TextType.ErrorTag)
@@ -402,7 +404,7 @@ internal class GameStringParser
             }
         }
 
-        // remove any null chars at the end
+        // slice, so no null chars the end
         return buffer[..currentOffset].ToString();
     }
 
@@ -579,51 +581,32 @@ internal class GameStringParser
         }
     }
 
+    private void PushNormalText(
 #if DEBUG
-    private void PushNormalText(ReadOnlySpan<char> gameString, bool append = false)
-    {
-        int normalTextLength = _index - _startingIndex;
-        if (normalTextLength > 0)
-        {
-            ReadOnlySpan<char> temp = gameString.Slice(_startingIndex, normalTextLength);
-
-            if (append is false)
-            {
-                _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
-            }
-            else
-            {
-                int lastIndex = _textStack.Count - 1;
-
-                Range existing = _textStack[lastIndex].Range;
-
-                _textStack.RemoveAt(lastIndex);
-                _textStack.Add(new TextRange(new Range(existing.Start, _index), TextType.Text));
-            }
-        }
-    }
-#else
-    private void PushNormalText(bool append = false)
-    {
-        int normalTextLength = _index - _startingIndex;
-        if (normalTextLength > 0)
-        {
-            if (append is false)
-            {
-                _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
-            }
-            else
-            {
-                int lastIndex = _textStack.Count - 1;
-
-                Range existing = _textStack[lastIndex].Range;
-
-                _textStack.RemoveAt(lastIndex);
-                _textStack.Add(new TextRange(new Range(existing.Start, _index), TextType.Text));
-            }
-        }
-    }
+        ReadOnlySpan<char> gameString,
 #endif
+        bool append = false)
+    {
+        int normalTextLength = _index - _startingIndex;
+        if (normalTextLength > 0)
+        {
+#if DEBUG
+            ReadOnlySpan<char> temp = gameString.Slice(_startingIndex, normalTextLength);
+#endif
+            if (append is false)
+            {
+                _textStack.Add(new TextRange(new Range(_startingIndex, _index), TextType.Text));
+            }
+            else
+            {
+                int lastIndex = _textStack.Count - 1;
+
+                Range existing = _textStack[lastIndex].Range;
+
+                _textStack[lastIndex] = new TextRange(new Range(existing.Start, _index), TextType.Text);
+            }
+        }
+    }
 
     // try to parse out a tag
     private bool TryParseTag(ReadOnlySpan<char> gameString, [NotNullWhen(true)] out Range? tag, out bool isStartTag)
@@ -684,18 +667,9 @@ internal class GameStringParser
         int lengthOffset = gameString.Length - currentTextSpan.Length;
 
         int startScaleIndex = currentTextSpan.IndexOf("~~") + 1; // the second char of the ~~ (first batch)
-        int endScaleIndex = -1; // first char of the ~~ (second batch)
-
-        for (int i = startScaleIndex; i < currentTextSpan.Length; i++)
-        {
-            // find next occurrence of ~~
-            if (currentTextSpan[i] == '~' && i + 1 < currentTextSpan.Length && currentTextSpan[i + 1] == '~')
-            {
-                endScaleIndex = i;
-
-                break;
-            }
-        }
+        int endScaleIndex = currentTextSpan[(startScaleIndex + 1)..].IndexOf("~~"); // first char of the ~~ (second batch)
+        if (endScaleIndex >= 0)
+            endScaleIndex += startScaleIndex + 1;
 
         if (startScaleIndex > 0 && endScaleIndex > 0)
         {
@@ -752,8 +726,17 @@ internal class GameStringParser
 
         for (int i = 0; i <= currentTextSpan.Length - searchLength; i++)
         {
-            if (currentTextSpan[i] == '<' &&
-                currentTextSpan[i + 1] == '/' &&
+            int next = currentTextSpan[i..].IndexOf('<');
+
+            if (next < 0)
+                break;
+
+            i += next;
+
+            if (i > currentTextSpan.Length - searchLength)
+                break;
+
+            if (currentTextSpan[i + 1] == '/' &&
                 currentTextSpan[i + searchLength - 1] == '>' &&
                 currentTextSpan.Slice(i + 2, tagTypeSpan.Length).Equals(tagTypeSpan, StringComparison.OrdinalIgnoreCase))
             {
@@ -1020,7 +1003,7 @@ internal class GameStringParser
             StormLocale.ZHCN => " (每级+0.##%)",
             StormLocale.ZHTW => " (每級+0.##%)",
 
-            _ => $"{value.ToString(" (+0.##% per level)", _culture)}",
+            _ => " (+0.##% per level)",
         };
 
         value.TryFormat(buffer[offset..], out int charsWritten, format, _culture);
