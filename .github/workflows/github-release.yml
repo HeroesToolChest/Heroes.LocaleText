@@ -8,7 +8,6 @@ jobs:
     permissions:
       contents: write
     with:
-      title: 'Heroes Locale Text'
       app-name: Heroes.LocaleText
       artifacts-workflow: build.yml
       github-release-env: Github Release
