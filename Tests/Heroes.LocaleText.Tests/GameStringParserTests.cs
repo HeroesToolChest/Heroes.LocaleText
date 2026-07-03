@@ -67,6 +67,8 @@ public class GameStringParserTests
     private readonly string _nestedTagDescription3Corrected = string.Empty;
     private readonly string _nestedTagDescription4 = "<c val=\"FF8000\">45%<c val=\"#TooltipNumbers\"></c></c>";
     private readonly string _nestedTagDescription4Corrected = "<c val=\"FF8000\">45%</c>";
+    private readonly string _nestedTagDescription5 = "<s val=\"StandardTooltipHeader\">Overdrive</s><n/><s val=\"StandardTooltipDetails\">Cooldown: 10 seconds</n></n><s val=\"StandardTooltipDetails\">Activate: <s val=\"StandardTooltip\">Increases ability power by 30% and Mana costs for abilities by 50% for 5 seconds.";
+    private readonly string _nestedTagDescription5Corrected = "<s val=\"StandardTooltipHeader\">Overdrive</s><n/><s val=\"StandardTooltipDetails\">Cooldown: 10 seconds</s><n/><n/><s val=\"StandardTooltipDetails\">Activate: </s><s val=\"StandardTooltip\">Increases ability power by 30% and Mana costs for abilities by 50% for 5 seconds.</s>";
 
     // nested new line
     private readonly string _nestedNewLineTagDescription1 = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%<n/>5%</c>Health <c val=\"#TooltipNumbers\">0</c>"; // new line between c tags
@@ -277,6 +279,7 @@ public class GameStringParserTests
         Assert.AreEqual(_nestedTagDescription2Corrected, GameStringParser.GetInstance(_nestedTagDescription2).GetRawText());
         Assert.AreEqual(_nestedTagDescription3Corrected, GameStringParser.GetInstance(_nestedTagDescription3).GetRawText());
         Assert.AreEqual(_nestedTagDescription4Corrected, GameStringParser.GetInstance(_nestedTagDescription4).GetRawText());
+        Assert.AreEqual(_nestedTagDescription5Corrected, GameStringParser.GetInstance(_nestedTagDescription5).GetRawText());
     }
 
     [TestMethod]

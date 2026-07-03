@@ -442,6 +442,8 @@ internal class GameStringParser
                         {
                             if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
                                 _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
+                            else
+                                _textStack.Add(new TextRange(startTag.Value, TextType.MissingEndTag));
 
                             _textStack.Add(new TextRange(tag.Value, TextType.Newline));
                             _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
