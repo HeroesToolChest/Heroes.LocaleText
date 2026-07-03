@@ -116,19 +116,17 @@ internal class GameStringParser
     // replaces double space or more into single space, and lowercases the tag type
     private static int CleanUpTag(Span<char> text)
     {
-        int position;
-        int i;
-        for (i = 0, position = 0; i < text.Length && position < text.Length; i++, position++)
-        {
-            while (text[position] == ' ' && i < text.Length && position + 1 < text.Length && text[position + 1] == ' ')
-            {
-                position++;
-            }
+        int writeIndex = 0;
 
-            text[i] = text[position];
+        for (int position = 0; position < text.Length; position++)
+        {
+            if (text[position] == ' ' && writeIndex > 0 && text[writeIndex - 1] == ' ')
+                continue; // skip for second consecutive space
+
+            text[writeIndex++] = text[position];
         }
 
-        text = text[..(position - (position - i))];
+        text = text[..writeIndex];
 
         Span<char> tagTypeSpan;
         int spaceIndex = text.IndexOf(' ');
@@ -137,10 +135,9 @@ internal class GameStringParser
             tagTypeSpan = text[..spaceIndex].TrimStart('<');
         else
             tagTypeSpan = text.Trim("</>");
+
         for (int j = 0; j < tagTypeSpan.Length; j++)
-        {
             tagTypeSpan[j] = char.ToLowerInvariant(tagTypeSpan[j]);
-        }
 
         return text.Length;
     }
@@ -164,15 +161,11 @@ internal class GameStringParser
 
     private static ReadOnlySpan<char> GetEndTagCharType(ReadOnlySpan<char> startTagText)
     {
-        ReadOnlySpan<char> tagTypeSpan;
+        // remove the < and > from the start tag
+        ReadOnlySpan<char> inner = startTagText[1..^1];
 
-        int spaceIndex = startTagText.IndexOf(' ');
-        if (spaceIndex > -1)
-            tagTypeSpan = startTagText[..spaceIndex].TrimStart('<');
-        else
-            tagTypeSpan = startTagText.Trim("<>");
-
-        return tagTypeSpan;
+        int spaceIndex = inner.IndexOf(' ');
+        return spaceIndex > -1 ? inner[..spaceIndex] : inner;
     }
 
     private static bool IsNewLineTag(ReadOnlySpan<char> text, Range tag) => IsNewLineTag(text[tag]);
