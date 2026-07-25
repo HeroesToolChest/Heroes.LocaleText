@@ -5,7 +5,7 @@
 
 Heroes Locale Text is a .NET library used to parse Heroes of the Storm gamestrings and provide readable friendly verbiage. Gamestrings must already have their data references parsed. 
 
-Valid gamestring are from [heroes-data](https://github.com/HeroesToolChest/heroes-data).
+Valid gamestring are from [heroes-data](https://github.com/HeroesToolChest/heroes-data2).
 
 ## Usage
 Parse a provided gamestring using `GameStringText` and call one of the properties.
