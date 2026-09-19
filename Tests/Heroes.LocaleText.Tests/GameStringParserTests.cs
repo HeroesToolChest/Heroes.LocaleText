@@ -31,6 +31,10 @@ public class GameStringParserTests
     private readonly string _scaleTagDescription1 = "aa ~~0.045~~ bb";
     private readonly string _specialCase1 = ":<3z:";
     private readonly string _specialCase2 = "<c val=\"#TooltipNumbers\">:<3z:</c>";
+    private readonly string _doubleLessThanCharacter = "Mana.<n/></n><<img path=\"@UI/StormTalentInTextQuestIcon\"/>";
+    private readonly string _doubleLessThanCharacterCorrected = "Mana.<n/><n/><<img path=\"@UI/StormTalentInTextQuestIcon\"/>";
+    private readonly string _doubleLessThanCharacterWithSpace = "Mana.<n/></n>< <img path=\"@UI/StormTalentInTextQuestIcon\"/>";
+    private readonly string _doubleLessThanCharacterWithSpaceCorrected = "Mana.<n/><n/>< <img path=\"@UI/StormTalentInTextQuestIcon\"/>";
 
     // Convert newline tags </n>, <n> to <n/>
     private readonly string _convertNewLineTagDescription1 = "Max Health Bonus: <c val=\"#TooltipNumbers\">0%</c></n>Health Per Second Bonus: <c val=\"#TooltipNumbers\">0</c>";
@@ -230,6 +234,8 @@ public class GameStringParserTests
         Assert.AreEqual(_specialCase1, GameStringParser.GetInstance(_specialCase1).GetRawText()); // no changes
         Assert.AreEqual(_specialCase2, GameStringParser.GetInstance(_specialCase2).GetRawText()); // no changes
         Assert.AreEqual(_specialCase1, GameStringParser.GetInstance(_specialCase2).GetPlainText(false, false));
+        Assert.AreEqual(_doubleLessThanCharacterCorrected, GameStringParser.GetInstance(_doubleLessThanCharacter).GetRawText());
+        Assert.AreEqual(_doubleLessThanCharacterWithSpaceCorrected, GameStringParser.GetInstance(_doubleLessThanCharacterWithSpace).GetRawText());
     }
 
     [TestMethod]

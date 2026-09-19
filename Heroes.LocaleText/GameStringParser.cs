@@ -421,11 +421,16 @@ internal class GameStringParser
 
             if (gameString[_index] == '<' && _index + 1 < gameString.Length && gameString[_index + 1] != ' ')
             {
+                int stackCountBeforeText = _textStack.Count;
+
 #if DEBUG
                 PushNormalText(gameString);
 #else
                 PushNormalText();
 #endif
+
+                bool pushedText = _textStack.Count > stackCountBeforeText;
+
                 if (TryParseTag(gameString, out Range? tag, out bool isStartTag))
                 {
                     if (IsNewLineTag(gameString, tag.Value))
@@ -487,7 +492,8 @@ internal class GameStringParser
                 }
                 else
                 {
-                    _textStack.RemoveAt(_textStack.Count - 1);
+                    if (pushedText)
+                        _textStack.RemoveAt(_textStack.Count - 1);
 #if DEBUG
                     PushNormalText(gameString);
 #else
