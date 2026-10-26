@@ -8,26 +8,27 @@ namespace Heroes.LocaleText;
 public static class StormLocaleCulture
 {
     /// <summary>
-    /// Gets the <see cref="CultureInfo"/>.
+    /// Gets the <see cref="CultureInfo"/> for the <paramref name="stormLocale"/>.
     /// </summary>
     /// <param name="stormLocale">The locale.</param>
-    /// <returns>The <see cref="CultureInfo"/>.</returns>
-    public static CultureInfo GetCultureInfo(StormLocale stormLocale) => stormLocale switch
-    {
-        StormLocale.ENUS => new CultureInfo("en-US"),
-        StormLocale.DEDE => new CultureInfo("de-DE"),
-        StormLocale.ESES => new CultureInfo("es-ES"),
-        StormLocale.ESMX => new CultureInfo("es-MX"),
-        StormLocale.FRFR => new CultureInfo("fr-FR"),
-        StormLocale.ITIT => new CultureInfo("it-IT"),
-        StormLocale.KOKR => new CultureInfo("ko-KR"),
-        StormLocale.PLPL => new CultureInfo("pl-PL"),
-        StormLocale.PTBR => new CultureInfo("pt-BR"),
-        StormLocale.RURU => new CultureInfo("ru-RU"),
-        StormLocale.ZHCN => new CultureInfo("zh-CN"),
-        StormLocale.ZHTW => new CultureInfo("zh-TW"),
+    /// <returns>A cached, read-only <see cref="CultureInfo"/>.</returns>
+    public static CultureInfo GetCultureInfo(StormLocale stormLocale) => CultureInfo.GetCultureInfo(GetCultureName(stormLocale));
 
-        _ => new CultureInfo("en-US"),
+    private static string GetCultureName(StormLocale stormLocale) => stormLocale switch
+    {
+        StormLocale.ENUS => "en-US",
+        StormLocale.DEDE => "de-DE",
+        StormLocale.ESES => "es-ES",
+        StormLocale.ESMX => "es-MX",
+        StormLocale.FRFR => "fr-FR",
+        StormLocale.ITIT => "it-IT",
+        StormLocale.KOKR => "ko-KR",
+        StormLocale.PLPL => "pl-PL",
+        StormLocale.PTBR => "pt-BR",
+        StormLocale.RURU => "ru-RU",
+        StormLocale.ZHCN => "zh-CN",
+        StormLocale.ZHTW => "zh-TW",
+
+        _ => "en-US",
     };
 }
-

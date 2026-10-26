@@ -445,12 +445,13 @@ public class GameStringParserTests
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "StandardTooltipHeader",
             },
-            styleTagVars);
+            styleTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -464,12 +465,13 @@ public class GameStringParserTests
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "#TooltipNumbers",
             },
-            styleConstantTagVars);
+            styleConstantTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -483,13 +485,14 @@ public class GameStringParserTests
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "StandardTooltipHeader",
                 "StandardTooltipDetails",
             },
-            styleTagVars);
+            styleTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -503,14 +506,15 @@ public class GameStringParserTests
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "#TooltipNumbers1",
                 "#TooltipNumbers2",
                 "#TooltipNumbers3",
             },
-            styleConstantTagVars);
+            styleConstantTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -524,13 +528,14 @@ public class GameStringParserTests
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "StandardTooltipHeader",
                 "standardtooltipheader",
             },
-            styleTagVars);
+            styleTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -544,13 +549,14 @@ public class GameStringParserTests
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "#TooltipNumbers",
                 "#tooltipnumbers",
             },
-            styleConstantTagVars);
+            styleConstantTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -564,12 +570,13 @@ public class GameStringParserTests
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "#other",
             },
-            styleTagVars);
+            styleTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -583,12 +590,13 @@ public class GameStringParserTests
         List<string> styleTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "other",
             },
-            styleTagVars);
+            styleTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -603,17 +611,19 @@ public class GameStringParserTests
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
             },
-            styleTagVars);
+            styleTagVars,
+            SequenceOrder.InAnyOrder);
 
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
             },
-            styleConstantTagVars);
+            styleConstantTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -643,11 +653,12 @@ public class GameStringParserTests
         List<string> styleTagVars = [.. descriptionParser.StyleTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
             },
-            styleTagVars);
+            styleTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -661,11 +672,12 @@ public class GameStringParserTests
         List<string> styleConstantTagVars = [.. descriptionParser.StyleConstantTagVariables!];
 
         // assert
-        CollectionAssert.AreEquivalent(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
             },
-            styleConstantTagVars);
+            styleConstantTagVars,
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -930,5 +942,123 @@ public class GameStringParserTests
 
         // assert
         Assert.AreEqual("RefName[%1] did not return a valid actor.", result);
+    }
+
+    [TestMethod]
+    [DataRow("<C val=\"#TooltipNumbers\">10", "<c val=\"#TooltipNumbers\">10</c>")]
+    [DataRow("<C val=\"FF8000\">Gain <c val=\"#TooltipNumbers\">30%</c> points", "<c val=\"FF8000\">Gain </c><c val=\"#TooltipNumbers\">30%</c><c val=\"FF8000\"> points</c>")]
+    public void GetRawText_UpperCaseStartTagWithMissingEndTag_AddsLowerCaseEndTag(string text, string correct)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string result = descriptionParser.GetRawText();
+
+        // assert
+        Assert.AreEqual(correct, result);
+    }
+
+    [TestMethod]
+    [DataRow("<c val=\"#TooltipNumbers\">10</w> seconds", "<c val=\"#TooltipNumbers\">10 seconds</c>")]
+    [DataRow("<c val=\"#TooltipNumbers\">100~~0.04~~", "<c val=\"#TooltipNumbers\">100~~0.04~~</c>")]
+    [DataRow("<c val=\"#TooltipNumbers\">100##ERROR##", "<c val=\"#TooltipNumbers\">100##ERROR##</c>")]
+    [DataRow("<c val=\"#TooltipNumbers\">Temps<sp/>20", "<c val=\"#TooltipNumbers\">Temps<sp/>20</c>")]
+    public void GetRawText_MissingEndTagAfterNonTextItem_AddsEndTag(string text, string correct)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string result = descriptionParser.GetRawText();
+
+        // assert
+        Assert.AreEqual(correct, result);
+    }
+
+    [TestMethod]
+    [DataRow("Every <c>18</c> seconds", "Every <c>18</c> seconds")]
+    [DataRow("previous <w>location.</w> more", "previous <w>location.</w> more")]
+    [DataRow("<C>18</c> seconds", "<c>18</c> seconds")]
+    [DataRow("<w>a <c>b</c> d</w>", "<w>a </w><c>b</c><w> d</w>")]
+    [DataRow("<w>a<n/>b</w> c", "<w>a</w><n/><w>b</w> c")]
+    public void GetRawText_StartTagWithNoAttributes_MatchesEndTag(string text, string correct)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string result = descriptionParser.GetRawText();
+
+        // assert
+        Assert.AreEqual(correct, result);
+    }
+
+    [TestMethod]
+    [DataRow("<c val=\"c\">text</c>", "c", false, "<c val=\"123456\">text</c>")]
+    [DataRow("<c val=\"c\">text</c>", "c", true, "<c val=\"123456\" hlt-name=\"c\">text</c>")]
+    [DataRow("<c val=\"val\">text</c>", "val", false, "<c val=\"123456\">text</c>")]
+    public void GetColoredText_WithReplacementConstantVarThatAppearsEarlierInTag_ReturnsReplacement(string text, string constantVar, bool preserve, string correct)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+        descriptionParser.AddStyleConstantVarsWithReplacement(constantVar, "123456", preserve);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual(correct, result);
+    }
+
+    [TestMethod]
+    [DataRow("<s val=\"s\">text</s>", "s", false, "<s val=\"123456\">text</s>")]
+    [DataRow("<s val=\"val\">text</s>", "val", true, "<s val=\"123456\" hlt-name=\"val\">text</s>")]
+    public void GetColoredText_WithReplacementStyleVarThatAppearsEarlierInTag_ReturnsReplacement(string text, string styleVar, bool preserve, string correct)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+        descriptionParser.AddStyleVarsWithReplacement(styleVar, "123456", preserve);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual(correct, result);
+    }
+
+    [TestMethod]
+    public void GetRawText_NoTags_ReturnsSameStringInstance()
+    {
+        // arrange
+        string text = "Deals damage to nearby enemies.";
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string result = descriptionParser.GetRawText();
+
+        // assert
+        Assert.AreSame(text, result);
+    }
+
+    [TestMethod]
+    public void GetColoredText_DescriptionLongerThanStackBuffer_ReturnsCorrectText()
+    {
+        // arrange
+        string text = string.Concat(Enumerable.Repeat("Deal <c val=\"#TooltipNumbers\">120~~0.04~~</c> damage to <s val=\"StandardTooltipDetails\">enemies</s><n/>", 20));
+        string correctColoredText = string.Concat(Enumerable.Repeat("Deal <c val=\"#TooltipNumbers\">120 (+4% per level)</c> damage to <s val=\"StandardTooltipDetails\">enemies</s><n/>", 20));
+        string correctPlainText = string.Concat(Enumerable.Repeat("Deal 120 damage to enemies ", 20));
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultColoredText = descriptionParser.GetColoredText(true);
+        string resultPlainText = descriptionParser.GetPlainText(false, false);
+
+        // assert
+        Assert.IsGreaterThan(1024, text.Length);
+        Assert.AreEqual(text, resultRaw);
+        Assert.AreEqual(correctColoredText, resultColoredText);
+        Assert.AreEqual(correctPlainText, resultPlainText);
     }
 }

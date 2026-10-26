@@ -198,12 +198,13 @@ public class GameStringTextTests
         IEnumerable<string>? result = gameStringText.FontStyleValues;
 
         // assert
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "StandardTooltipHeader",
             },
-            result!.ToList());
+            result!.ToList(),
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -216,12 +217,13 @@ public class GameStringTextTests
         IEnumerable<string>? result = gameStringText.FontConstantValues;
 
         // assert
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
                 "#TooltipNumbers",
             },
-            result!.ToList());
+            result!.ToList(),
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -235,11 +237,12 @@ public class GameStringTextTests
 
         // assert
         Assert.IsTrue(gameStringText.IsFontValuesExtracted);
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
             },
-            result!.ToList());
+            result!.ToList(),
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -253,11 +256,12 @@ public class GameStringTextTests
 
         // assert
         Assert.IsTrue(gameStringText.IsFontValuesExtracted);
-        CollectionAssert.AreEqual(
+        Assert.AreSequenceEqual(
             new List<string>()
             {
             },
-            result!.ToList());
+            result!.ToList(),
+            SequenceOrder.InAnyOrder);
     }
 
     [TestMethod]
@@ -743,6 +747,51 @@ public class GameStringTextTests
 
         // assert
         Assert.AreEqual(result, resultRaw);
+    }
+
+    [TestMethod]
+    public void AddFontValueReplacement_StyleReplacementWithRemoveHltNameForConstantTags_StyleValueIsReplaced()
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s val=\"StandardTooltipHeader\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\">18</c> seconds")
+            .AddFontValueReplacement("StandardTooltipHeader", "654321", FontTagType.Style)
+            .RemoveHltNameForConstantTags(false);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual("<s val=\"654321\">Archon </s> more text <c val=\"123456\">18</c> seconds", resultRaw);
+    }
+
+    [TestMethod]
+    public void AddFontValueReplacement_ConstantReplacementWithRemoveHltNameForStyleTags_ConstantValueIsReplaced()
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s> more text <c val=\"#TooltipNumbers\">18</c> seconds")
+            .AddFontValueReplacement("#TooltipNumbers", "654321", FontTagType.Constant)
+            .RemoveHltNameForStyleTags(true);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual("<s val=\"StandardTooltipHeader\">Archon </s> more text <c val=\"654321\">18</c> seconds", resultRaw);
+    }
+
+    [TestMethod]
+    public void AddFontValueReplacement_StyleReplacementWithRemoveHltNameForStyleTagsButHasNoHlt_StyleValueIsReplaced()
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s val=\"StandardTooltipHeader\">Archon </s> more text")
+            .AddFontValueReplacement("StandardTooltipHeader", "654321", FontTagType.Style)
+            .RemoveHltNameForStyleTags(false);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual("<s val=\"654321\">Archon </s> more text", resultRaw);
     }
 
     [TestMethod]

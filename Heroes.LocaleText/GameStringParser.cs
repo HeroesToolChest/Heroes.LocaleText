@@ -30,6 +30,7 @@ internal class GameStringParser
 #endif
 
     private bool _isConstructed = false;
+    private bool _isPlainText = false;
     private int _startingIndex = 0;
     private int _index = 0;
 
@@ -145,18 +146,12 @@ internal class GameStringParser
     // checks if the end tag matches the start tag
     private static bool IsTagsMatch(ReadOnlySpan<char> text, Range startTag, Range endTag)
     {
-        ReadOnlySpan<char> startSpan = text[startTag];
         ReadOnlySpan<char> endSpan = text[endTag].Trim("</> ");
-        ReadOnlySpan<char> firstPart;
 
-        int spaceIndex = startSpan.IndexOf(' ');
+        // strips both the < and >, so tags with no attributes (e.g. <c>) also match
+        ReadOnlySpan<char> startTagType = GetEndTagCharType(text[startTag]);
 
-        if (spaceIndex > -1)
-            firstPart = startSpan[..spaceIndex].TrimStart('<');
-        else
-            firstPart = startSpan.TrimStart('<');
-
-        return firstPart.Equals(endSpan, StringComparison.OrdinalIgnoreCase);
+        return startTagType.Equals(endSpan, StringComparison.OrdinalIgnoreCase);
     }
 
     private static ReadOnlySpan<char> GetEndTagCharType(ReadOnlySpan<char> startTagText)
@@ -232,18 +227,25 @@ internal class GameStringParser
     {
         buffer[offset++] = '<';
         buffer[offset++] = '/';
-        tagType.CopyTo(buffer[offset..]);
-        offset += tagType.Length;
+
+        // lowercase to match the start tag, which gets lowercased by CleanUpTag
+        offset += tagType.ToLowerInvariant(buffer[offset..]);
         buffer[offset++] = '>';
+    }
+
+    private static void AddFontVar(HashSet<string> fontVars, ReadOnlySpan<char> fontTagVal)
+    {
+#if NET9_0_OR_GREATER
+        // only allocates a string if the value is not already in the set
+        fontVars.GetAlternateLookup<ReadOnlySpan<char>>().Add(fontTagVal);
+#else
+        fontVars.Add(fontTagVal.ToString());
+#endif
     }
 
     private string Parse(ReadOnlySpan<char> gameString)
     {
-        if (!_isConstructed)
-        {
-            ConstructTextStack(gameString);
-            _isConstructed = true;
-        }
+        EnsureTextStackConstructed(gameString);
 
         return BuildDescription(gameString, new GameStringFlags()
         {
@@ -257,11 +259,7 @@ internal class GameStringParser
 
     private string ParseToPlainText(ReadOnlySpan<char> gameString, bool includeNewlineTags, bool includeScaling)
     {
-        if (!_isConstructed)
-        {
-            ConstructTextStack(gameString);
-            _isConstructed = true;
-        }
+        EnsureTextStackConstructed(gameString);
 
         return BuildDescription(gameString, new GameStringFlags()
         {
@@ -275,11 +273,7 @@ internal class GameStringParser
 
     private string ParseToColoredText(ReadOnlySpan<char> gameString, bool includeScaling)
     {
-        if (!_isConstructed)
-        {
-            ConstructTextStack(gameString);
-            _isConstructed = true;
-        }
+        EnsureTextStackConstructed(gameString);
 
         return BuildDescription(gameString, new GameStringFlags()
         {
@@ -291,14 +285,33 @@ internal class GameStringParser
         });
     }
 
+    private void EnsureTextStackConstructed(ReadOnlySpan<char> gameString)
+    {
+        if (_isConstructed)
+            return;
+
+        ConstructTextStack(gameString);
+        _isConstructed = true;
+
+        // no tags or special text, so every output is the original string
+        _isPlainText = _textStack.Count == 1 &&
+            _textStack[0].Type == TextType.Text &&
+            _textStack[0].Range.Start.Value == 0 &&
+            _textStack[0].Range.End.Value == gameString.Length;
+    }
+
     private string BuildDescription(ReadOnlySpan<char> gameString, GameStringFlags flags)
     {
         if (_textStack.Count < 1)
             return string.Empty;
 
+        if (_isPlainText)
+            return _description;
+
         int totalSize = GetSizeOfBuffer(gameString, flags);
 
-        Span<char> buffer = totalSize < 1024 ? stackalloc char[totalSize] : new char[totalSize];
+        char[]? rentedBuffer = null;
+        Span<char> buffer = totalSize < 1024 ? stackalloc char[totalSize] : (rentedBuffer = ArrayPool<char>.Shared.Rent(totalSize));
 
         ReadOnlySpan<char> startTag = [];
         int currentOffset = 0;
@@ -398,7 +411,15 @@ internal class GameStringParser
         }
 
         // slice, so no null chars the end
-        return buffer[..currentOffset].ToString();
+        ReadOnlySpan<char> result = buffer[..currentOffset];
+
+        // reuse the original string if nothing changed, saves an allocation
+        string description = result.SequenceEqual(gameString) ? _description : result.ToString();
+
+        if (rentedBuffer is not null)
+            ArrayPool<char>.Shared.Return(rentedBuffer);
+
+        return description;
     }
 
     private void ConstructTextStack(ReadOnlySpan<char> gameString, Range? startTag = null)
@@ -570,7 +591,8 @@ internal class GameStringParser
 
         if (_index <= gameString.Length)
         {
-            bool missingEndTag = _textStack.Count > 0 && startTag.HasValue && _textStack[^1].Range.Equals(startTag);
+            // reached the end of the string without finding the matching end tag (that case returns early)
+            bool missingEndTag = startTag.HasValue;
 
 #if DEBUG
             PushNormalText(gameString);
@@ -763,14 +785,14 @@ internal class GameStringParser
             ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
 
             if (!fontTagVal.IsEmpty)
-                _styleConstantTagVariables.Add(fontTagVal.ToString());
+                AddFontVar(_styleConstantTagVariables, fontTagVal);
         }
         else if (fontSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase))
         {
             ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
 
             if (!fontTagVal.IsEmpty)
-                _styleTagVariables.Add(fontTagVal.ToString());
+                AddFontVar(_styleTagVariables, fontTagVal);
         }
         else
         {
@@ -786,52 +808,54 @@ internal class GameStringParser
         if (!isStyleTag && !isConstantTag)
             return false;
 
-        if (RemoveHltNameFromStyleTags || RemoveHltNameFromConstantTags)
-        {
-            int indexOfHltName = startTag.IndexOf(_hltNameAttribute, StringComparison.OrdinalIgnoreCase);
-            if (indexOfHltName < 0)
-                return false;
+        // only the tag type that has hlt-name removal turned on is affected, the other tag type still gets its value replacements
+        bool removeHltName = (isStyleTag && RemoveHltNameFromStyleTags) || (isConstantTag && RemoveHltNameFromConstantTags);
 
-            ReadOnlySpan<char> hltNameSpan = startTag[indexOfHltName..];
-
-            int startIndexOfQuote = hltNameSpan.IndexOf("\"");
-            int endIndexOfQuote = hltNameSpan[(startIndexOfQuote + 1)..].IndexOf("\"");
-
-            if (endIndexOfQuote < 0)
-                return false;
-
-            if ((isStyleTag && RemoveHltNameFromStyleTags) || (isConstantTag && RemoveHltNameFromConstantTags))
-            {
-                // <s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >
-                if ((isStyleTag && UndoHltNameReplacementForStyleTags) || (isConstantTag && UndoHltNameReplacementForConstantTags))
-                {
-                    int indexOfVal = startTag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
-
-                    if (indexOfVal < 0)
-                        return false;
-
-                    CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfVal + 4)], true);
-                    buffer[currentOffset++] = '"';
-                    CopyIntoBuffer(buffer, ref currentOffset, hltNameSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim(), false);
-                    buffer[currentOffset++] = '"';
-                }
-                else
-                {
-                    CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfHltName - 1)].Trim(), true);
-                }
-
-                ReadOnlySpan<char> remainingStartTag = startTag[(indexOfHltName + _hltNameAttribute.Length + endIndexOfQuote + 2)..];
-                CopyIntoBuffer(buffer, ref currentOffset, remainingStartTag, true);
-
-                return true;
-            }
-        }
-        else if (CopiedInFontTagVal(buffer, startTag, ref currentOffset))
-        {
+        if (removeHltName && HltNameRemovedInBuffer(buffer, startTag, isStyleTag, ref currentOffset))
             return true;
+
+        return CopiedInFontTagVal(buffer, startTag, ref currentOffset);
+    }
+
+    // removes the hlt-name attribute, and if undoing the replacement then sets the val attribute back to the hlt-name value
+    private bool HltNameRemovedInBuffer(Span<char> buffer, ReadOnlySpan<char> startTag, bool isStyleTag, ref int currentOffset)
+    {
+        int indexOfHltName = startTag.IndexOf(_hltNameAttribute, StringComparison.OrdinalIgnoreCase);
+        if (indexOfHltName < 0)
+            return false;
+
+        ReadOnlySpan<char> hltNameSpan = startTag[indexOfHltName..];
+
+        int startIndexOfQuote = hltNameSpan.IndexOf("\"");
+        int endIndexOfQuote = hltNameSpan[(startIndexOfQuote + 1)..].IndexOf("\"");
+
+        if (endIndexOfQuote < 0)
+            return false;
+
+        bool undoReplacement = isStyleTag ? UndoHltNameReplacementForStyleTags : UndoHltNameReplacementForConstantTags;
+
+        // <s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >
+        if (undoReplacement)
+        {
+            int indexOfVal = startTag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
+
+            if (indexOfVal < 0)
+                return false;
+
+            CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfVal + 4)], true);
+            buffer[currentOffset++] = '"';
+            CopyIntoBuffer(buffer, ref currentOffset, hltNameSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim(), false);
+            buffer[currentOffset++] = '"';
+        }
+        else
+        {
+            CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfHltName - 1)].Trim(), true);
         }
 
-        return false;
+        ReadOnlySpan<char> remainingStartTag = startTag[(indexOfHltName + _hltNameAttribute.Length + endIndexOfQuote + 2)..];
+        CopyIntoBuffer(buffer, ref currentOffset, remainingStartTag, true);
+
+        return true;
     }
 
     // for copy in the replacement value of the font tag, and if preserve is true then also copy in the hlt-name attribute with the original value
@@ -856,7 +880,8 @@ internal class GameStringParser
             (_valueByStyleVar is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
 #endif
         {
-            int indexOfStyleVar = startTag.IndexOf(fontTagVal);
+            // fontTagVal is a slice of startTag, so get its exact position.
+            startTag.Overlaps(fontTagVal, out int indexOfStyleVar);
 
             // <s val=\"
             CopyIntoBuffer(buffer, ref currentOffset, startTag[..indexOfStyleVar], true);
