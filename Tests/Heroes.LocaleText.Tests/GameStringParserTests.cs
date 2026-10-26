@@ -131,7 +131,7 @@ public class GameStringParserTests
     private readonly string _plainTextScaling1Corrected = "120 (+4% per level)  damage per second";
     private readonly string _plainTextScaling2 = "<c val=\"#TooltipNumbers\">120~~0.05~~</c> damage per second ~~0.035~~<n/>";
     private readonly string _plainTextScaling2Corrected = "120 (+5% per level) damage per second  (+3.5% per level) ";
-    private readonly string _plainTextScalingMeiSnowBlindDeDECorrected = "Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern 70 (+4,5% pro Stufe) Schaden zu, verlangsamt sie um 35% und blendet sie 1,75 Sek. lang.";
+    private readonly string _plainTextScalingMeiSnowBlindDeDECorrected = "Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern 70 (+4,5 % pro Stufe) Schaden zu, verlangsamt sie um 35% und blendet sie 1,75 Sek. lang.";
     private readonly string _plainTextScalingCustomScalingTag = "Deal <c val=\"#TooltipNumbers\">135<c val=\"#ColorGray\">~~0.05~~</c></c> damage to enemies in the area.";
     private readonly string _plainTextScalingCustomScalingTagCorrected = "Deal 135 (+5% per level) damage to enemies in the area.";
 
@@ -201,14 +201,14 @@ public class GameStringParserTests
 
     private readonly string _meiSnowBlindEsESColorWithScaling = "Lanzas una bola de nieve que golpea a todos los enemigos en un área. Los enemigos golpeados reciben <c val=\"bfd4fd\">70 (+4,5% por nivel)</c> de daño, quedan ralentizados un <c val=\"bfd4fd\">35%</c> y cegados durante <c val=\"bfd4fd\">1,75</c> s.";
     private readonly string _meiSnowBlindEsMXColorWithScaling = "Lanza una bola de nieve que golpea a todos los enemigos en un área. Los enemigos golpeados reciben <c val=\"bfd4fd\">70 (+4.5% por nivel)</c> de daño, son ralentizados un <c val=\"bfd4fd\">35%</c> y quedan cegados durante <c val=\"bfd4fd\">1.75</c> segundos.";
-    private readonly string _meiSnowBlindFrFRColorWithScaling = "Lance une boule de neige qui frappe tous les ennemis dans une zone. Les ennemis touchés subissent <c val=\"bfd4fd\">70 (+4,5% par niveau)</c> points de dégâts, sont ralentis de <c val=\"bfd4fd\">35%</c> et sont aveuglés pendant <c val=\"bfd4fd\">1,75</c> seconde.";
+    private readonly string _meiSnowBlindFrFRColorWithScaling = "Lance une boule de neige qui frappe tous les ennemis dans une zone. Les ennemis touchés subissent <c val=\"bfd4fd\">70 (+4,5 % par niveau)</c> points de dégâts, sont ralentis de <c val=\"bfd4fd\">35%</c> et sont aveuglés pendant <c val=\"bfd4fd\">1,75</c> seconde.";
     private readonly string _meiSnowBlindItITColorWithScaling = "Lancia una palla di neve che colpisce tutti i nemici in un'area. I nemici colpiti subiscono <c val=\"bfd4fd\">70 (+4,5% per livello)</c> danni, sono rallentati del <c val=\"bfd4fd\">35%</c> e sono accecati per <c val=\"bfd4fd\">1,75</c> s.";
     private readonly string _meiSnowBlindKoKRColorWithScaling = "눈덩이를 던져 대상 지역의 모든 적에게 <c val=\"bfd4fd\">70 (레벨당 +4.5%)</c>의 피해를 주고, <c val=\"bfd4fd\">1.75</c>초 동안 <c val=\"bfd4fd\">35%</c> 느려지고 실명하게 합니다.";
     private readonly string _meiSnowBlindPlPLColorWithScaling = "Mei ciska śnieżką, która trafia wszystkich przeciwników na danym obszarze. Trafieni przeciwnicy otrzymują <c val=\"bfd4fd\">70 (+4,5% na poziom)</c> pkt. obrażeń, zostają spowolnieni o <c val=\"bfd4fd\">35%</c>, a także oślepieni na <c val=\"bfd4fd\">1,75</c> sek.";
     private readonly string _meiSnowBlindPtBRColorWithScaling = "Joga uma bola de neve que atinge todos os inimigos na área. Inimigos atingidos recebem <c val=\"bfd4fd\">70 (+4,5% por nível)</c> de dano, são desacelerados em <c val=\"bfd4fd\">35%</c> e ficam cegos por <c val=\"bfd4fd\">1,75</c> s.";
     private readonly string _meiSnowBlindRuRUColorWithScaling = "Бросает снежок, поражая противников в области действия. Пораженные цели получают <c val=\"bfd4fd\">70 (+4,5% за уровень)</c> ед. урона, замедляются на <c val=\"bfd4fd\">35%</c> и ослепляются на <c val=\"bfd4fd\">1,75</c> сек.";
-    private readonly string _meiSnowBlindZhCNColorWithScaling = "投掷一个雪球，击中区域内所有敌人。被击中的敌人受到<c val=\"bfd4fd\">70 (每级+4.5%)</c>点伤害，同时会被减速<c val=\"bfd4fd\">35%</c>并且被致盲，持续<c val=\"bfd4fd\">1.75</c>秒。";
-    private readonly string _meiSnowBlindZhTWColorWithScaling = "投擲一顆雪球，命中範圍內的所有敵人。命中的敵人受到<c val=\"bfd4fd\">70 (每級+4.5%)</c>點傷害和緩速<c val=\"bfd4fd\">35%</c>，同時會目盲<c val=\"bfd4fd\">1.75</c>秒。";
+    private readonly string _meiSnowBlindZhCNColorWithScaling = "投掷一个雪球，击中区域内所有敌人。被击中的敌人受到<c val=\"bfd4fd\">70（每级+4.5%）</c>点伤害，同时会被减速<c val=\"bfd4fd\">35%</c>并且被致盲，持续<c val=\"bfd4fd\">1.75</c>秒。";
+    private readonly string _meiSnowBlindZhTWColorWithScaling = "投擲一顆雪球，命中範圍內的所有敵人。命中的敵人受到<c val=\"bfd4fd\">70（每級+4.5%）</c>點傷害和緩速<c val=\"bfd4fd\">35%</c>，同時會目盲<c val=\"bfd4fd\">1.75</c>秒。";
 
     [TestMethod]
     public void ValidateTest()

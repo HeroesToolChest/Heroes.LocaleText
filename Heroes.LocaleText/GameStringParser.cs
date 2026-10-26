@@ -1014,20 +1014,23 @@ internal class GameStringParser
     {
         _culture ??= StormLocaleCulture.GetCultureInfo(_gameStringLocale);
 
+        // formatted the same way as the gamestrings:
+        // dede and frfr have a non-breaking space ( ) before the %,
+        // zhcn and zhtw use full-width parentheses with no space before them
         ReadOnlySpan<char> format = _gameStringLocale switch
         {
             StormLocale.ENUS => " (+0.##% per level)",
-            StormLocale.DEDE => " (+0.##% pro Stufe)",
+            StormLocale.DEDE => " (+0.## % pro Stufe)",
             StormLocale.ESES => " (+0.##% por nivel)",
             StormLocale.ESMX => " (+0.##% por nivel)",
-            StormLocale.FRFR => " (+0.##% par niveau)",
+            StormLocale.FRFR => " (+0.## % par niveau)",
             StormLocale.ITIT => " (+0.##% per livello)",
             StormLocale.KOKR => " (레벨당 +0.##%)",
             StormLocale.PLPL => " (+0.##% na poziom)",
             StormLocale.PTBR => " (+0.##% por nível)",
             StormLocale.RURU => " (+0.##% за уровень)",
-            StormLocale.ZHCN => " (每级+0.##%)",
-            StormLocale.ZHTW => " (每級+0.##%)",
+            StormLocale.ZHCN => "（每级+0.##%）",
+            StormLocale.ZHTW => "（每級+0.##%）",
 
             _ => " (+0.##% per level)",
         };
