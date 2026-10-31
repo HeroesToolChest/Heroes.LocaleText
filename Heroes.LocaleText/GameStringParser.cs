@@ -8,7 +8,7 @@ namespace Heroes.LocaleText;
 /// <summary>
 /// Used for parsing through a gamestring that has been already been xml parsed out and computed for values.
 /// </summary>
-internal class GameStringParser
+internal sealed class GameStringParser
 {
     private const string _hltNameAttribute = "hlt-name=";
 
