@@ -7,8 +7,6 @@ jobs:
     uses: koliva8245/github.workflows/.github/workflows/dotnet-build.yml@main
     with:
       dotnet-sdk: |
-        8.0.X
-        9.0.X
         10.0.X
       main-project: Heroes.LocaleText/Heroes.LocaleText.csproj
       artifact-name-prefix: Heroes.LocaleText
