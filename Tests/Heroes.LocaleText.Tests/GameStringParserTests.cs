@@ -403,6 +403,94 @@ public class GameStringParserTests
     }
 
     [TestMethod]
+    public void LanguageTest_ScalingValueHasLocaleDecimalComma_ReturnsLocalizedScalingText()
+    {
+        // same gamestrings as LanguageTest, but the scaling value uses the locale's comma like the rest of the numbers
+        Assert.AreEqual(_plainTextScalingMeiSnowBlindDeDECorrected, GameStringParser.GetInstance(_meiSnowBlindDeDE.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.DEDE).GetPlainText(false, true));
+        Assert.AreEqual(_meiSnowBlindEsESColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindEsES.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.ESES).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindFrFRColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindFrFR.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.FRFR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindItITColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindItIT.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.ITIT).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindPlPLColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindPlPL.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.PLPL).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindPtBRColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindPtBR.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.PTBR).GetColoredText(true));
+        Assert.AreEqual(_meiSnowBlindRuRUColorWithScaling, GameStringParser.GetInstance(_meiSnowBlindRuRU.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.RURU).GetColoredText(true));
+    }
+
+    [TestMethod]
+    [DataRow(StormLocale.DEDE, "deals 70 (+4,5 % pro Stufe) damage")]
+    [DataRow(StormLocale.FRFR, "deals 70 (+4,5 % par niveau) damage")]
+    [DataRow(StormLocale.RURU, "deals 70 (+4,5% за уровень) damage")]
+    public void GetPlainText_ScalingValueHasLocaleDecimalComma_ParsesAsScalingTag(StormLocale stormLocale, string correctPlainTextWithScaling)
+    {
+        // arrange
+        string text = "deals <c val=\"#TooltipNumbers\">70~~0,045~~</c> damage";
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text, stormLocale);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultPlainText = descriptionParser.GetPlainText(false, false);
+        string resultPlainTextWithScaling = descriptionParser.GetPlainText(false, true);
+
+        // assert
+        Assert.AreEqual(text, resultRaw);
+        Assert.AreEqual("deals 70 damage", resultPlainText);
+        Assert.AreEqual(correctPlainTextWithScaling, resultPlainTextWithScaling);
+    }
+
+    [TestMethod]
+    [DataRow(StormLocale.ENUS)]
+    [DataRow(StormLocale.ESMX)]
+    [DataRow(StormLocale.KOKR)]
+    [DataRow(StormLocale.ZHCN)]
+    [DataRow(StormLocale.ZHTW)]
+    public void GetPlainText_ScalingValueHasCommaForPeriodLocale_IsNotAScalingTag(StormLocale stormLocale)
+    {
+        // arrange
+        string text = "deals 70~~0,045~~ damage";
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text, stormLocale);
+
+        // act
+        string resultPlainText = descriptionParser.GetPlainText(false, false);
+        string resultPlainTextWithScaling = descriptionParser.GetPlainText(false, true);
+
+        // assert
+        Assert.AreEqual(text, resultPlainText);
+        Assert.AreEqual(text, resultPlainTextWithScaling);
+    }
+
+    [TestMethod]
+    [DataRow("deals 70~~0,04,5~~ damage")]
+    [DataRow("deals 70~~0.04,5~~ damage")]
+    [DataRow("deals 70~~0,04.5~~ damage")]
+    [DataRow("deals 70~~0.04.5~~ damage")]
+    public void GetPlainText_ScalingValueHasTwoDecimalSeparators_IsNotAScalingTag(string text)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text, StormLocale.DEDE);
+
+        // act
+        string result = descriptionParser.GetPlainText(false, true);
+
+        // assert
+        Assert.AreEqual(text, result);
+    }
+
+    [TestMethod]
+    public void GetDecimalSeparator_EachStormLocale_MatchesCultureInfoDecimalSeparator()
+    {
+        foreach (StormLocale stormLocale in Enum.GetValues<StormLocale>())
+        {
+            // arrange
+            string cultureDecimalSeparator = StormLocaleCulture.GetCultureInfo(stormLocale).NumberFormat.NumberDecimalSeparator;
+
+            // act
+            char result = GameStringParser.GetDecimalSeparator(stormLocale);
+
+            // assert
+            Assert.AreEqual(cultureDecimalSeparator, result.ToString(), stormLocale.ToString());
+        }
+    }
+
+    [TestMethod]
     public void NoScaleTagTest()
     {
         Assert.AreEqual(_noScaleText1, GameStringParser.GetInstance(_noScaleText1).GetColoredText(true));

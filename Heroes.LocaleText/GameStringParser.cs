@@ -13,9 +13,11 @@ internal sealed class GameStringParser
     private const string _hltNameAttribute = "hlt-name=";
 
     private static readonly SearchValues<char> _specialChars = SearchValues.Create(['<', '~', '#', '%']);
+    private static readonly NumberFormatInfo _commaDecimalNumberFormat = NumberFormatInfo.ReadOnly(new NumberFormatInfo() { NumberDecimalSeparator = "," });
 
     private readonly string _description;
     private readonly StormLocale _gameStringLocale;
+    private readonly char _decimalSeparator;
     private readonly List<TextRange> _textStack;
 
     private readonly HashSet<string>? _styleTagVariables;
@@ -42,6 +44,7 @@ internal sealed class GameStringParser
 
         _description = description;
         _gameStringLocale = gameStringLocale;
+        _decimalSeparator = GetDecimalSeparator(gameStringLocale);
 
         ExtractFontVars = extractFontVars;
         if (ExtractFontVars is true)
@@ -103,6 +106,20 @@ internal sealed class GameStringParser
 #endif
         _valueByStyleConstantVar[styleConstantVar] = (replacement, preserve);
     }
+
+    // kept here instead of read from the CultureInfo, so finding the scaling tags doesn't need to load any culture data
+    internal static char GetDecimalSeparator(StormLocale stormLocale) => stormLocale switch
+    {
+        StormLocale.DEDE or
+        StormLocale.ESES or
+        StormLocale.FRFR or
+        StormLocale.ITIT or
+        StormLocale.PLPL or
+        StormLocale.PTBR or
+        StormLocale.RURU => ',',
+
+        _ => '.',
+    };
 
     private static void CopyIntoBuffer(Span<char> buffer, ref int offset, ReadOnlySpan<char> item, bool cleanTheTag)
     {
@@ -179,24 +196,33 @@ internal sealed class GameStringParser
         return !tagSpan.Equals("<li/>", StringComparison.OrdinalIgnoreCase) && tagSpan.Length > 3 && tagSpan.EndsWith("/>", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsDigits(ReadOnlySpan<char> value)
+    // digits with at most one decimal separator, which can be a period or the locale's decimal separator
+    private static bool IsDigits(ReadOnlySpan<char> value, char decimalSeparator)
     {
         if (value.IsEmpty || value.IsWhiteSpace())
             return false;
 
-        bool dot = false;
+        bool hasSeparator = false;
 
         for (int i = 0; i < value.Length; i++)
         {
             if ((uint)(value[i] - '0') <= 9)
                 continue;
-            else if (dot is false && value[i] == '.')
-                dot = true;
+            else if (hasSeparator is false && (value[i] == '.' || value[i] == decimalSeparator))
+                hasSeparator = true;
             else
                 return false;
         }
 
         return true;
+    }
+
+    // the value already passed IsDigits, so a comma can only be the decimal separator
+    private static bool TryParseScalingValue(ReadOnlySpan<char> value, out double result)
+    {
+        NumberFormatInfo numberFormat = value.Contains(',') ? _commaDecimalNumberFormat : NumberFormatInfo.InvariantInfo;
+
+        return double.TryParse(value, NumberStyles.AllowDecimalPoint, numberFormat, out result);
     }
 
     private static ReadOnlySpan<char> GetFontTagVal(ReadOnlySpan<char> tag)
@@ -369,7 +395,7 @@ internal sealed class GameStringParser
                             startTag = [];
                         }
 
-                        if (flags.ScalingTag == TagFlag.Eval && double.TryParse(itemText.Trim('~'), CultureInfo.InvariantCulture, out double scaleValue))
+                        if (flags.ScalingTag == TagFlag.Eval && TryParseScalingValue(itemText.Trim('~'), out double scaleValue))
                             GetScalingLocaleText(buffer, ref currentOffset, scaleValue);
                         else if (flags.ScalingTag == TagFlag.Include)
                             CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
@@ -698,7 +724,7 @@ internal sealed class GameStringParser
         {
             ReadOnlySpan<char> value = currentTextSpan[(startScaleIndex + 1)..endScaleIndex];
 
-            if (IsDigits(value))
+            if (IsDigits(value, _decimalSeparator))
             {
                 tag = new Range(startScaleIndex - 1 + lengthOffset, endScaleIndex + 1 + lengthOffset + 1);
 

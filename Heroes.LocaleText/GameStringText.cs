@@ -42,7 +42,11 @@ public class GameStringText
     /// Initializes a new instance of the <see cref="GameStringText"/> class.
     /// </summary>
     /// <param name="text">An already parsed gamestring that has had it's data references computed and has not yet been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
-    /// <param name="gameStringLocale">The localization of the <paramref name="text"/>. This is just used for the scaling text, if not needing the scaling text then this may be left as the default.</param>
+    /// <param name="gameStringLocale">
+    /// The localization of the <paramref name="text"/>. This is just used for the scaling text.
+    /// The scaling value (e.g. <c>~~0,04~~</c>) may use this locale's decimal separator or a period, and the scaling text (e.g. <c>(+4% per level)</c>) is written for this locale.
+    /// If the scaling values only use a period and the scaling text is not needed, then this may be left as the default.
+    /// </param>
     /// <param name="extractFontValues">
     /// If <see langword="true"/>, then the style and constant tags will have their <c>val</c> values saved in <see cref="FontStyleValues"/> and  <see cref="FontConstantValues"/>.
     /// If not needing the output with style and constant tags, then set to <see langword="false"/> for faster parsing performance.

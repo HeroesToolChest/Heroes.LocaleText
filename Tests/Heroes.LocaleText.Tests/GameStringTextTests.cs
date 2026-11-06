@@ -149,6 +149,19 @@ public class GameStringTextTests
     }
 
     [TestMethod]
+    public void PlainTextWithScaling_TestTextDeDeWithCommaScalingValue_ReturnsPlainTextWithScaling()
+    {
+        // arrange
+        GameStringText gameStringText = new(_testTextDeDE.Replace("~~0.045~~", "~~0,045~~", StringComparison.Ordinal), StormLocale.DEDE);
+
+        // act
+        string result = gameStringText.PlainTextWithScaling;
+
+        // assert
+        Assert.AreEqual("Wirft einen Schneeball, der alle Gegner in einem Bereich trifft. Fügt getroffenen Gegnern 70 (+4,5 % pro Stufe) Schaden zu, verlangsamt sie um 35% und blendet sie 1,75 Sek. lang.", result);
+    }
+
+    [TestMethod]
     public void ToString_TestText_ReturnsPlainTextWithScaling()
     {
         // arrange
