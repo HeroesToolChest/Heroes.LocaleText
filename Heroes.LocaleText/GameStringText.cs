@@ -205,11 +205,14 @@ public class GameStringText
     /// <param name="preserveValues">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
     /// <param name="newValuesByValue">A dictionary of values and their replacement values. The values are matched case-sensitively.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="newValuesByValue"/> or one of its replacement values is <see langword="null"/>.</exception>
     public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IDictionary<string, string> newValuesByValue)
     {
-        foreach (var item in newValuesByValue)
+        ArgumentNullException.ThrowIfNull(newValuesByValue);
+
+        foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacementInternal(item.Key, item.Value, fontTagType, preserveValues);
+            ApplyFontValueReplacement(value, replacement, fontTagType, preserveValues);
         }
 
         ClearDescriptionsCaches();
@@ -228,11 +231,14 @@ public class GameStringText
     /// <param name="preserveValues">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
     /// <param name="newValuesByValue">A collection of values and their replacement values. The values are matched case-sensitively.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="newValuesByValue"/> or one of its values or replacement values is <see langword="null"/>.</exception>
     public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IEnumerable<(string Value, string Replacement)> newValuesByValue)
     {
+        ArgumentNullException.ThrowIfNull(newValuesByValue);
+
         foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacementInternal(value, replacement, fontTagType, preserveValues);
+            ApplyFontValueReplacement(value, replacement, fontTagType, preserveValues);
         }
 
         ClearDescriptionsCaches();
@@ -251,11 +257,12 @@ public class GameStringText
     /// <param name="preserveValues">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
     /// <param name="newValuesByValue">A collection of values and their replacement values. The values are matched case-sensitively.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
-    public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params (string Value, string Replacement)[] newValuesByValue)
+    /// <exception cref="ArgumentNullException">One of the values or replacement values is <see langword="null"/>.</exception>
+    public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params ReadOnlySpan<(string Value, string Replacement)> newValuesByValue)
     {
         foreach ((string value, string replacement) in newValuesByValue)
         {
-            AddFontValueReplacementInternal(value, replacement, fontTagType, preserveValues);
+            ApplyFontValueReplacement(value, replacement, fontTagType, preserveValues);
         }
 
         ClearDescriptionsCaches();
@@ -275,6 +282,7 @@ public class GameStringText
     /// <param name="fontTagType">The tag type for the replacement of the <paramref name="value"/>.</param>
     /// <param name="preserveValue">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) <paramref name="value"/>. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="value"/> or <paramref name="replacement"/> is <see langword="null"/>.</exception>
     public GameStringText AddFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
     {
         ApplyFontValueReplacement(value, replacement, fontTagType, preserveValue);
@@ -327,13 +335,12 @@ public class GameStringText
         return PlainTextWithScaling;
     }
 
-    private void AddFontValueReplacementInternal(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
-    {
-        ApplyFontValueReplacement(value, replacement, fontTagType, preserveValue);
-    }
-
     private void ApplyFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue)
     {
+        // checked here, otherwise a null replacement only fails later when the text is built
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(replacement);
+
         if (fontTagType == FontTagType.Constant)
         {
             _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);

@@ -517,7 +517,6 @@ public class GameStringTextTests
         Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Cooldown: </s>", result);
     }
 
-#if NET9_0_OR_GREATER
     [TestMethod]
     public void AddFontVarReplacements_WithParamsConstant_ReturnsResultWithReplace()
     {
@@ -586,7 +585,6 @@ public class GameStringTextTests
         // assert
         Assert.AreEqual("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon </s><n/><s val=\"222222\" hlt-name=\"StandardTooltipDetails2\">Cooldown: </s>", result);
     }
-#endif
 
     [TestMethod]
     public void AddFontVarReplacement_ExtractFontValuesThenAddReplacements_ColorDescriptionsShouldBeUpdated()

@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using ReplacementLookup = System.Collections.Generic.Dictionary<string, (string Value, bool Preserve)>.AlternateLookup<System.ReadOnlySpan<char>>;
 
 namespace Heroes.LocaleText;
 
@@ -27,18 +28,13 @@ internal sealed class GameStringParser
     // created on the first parse, and only when the text has something to parse
     private List<TextRange> _textStack = null!;
 
-    private Dictionary<string, (string Value, bool Preserve)>? _valueByStyleVar;
-    private Dictionary<string, (string Value, bool Preserve)>? _valueByStyleConstantVar;
+    private ReplacementLookup? _valueByStyleVar;
+    private ReplacementLookup? _valueByStyleConstantVar;
 
-#if NET9_0_OR_GREATER
-    private Dictionary<string, (string Value, bool Preserve)>.AlternateLookup<ReadOnlySpan<char>>? _valueByStyleVarAltLookup;
-    private Dictionary<string, (string Value, bool Preserve)>.AlternateLookup<ReadOnlySpan<char>>? _valueByStyleConstantVarAltLookup;
-#endif
-
-    private bool _isConstructed = false;
-    private bool _isPlainText = false;
-    private int _startingIndex = 0;
-    private int _index = 0;
+    private bool _isConstructed;
+    private bool _isPlainText;
+    private int _startingIndex;
+    private int _index;
 
     private GameStringParser(string description, StormLocale gameStringLocale, bool extractFontVars)
     {
@@ -47,7 +43,7 @@ internal sealed class GameStringParser
         _decimalSeparator = GetDecimalSeparator(gameStringLocale);
 
         ExtractFontVars = extractFontVars;
-        if (ExtractFontVars is true)
+        if (ExtractFontVars)
         {
             _styleTagVariables = new(StringComparer.Ordinal);
             _styleConstantTagVariables = new(StringComparer.Ordinal);
@@ -77,40 +73,74 @@ internal sealed class GameStringParser
     // parses (which also extracts the font vars) without building an output string
     public void EnsureParsed()
     {
-        EnsureTextStackConstructed(_description);
+        if (_isConstructed)
+            return;
+
+        _isConstructed = true;
+
+        ReadOnlySpan<char> gameString = _description;
+
+        // no special characters, so there's nothing to parse and every output is the original string
+        if (!gameString.ContainsAny(_specialChars))
+        {
+            _isPlainText = true;
+            return;
+        }
+
+        _textStack = new List<TextRange>(gameString.Length / 10);
+        ConstructTextStack(gameString);
+
+        // no tags or special text, so every output is the original string
+        _isPlainText = _textStack.Count == 1 &&
+            _textStack[0].Type == TextType.Text &&
+            _textStack[0].Start == 0 &&
+            _textStack[0].Length == gameString.Length;
     }
 
     public string GetRawText()
     {
-        return Parse(_description);
+        return BuildDescription(new GameStringFlags()
+        {
+            ColorTags = TagFlag.Include,
+            ScalingTag = TagFlag.Include,
+            NewLineTag = TagFlag.Include,
+            ErrorTag = TagFlag.Include,
+            SpaceTag = TagFlag.Include,
+        });
     }
 
     public string GetPlainText(bool includeNewLineTags, bool includeScaling)
     {
-        return ParseToPlainText(_description, includeNewLineTags, includeScaling);
+        return BuildDescription(new GameStringFlags()
+        {
+            ColorTags = TagFlag.None,
+            ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
+            NewLineTag = includeNewLineTags ? TagFlag.Include : TagFlag.Eval,
+            ErrorTag = TagFlag.None,
+            SpaceTag = TagFlag.Eval,
+        });
     }
 
     public string GetColoredText(bool includeScaling)
     {
-        return ParseToColoredText(_description, includeScaling);
+        return BuildDescription(new GameStringFlags()
+        {
+            ColorTags = TagFlag.Include,
+            ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
+            NewLineTag = TagFlag.Include,
+            ErrorTag = TagFlag.None,
+            SpaceTag = TagFlag.Eval,
+        });
     }
 
     public void AddStyleVarsWithReplacement(string styleVar, string replacement, bool preserve)
     {
-        _valueByStyleVar ??= new(StringComparer.Ordinal);
-#if NET9_0_OR_GREATER
-        _valueByStyleVarAltLookup ??= _valueByStyleVar.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
-        _valueByStyleVar[styleVar] = (replacement, preserve);
+        AddReplacement(ref _valueByStyleVar, styleVar, replacement, preserve);
     }
 
     public void AddStyleConstantVarsWithReplacement(string styleConstantVar, string replacement, bool preserve)
     {
-        _valueByStyleConstantVar ??= new(StringComparer.Ordinal);
-#if NET9_0_OR_GREATER
-        _valueByStyleConstantVarAltLookup ??= _valueByStyleConstantVar.GetAlternateLookup<ReadOnlySpan<char>>();
-#endif
-        _valueByStyleConstantVar[styleConstantVar] = (replacement, preserve);
+        AddReplacement(ref _valueByStyleConstantVar, styleConstantVar, replacement, preserve);
     }
 
     // kept here instead of read from the CultureInfo, so finding the scaling tags doesn't need to load any culture data
@@ -126,6 +156,12 @@ internal sealed class GameStringParser
 
         _ => '.',
     };
+
+    private static void AddReplacement(ref ReplacementLookup? replacements, string value, string replacement, bool preserve)
+    {
+        replacements ??= new Dictionary<string, (string Value, bool Preserve)>(StringComparer.Ordinal).GetAlternateLookup<ReadOnlySpan<char>>();
+        replacements.Value.Dictionary[value] = (replacement, preserve);
+    }
 
     private static void CopyIntoBuffer(Span<char> buffer, ref int offset, ReadOnlySpan<char> item, bool cleanTheTag)
     {
@@ -167,14 +203,10 @@ internal sealed class GameStringParser
     }
 
     // checks if the end tag matches the start tag
-    private static bool IsTagsMatch(ReadOnlySpan<char> text, Range startTag, Range endTag)
+    private static bool IsTagsMatch(ReadOnlySpan<char> startTag, ReadOnlySpan<char> endTag)
     {
-        ReadOnlySpan<char> endSpan = text[endTag].Trim("</> ");
-
         // strips both the < and >, so tags with no attributes (e.g. <c>) also match
-        ReadOnlySpan<char> startTagType = GetEndTagCharType(text[startTag]);
-
-        return startTagType.Equals(endSpan, StringComparison.OrdinalIgnoreCase);
+        return GetEndTagCharType(startTag).Equals(endTag.Trim("</> "), StringComparison.OrdinalIgnoreCase);
     }
 
     private static ReadOnlySpan<char> GetEndTagCharType(ReadOnlySpan<char> startTagText)
@@ -186,20 +218,33 @@ internal sealed class GameStringParser
         return spaceIndex > -1 ? inner[..spaceIndex] : inner;
     }
 
-    private static bool IsNewLineTag(ReadOnlySpan<char> text, Range tag) => IsNewLineTag(text[tag]);
+    private static bool IsNewLineTag(ReadOnlySpan<char> tag) => tag.Equals("<n/>", StringComparison.OrdinalIgnoreCase) || tag.Equals("</n>", StringComparison.OrdinalIgnoreCase) || tag.Equals("<n>", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsNewLineTag(ReadOnlySpan<char> text) => text.Equals("<n/>", StringComparison.OrdinalIgnoreCase) || text.Equals("</n>", StringComparison.OrdinalIgnoreCase) || text.Equals("<n>", StringComparison.OrdinalIgnoreCase);
+    private static bool IsSpaceTag(ReadOnlySpan<char> tag) => tag.Equals("<sp/>", StringComparison.OrdinalIgnoreCase) || tag.Equals("</sp>", StringComparison.OrdinalIgnoreCase) || tag.Equals("<sp>", StringComparison.OrdinalIgnoreCase);
 
-    private static bool IsSpaceTag(ReadOnlySpan<char> text, Range tag) => IsSpaceTag(text[tag]);
-
-    private static bool IsSpaceTag(ReadOnlySpan<char> text) => text.Equals("<sp/>", StringComparison.OrdinalIgnoreCase) || text.Equals("</sp>", StringComparison.OrdinalIgnoreCase) || text.Equals("<sp>", StringComparison.OrdinalIgnoreCase);
-
-    private static bool IsSelfCloseTag(ReadOnlySpan<char> text, Range tag)
+    private static bool IsSelfCloseTag(ReadOnlySpan<char> tag)
     {
-        ReadOnlySpan<char> tagSpan = text[tag];
+        // <li> tags are a thing inside of an <ol> or <ul>, but since no tooltips actually use them so far we can ignore them
+        return !tag.Equals("<li/>", StringComparison.OrdinalIgnoreCase) && tag.Length > 3 && tag.EndsWith("/>", StringComparison.OrdinalIgnoreCase);
+    }
 
-        // <li> tags are a thing inside of an <ol> or <ul>, but since no tooltips acutally use them so far we can ignore them
-        return !tagSpan.Equals("<li/>", StringComparison.OrdinalIgnoreCase) && tagSpan.Length > 3 && tagSpan.EndsWith("/>", StringComparison.OrdinalIgnoreCase);
+    // <s ...> is a style tag and <c ...> is a constant tag
+    private static bool TryGetFontTagType(ReadOnlySpan<char> tag, out FontTagType fontTagType)
+    {
+        if (tag.StartsWith("<s", StringComparison.OrdinalIgnoreCase))
+        {
+            fontTagType = FontTagType.Style;
+            return true;
+        }
+
+        if (tag.StartsWith("<c", StringComparison.OrdinalIgnoreCase))
+        {
+            fontTagType = FontTagType.Constant;
+            return true;
+        }
+
+        fontTagType = default;
+        return false;
     }
 
     // digits with at most one decimal separator, which can be a period or the locale's decimal separator
@@ -211,14 +256,15 @@ internal sealed class GameStringParser
 
         bool hasSeparator = false;
 
-        for (int i = 0; i < value.Length; i++)
+        foreach (char c in value)
         {
-            if ((uint)(value[i] - '0') <= 9)
+            if (char.IsAsciiDigit(c))
                 continue;
-            else if (hasSeparator is false && (value[i] == '.' || value[i] == decimalSeparator))
-                hasSeparator = true;
-            else
+
+            if (hasSeparator || (c != '.' && c != decimalSeparator))
                 return false;
+
+            hasSeparator = true;
         }
 
         return true;
@@ -298,103 +344,28 @@ internal sealed class GameStringParser
         buffer[offset++] = '>';
     }
 
-    private static void AddFontVar(HashSet<string> fontVars, ReadOnlySpan<char> fontTagVal)
+    private string BuildDescription(GameStringFlags flags)
     {
-#if NET9_0_OR_GREATER
-        // only allocates a string if the value is not already in the set
-        fontVars.GetAlternateLookup<ReadOnlySpan<char>>().Add(fontTagVal);
-#else
-        fontVars.Add(fontTagVal.ToString());
-#endif
-    }
+        EnsureParsed();
 
-    private string Parse(ReadOnlySpan<char> gameString)
-    {
-        EnsureTextStackConstructed(gameString);
-
-        return BuildDescription(gameString, new GameStringFlags()
-        {
-            ColorTags = TagFlag.Include,
-            ScalingTag = TagFlag.Include,
-            NewLineTag = TagFlag.Include,
-            ErrorTag = TagFlag.Include,
-            SpaceTag = TagFlag.Include,
-        });
-    }
-
-    private string ParseToPlainText(ReadOnlySpan<char> gameString, bool includeNewlineTags, bool includeScaling)
-    {
-        EnsureTextStackConstructed(gameString);
-
-        return BuildDescription(gameString, new GameStringFlags()
-        {
-            ColorTags = TagFlag.None,
-            ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
-            NewLineTag = includeNewlineTags ? TagFlag.Include : TagFlag.Eval,
-            ErrorTag = TagFlag.None,
-            SpaceTag = TagFlag.Eval,
-        });
-    }
-
-    private string ParseToColoredText(ReadOnlySpan<char> gameString, bool includeScaling)
-    {
-        EnsureTextStackConstructed(gameString);
-
-        return BuildDescription(gameString, new GameStringFlags()
-        {
-            ColorTags = TagFlag.Include,
-            ScalingTag = includeScaling ? TagFlag.Eval : TagFlag.None,
-            NewLineTag = TagFlag.Include,
-            ErrorTag = TagFlag.None,
-            SpaceTag = TagFlag.Eval,
-        });
-    }
-
-    private void EnsureTextStackConstructed(ReadOnlySpan<char> gameString)
-    {
-        if (_isConstructed)
-            return;
-
-        _isConstructed = true;
-
-        // no special characters, so there's nothing to parse and every output is the original string
-        if (!gameString.ContainsAny(_specialChars))
-        {
-            _isPlainText = true;
-            return;
-        }
-
-        _textStack = new List<TextRange>(gameString.Length / 10);
-        ConstructTextStack(gameString);
-
-        // no tags or special text, so every output is the original string
-        _isPlainText = _textStack.Count == 1 &&
-            _textStack[0].Type == TextType.Text &&
-            _textStack[0].Start == 0 &&
-            _textStack[0].Length == gameString.Length;
-    }
-
-    private string BuildDescription(ReadOnlySpan<char> gameString, GameStringFlags flags)
-    {
         if (_isPlainText)
             return _description;
 
         if (_textStack.Count < 1)
             return string.Empty;
 
+        ReadOnlySpan<char> gameString = _description;
         int totalSize = GetSizeOfBuffer(gameString, flags);
 
         char[]? rentedBuffer = null;
         Span<char> buffer = totalSize < 1024 ? stackalloc char[totalSize] : (rentedBuffer = ArrayPool<char>.Shared.Rent(totalSize));
 
+        // a start tag is only copied in once there is text for it, so empty tags are dropped
         ReadOnlySpan<char> startTag = [];
         int currentOffset = 0;
 
-        // loop through and build string
-        ReadOnlySpan<TextRange> textStack = CollectionsMarshal.AsSpan(_textStack);
-        for (int i = 0; i < textStack.Length; i++)
+        foreach (TextRange item in CollectionsMarshal.AsSpan(_textStack))
         {
-            TextRange item = textStack[i];
             ReadOnlySpan<char> itemText = item.GetText(gameString);
 
             switch (item.Type)
@@ -434,48 +405,32 @@ internal sealed class GameStringParser
 
                     break;
                 case TextType.ScalingTag:
+                    if (flags.ScalingTag != TagFlag.None && flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                     {
-                        if (flags.ScalingTag != TagFlag.None && flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
-                        {
-                            if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
-                                CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
-
-                            startTag = [];
-                        }
-
-                        if (flags.ScalingTag == TagFlag.Eval && TryParseScalingValue(itemText.Trim('~'), out double scaleValue))
-                            GetScalingLocaleText(buffer, ref currentOffset, scaleValue);
-                        else if (flags.ScalingTag == TagFlag.Include)
-                            CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
-
-                        break;
+                        CopyStartTag(buffer, startTag, ref currentOffset);
+                        startTag = [];
                     }
 
-                case TextType.SelfCloseTag:
-                    {
-                        if (flags.ColorTags == TagFlag.Include)
-                        {
-                            CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
-                        }
-                    }
+                    if (flags.ScalingTag == TagFlag.Eval && TryParseScalingValue(itemText.Trim('~'), out double scaleValue))
+                        CopyScalingText(buffer, ref currentOffset, scaleValue);
+                    else if (flags.ScalingTag == TagFlag.Include)
+                        CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
 
                     break;
+                case TextType.SelfCloseTag:
+                    if (flags.ColorTags == TagFlag.Include)
+                        CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
 
+                    break;
                 default:
                     if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                     {
-                        if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
-                            CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
-
+                        CopyStartTag(buffer, startTag, ref currentOffset);
                         startTag = [];
+
                         CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
                     }
-                    else if (item.Type == TextType.ErrorTag)
-                    {
-                        if (flags.ErrorTag == TagFlag.Include)
-                            CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
-                    }
-                    else
+                    else if (item.Type != TextType.ErrorTag || flags.ErrorTag == TagFlag.Include)
                     {
                         CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
                     }
@@ -502,117 +457,95 @@ internal sealed class GameStringParser
 
         while (_index < gameString.Length)
         {
-            // Fast path: skip to next special character
+            // skip to the next special character
             int nextSpecialIndex = gameString[_index..].IndexOfAny(_specialChars);
-            if (nextSpecialIndex > 0)
-            {
-                _index += nextSpecialIndex;
-            }
-            else if (nextSpecialIndex < 0)
+            if (nextSpecialIndex < 0)
             {
                 _index = gameString.Length;
+
                 break;
             }
 
+            _index += nextSpecialIndex;
+
             if (gameString[_index] == '<' && _index + 1 < gameString.Length && gameString[_index + 1] != ' ')
             {
-                int stackCountBeforeText = _textStack.Count;
+                bool pushedText = PushNormalText();
 
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-
-                bool pushedText = _textStack.Count > stackCountBeforeText;
-
-                if (TryParseTag(gameString, out Range? tag, out bool isStartTag))
+                if (TryParseTag(gameString, out Range tag, out bool isStartTag))
                 {
-                    if (IsNewLineTag(gameString, tag.Value))
+                    ReadOnlySpan<char> tagText = gameString[tag];
+
+                    if (IsNewLineTag(tagText))
                     {
-                        // nested
+                        // nested, so the outer tag is closed before the newline and opened again after it
                         if (startTag.HasValue)
                         {
-                            if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
-                                _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
-                            else
-                                _textStack.Add(new TextRange(startTag.Value, TextType.MissingEndTag));
+                            PushOuterTagEnd(gameString, startTag.Value);
 
-                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
+                            _textStack.Add(new TextRange(tag, TextType.Newline));
                             _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
                         }
                         else
                         {
-                            _textStack.Add(new TextRange(tag.Value, TextType.Newline));
+                            _textStack.Add(new TextRange(tag, TextType.Newline));
                         }
                     }
-                    else if (IsSpaceTag(gameString, tag.Value))
+                    else if (IsSpaceTag(tagText))
                     {
-                        _textStack.Add(new TextRange(tag.Value, TextType.SpaceTag));
+                        _textStack.Add(new TextRange(tag, TextType.SpaceTag));
                     }
                     else if (isStartTag)
                     {
-                        PushFontVarFromTag(gameString, tag.Value);
+                        PushFontVarFromTag(tagText);
 
-                        // nested
+                        // nested, so the outer tag is closed before the inner tag and opened again after it
                         if (startTag.HasValue)
-                        {
-                            if (TryGetEndTag(gameString, startTag.Value, out Range? endTag))
-                                _textStack.Add(new TextRange(endTag.Value, TextType.EndTag));
-                            else
-                                _textStack.Add(new TextRange(startTag.Value, TextType.MissingEndTag));
-                        }
+                            PushOuterTagEnd(gameString, startTag.Value);
 
-                        _textStack.Add(new TextRange(tag.Value, TextType.StartTag));
+                        _textStack.Add(new TextRange(tag, TextType.StartTag));
 
                         ConstructTextStack(gameString, tag);
 
-                        // nested
                         if (startTag.HasValue)
                             _textStack.Add(new TextRange(startTag.Value, TextType.StartTag));
                     }
-                    else if (startTag is not null)
+                    else if (startTag.HasValue)
                     {
-                        if (IsTagsMatch(gameString, startTag.Value, tag.Value))
+                        if (IsTagsMatch(gameString[startTag.Value], tagText))
                         {
-                            _textStack.Add(new TextRange(tag.Value, TextType.EndTag));
+                            _textStack.Add(new TextRange(tag, TextType.EndTag));
 
                             return;
                         }
                     }
-                    else if (IsSelfCloseTag(gameString, tag.Value))
+                    else if (IsSelfCloseTag(tagText))
                     {
-                        _textStack.Add(new TextRange(tag.Value, TextType.SelfCloseTag));
+                        _textStack.Add(new TextRange(tag, TextType.SelfCloseTag));
                     }
                 }
                 else
                 {
+                    // not a tag, so take back the text and push it again with the < included
                     if (pushedText)
                         _textStack.RemoveAt(_textStack.Count - 1);
-#if DEBUG
-                    PushNormalText(gameString);
-#else
+
                     PushNormalText();
-#endif
                 }
 
                 _startingIndex = _index;
             }
             else if (gameString[_index] == '~' && _index + 1 < gameString.Length && gameString[_index + 1] == '~')
             {
-                int stackCountBeforeText = _textStack.Count;
+                bool pushedText = PushNormalText();
 
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseScalingTag(gameString, out Range? tag))
+                if (TryParseScalingTag(gameString, out Range tag))
                 {
-                    _textStack.Add(new TextRange(tag.Value, TextType.ScalingTag));
+                    _textStack.Add(new TextRange(tag, TextType.ScalingTag));
+
                     _startingIndex = _index;
                 }
-                else if (_textStack.Count > stackCountBeforeText)
+                else if (pushedText)
                 {
                     // not a scaling tag, so take back the text and let it carry on past the ~~
                     _textStack.RemoveAt(_textStack.Count - 1);
@@ -620,19 +553,15 @@ internal sealed class GameStringParser
             }
             else if (gameString[_index] == '#' && _index + 1 < gameString.Length && gameString[_index + 1] == '#')
             {
-                int stackCountBeforeText = _textStack.Count;
+                bool pushedText = PushNormalText();
 
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
-                if (TryParseErrorTag(gameString, out Range? tag))
+                if (TryParseErrorTag(gameString, out Range tag))
                 {
-                    _textStack.Add(new TextRange(tag.Value, TextType.ErrorTag));
+                    _textStack.Add(new TextRange(tag, TextType.ErrorTag));
+
                     _startingIndex = _index;
                 }
-                else if (_textStack.Count > stackCountBeforeText)
+                else if (pushedText)
                 {
                     // not an error tag, so take back the text and let it carry on past the ##
                     _textStack.RemoveAt(_textStack.Count - 1);
@@ -641,15 +570,11 @@ internal sealed class GameStringParser
             else if (gameString[_index] == '%' && _index == _startingIndex && _textStack.Count > 0 && _textStack[^1].Type == TextType.ScalingTag)
             {
                 // only when the percent is right after the scaling tag, otherwise the text in between would get moved too
-                // increment and push the percent text into the stack
+                // push the percent as text, then swap it in front of the scaling tag
                 _index++;
-#if DEBUG
-                PushNormalText(gameString);
-#else
-                PushNormalText();
-#endif
 
-                // swap the scaling and percent text
+                PushNormalText();
+
                 (_textStack[^1], _textStack[^2]) = (_textStack[^2], _textStack[^1]);
 
                 _startingIndex = _index;
@@ -660,146 +585,107 @@ internal sealed class GameStringParser
             }
         }
 
-        if (_index <= gameString.Length)
-        {
-            // reached the end of the string without finding the matching end tag (that case returns early)
-            bool missingEndTag = startTag.HasValue;
+        // reached the end of the string without finding the matching end tag (that case returns early)
+        PushNormalText();
 
-#if DEBUG
-            PushNormalText(gameString);
-#else
-            PushNormalText();
-#endif
-            if (missingEndTag)
-                _textStack.Add(new TextRange(startTag!.Value, TextType.MissingEndTag));
-        }
+        if (startTag.HasValue)
+            _textStack.Add(new TextRange(startTag.Value, TextType.MissingEndTag));
     }
 
-#if DEBUG
-    private void PushNormalText(ReadOnlySpan<char> gameString)
-#else
-    private void PushNormalText()
-#endif
+    // pushes the text from the starting index up to the current index, returns false if there is no text
+    private bool PushNormalText()
     {
-        int normalTextLength = _index - _startingIndex;
-        if (normalTextLength > 0)
-        {
-#if DEBUG
-            ReadOnlySpan<char> temp = gameString.Slice(_startingIndex, normalTextLength);
-#endif
-            _textStack.Add(new TextRange(_startingIndex, _index, TextType.Text));
-        }
+        if (_index <= _startingIndex)
+            return false;
+
+        _textStack.Add(new TextRange(_startingIndex, _index, TextType.Text));
+        return true;
     }
 
-    // try to parse out a tag
-    private bool TryParseTag(ReadOnlySpan<char> gameString, [NotNullWhen(true)] out Range? tag, out bool isStartTag)
+    // closes the outer tag with its end tag, or marks it as missing one
+    private void PushOuterTagEnd(ReadOnlySpan<char> gameString, Range outerStartTag)
     {
-        tag = null;
-        isStartTag = false;
+        if (TryGetEndTag(gameString, outerStartTag, out Range endTag))
+            _textStack.Add(new TextRange(endTag, TextType.EndTag));
+        else
+            _textStack.Add(new TextRange(outerStartTag, TextType.MissingEndTag));
+    }
 
-        ReadOnlySpan<char> currentTextSpan = gameString[_index..];
-        int lengthOffset = gameString.Length - currentTextSpan.Length;
-
-        int startTagIndex = 0; // index of <
-        int endTagIndex = -1;
-
+    // the current index is at a <
+    private bool TryParseTag(ReadOnlySpan<char> gameString, out Range tag, out bool isStartTag)
+    {
         // the next < or > after the starting <
-        int nextBracketIndex = currentTextSpan[1..].IndexOfAny('<', '>') + 1;
-        if (nextBracketIndex > 0)
+        int nextBracketIndex = gameString[(_index + 1)..].IndexOfAny('<', '>') + 1;
+
+        if (nextBracketIndex > 0 && gameString[_index + nextBracketIndex] == '>')
         {
-            if (currentTextSpan[nextBracketIndex] == '>')
-                endTagIndex = nextBracketIndex;
-            else
-                startTagIndex = nextBracketIndex;
-        }
+            tag = new Range(_index, _index + nextBracketIndex + 1);
 
-        if (endTagIndex > 0)
-        {
-            ReadOnlySpan<char> tagSpan = currentTextSpan[startTagIndex..(endTagIndex + 1)];
+            ReadOnlySpan<char> tagText = gameString[tag];
+            isStartTag = tagText[1] != '/' && tagText[^2] != '/';
 
-            // check if its a start tag
-            if (tagSpan[1] != '/' && tagSpan[^2] != '/')
-                isStartTag = true;
-            else
-                isStartTag = false;
-
-            tag = new Range(startTagIndex + lengthOffset, endTagIndex + lengthOffset + 1);
-
-            _index += endTagIndex - startTagIndex + 1;
+            _index += nextBracketIndex + 1;
 
             return true;
         }
 
-        if (startTagIndex == 0)
-            _index++;
-        else
-            _index += startTagIndex;
+        tag = default;
+        isStartTag = false;
+
+        // not a tag, so carry on from the next < if there is one
+        _index += nextBracketIndex > 0 ? nextBracketIndex : 1;
 
         return false;
     }
 
-    private bool TryParseScalingTag(ReadOnlySpan<char> gameString, [NotNullWhen(true)] out Range? tag)
+    // the current index is at the first ~ of a ~~
+    private bool TryParseScalingTag(ReadOnlySpan<char> gameString, out Range tag)
     {
-        tag = null;
+        int valueStart = _index + 2;
+        int valueLength = gameString[valueStart..].IndexOf("~~");
 
-        ReadOnlySpan<char> currentTextSpan = gameString[_index..];
-        int lengthOffset = gameString.Length - currentTextSpan.Length;
-
-        int startScaleIndex = currentTextSpan.IndexOf("~~") + 1; // the second char of the ~~ (first batch)
-        int endScaleIndex = currentTextSpan[(startScaleIndex + 1)..].IndexOf("~~"); // first char of the ~~ (second batch)
-        if (endScaleIndex >= 0)
-            endScaleIndex += startScaleIndex + 1;
-
-        if (startScaleIndex > 0 && endScaleIndex > 0)
+        if (valueLength >= 0 && IsDigits(gameString.Slice(valueStart, valueLength), _decimalSeparator))
         {
-            ReadOnlySpan<char> value = currentTextSpan[(startScaleIndex + 1)..endScaleIndex];
+            int tagEnd = valueStart + valueLength + 2;
 
-            if (IsDigits(value, _decimalSeparator))
-            {
-                tag = new Range(startScaleIndex - 1 + lengthOffset, endScaleIndex + 1 + lengthOffset + 1);
+            tag = new Range(_index, tagEnd);
+            _index = tagEnd;
 
-                _index += endScaleIndex - startScaleIndex + 3;
-
-                return true;
-            }
+            return true;
         }
 
+        tag = default;
         _index += 2;
 
         return false;
     }
 
-    private bool TryParseErrorTag(ReadOnlySpan<char> gameString, [NotNullWhen(true)] out Range? tag)
+    // the current index is at the first # of a ##
+    private bool TryParseErrorTag(ReadOnlySpan<char> gameString, out Range tag)
     {
-        tag = null;
-
-        ReadOnlySpan<char> currentTextSpan = gameString[_index..];
-        int lengthOffset = gameString.Length - currentTextSpan.Length;
-
-        if (currentTextSpan.StartsWith(GameStringText.ErrorTag, StringComparison.Ordinal))
+        if (gameString[_index..].StartsWith(GameStringText.ErrorTag, StringComparison.Ordinal))
         {
-            tag = new Range(lengthOffset, GameStringText.ErrorTag.Length + lengthOffset);
+            int tagEnd = _index + GameStringText.ErrorTag.Length;
 
-            _index += GameStringText.ErrorTag.Length;
+            tag = new Range(_index, tagEnd);
+            _index = tagEnd;
 
             return true;
         }
 
+        tag = default;
         _index += 2;
 
         return false;
     }
 
     // find the index of the end tag
-    private bool TryGetEndTag(ReadOnlySpan<char> gameString, Range startTag, [NotNullWhen(true)] out Range? endTag)
+    private bool TryGetEndTag(ReadOnlySpan<char> gameString, Range startTag, out Range endTag)
     {
-        endTag = null;
-
         ReadOnlySpan<char> currentTextSpan = gameString[_index..];
-        ReadOnlySpan<char> startTagSpan = gameString[startTag];
 
         // find the tag type
-        ReadOnlySpan<char> tagTypeSpan = GetEndTagCharType(startTagSpan);
+        ReadOnlySpan<char> tagTypeSpan = GetEndTagCharType(gameString[startTag]);
 
         int searchLength = tagTypeSpan.Length + 3; // </ + tagType + >
 
@@ -824,64 +710,60 @@ internal sealed class GameStringParser
             }
         }
 
+        endTag = default;
         return false;
     }
 
-    private void PushFontVarFromTag(ReadOnlySpan<char> gameString, Range tag)
+    private void PushFontVarFromTag(ReadOnlySpan<char> tag)
     {
-        if (!ExtractFontVars)
+        if (!ExtractFontVars || !TryGetFontTagType(tag, out FontTagType fontTagType))
             return;
 
         // <c val=\"#TooltipNumbers\">
         // <s val=\"StandardTooltipHeader\">
-        ReadOnlySpan<char> fontSpan = gameString[tag];
-
-        if (fontSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase))
-        {
-            ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
-
-            if (!fontTagVal.IsEmpty)
-                AddFontVar(_styleConstantTagVariables, fontTagVal);
-        }
-        else if (fontSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase))
-        {
-            ReadOnlySpan<char> fontTagVal = GetFontTagVal(fontSpan);
-
-            if (!fontTagVal.IsEmpty)
-                AddFontVar(_styleTagVariables, fontTagVal);
-        }
-        else
-        {
+        ReadOnlySpan<char> fontTagVal = GetFontTagVal(tag);
+        if (fontTagVal.IsEmpty)
             return;
-        }
+
+        HashSet<string> fontVars = fontTagType == FontTagType.Style ? _styleTagVariables : _styleConstantTagVariables;
+
+        fontVars.GetAlternateLookup<ReadOnlySpan<char>>().Add(fontTagVal);
+    }
+
+    private ReplacementLookup? GetReplacements(FontTagType fontTagType) => fontTagType == FontTagType.Style ? _valueByStyleVar : _valueByStyleConstantVar;
+
+    private bool IsHltNameRemoved(FontTagType fontTagType) => fontTagType == FontTagType.Style ? RemoveHltNameFromStyleTags : RemoveHltNameFromConstantTags;
+
+    private bool IsHltNameReplacementUndone(FontTagType fontTagType) => fontTagType == FontTagType.Style ? UndoHltNameReplacementForStyleTags : UndoHltNameReplacementForConstantTags;
+
+    // copies in the start tag with its font value changes, or cleaned up as-is if it has none
+    private void CopyStartTag(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
+    {
+        if (!FontValueCopiedInBuffer(buffer, startTag, ref currentOffset))
+            CopyIntoBuffer(buffer, ref currentOffset, startTag, true);
     }
 
     private bool FontValueCopiedInBuffer(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
     {
-        bool isStyleTag = startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase);
-        bool isConstantTag = startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase);
-
-        if (!isStyleTag && !isConstantTag)
+        if (!TryGetFontTagType(startTag, out FontTagType fontTagType))
             return false;
 
         // only the tag type that has hlt-name removal turned on is affected, the other tag type still gets its value replacements
-        bool removeHltName = (isStyleTag && RemoveHltNameFromStyleTags) || (isConstantTag && RemoveHltNameFromConstantTags);
-
-        if (removeHltName)
+        if (IsHltNameRemoved(fontTagType))
         {
             // removing the hlt-name never makes the tag longer, so it fits in a buffer the length of the tag
             char[]? rentedBuffer = null;
             Span<char> tagBuffer = startTag.Length <= 256 ? stackalloc char[256] : (rentedBuffer = ArrayPool<char>.Shared.Rent(startTag.Length));
 
             int tagLength = 0;
-            bool isHltNameRemoved = HltNameRemovedInBuffer(tagBuffer, startTag, isStyleTag, ref tagLength);
+            bool isHltNameRemoved = HltNameRemovedInBuffer(tagBuffer, startTag, fontTagType, ref tagLength);
 
             if (isHltNameRemoved)
             {
                 // the hlt-name removal goes first, then the replacement is for the val that is left
                 ReadOnlySpan<char> tagWithoutHltName = tagBuffer[..tagLength];
 
-                if (!CopiedInFontTagVal(buffer, tagWithoutHltName, ref currentOffset))
+                if (!CopiedInFontTagVal(buffer, tagWithoutHltName, fontTagType, ref currentOffset))
                     CopyIntoBuffer(buffer, ref currentOffset, tagWithoutHltName, false);
             }
 
@@ -892,17 +774,13 @@ internal sealed class GameStringParser
                 return true;
         }
 
-        return CopiedInFontTagVal(buffer, startTag, ref currentOffset);
+        return CopiedInFontTagVal(buffer, startTag, fontTagType, ref currentOffset);
     }
 
     // the val value that a replacement is looked up by, which is the hlt-name value when the hlt-name removal undoes the replacement
-    private ReadOnlySpan<char> GetFontTagValForReplacement(ReadOnlySpan<char> startTag, bool isStyleTag)
+    private ReadOnlySpan<char> GetFontTagValForReplacement(ReadOnlySpan<char> startTag, FontTagType fontTagType)
     {
-        bool undoHltName = isStyleTag
-            ? RemoveHltNameFromStyleTags && UndoHltNameReplacementForStyleTags
-            : RemoveHltNameFromConstantTags && UndoHltNameReplacementForConstantTags;
-
-        if (undoHltName)
+        if (IsHltNameRemoved(fontTagType) && IsHltNameReplacementUndone(fontTagType))
         {
             ReadOnlySpan<char> hltNameVal = GetAttributeValue(startTag, _hltNameAttribute);
 
@@ -916,7 +794,7 @@ internal sealed class GameStringParser
     // removes the hlt-name attribute, and if undoing the replacement then sets the val attribute back to the hlt-name value
     // the attributes can be in any order, and the other attributes are kept
     // <s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >
-    private bool HltNameRemovedInBuffer(Span<char> buffer, ReadOnlySpan<char> startTag, bool isStyleTag, ref int currentOffset)
+    private bool HltNameRemovedInBuffer(Span<char> buffer, ReadOnlySpan<char> startTag, FontTagType fontTagType, ref int currentOffset)
     {
         int indexOfHltName = startTag.IndexOf(_hltNameAttribute, StringComparison.OrdinalIgnoreCase);
         if (indexOfHltName < 0)
@@ -934,10 +812,9 @@ internal sealed class GameStringParser
         int hltNameStart = startTag[..indexOfHltName].TrimEnd().Length;
         int hltNameEnd = indexOfHltName + startIndexOfQuote + endIndexOfQuote + 2;
 
-        bool undoReplacement = isStyleTag ? UndoHltNameReplacementForStyleTags : UndoHltNameReplacementForConstantTags;
         int tagStartOffset = currentOffset;
 
-        if (undoReplacement)
+        if (IsHltNameReplacementUndone(fontTagType))
         {
             if (!TryGetValValueRange(startTag, hltNameStart, hltNameEnd, out int valueStart, out int valueEnd))
                 return false;
@@ -973,63 +850,49 @@ internal sealed class GameStringParser
     }
 
     // for copy in the replacement value of the font tag, and if preserve is true then also copy in the hlt-name attribute with the original value (unless the tag already has one)
-    private bool CopiedInFontTagVal(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
+    private bool CopiedInFontTagVal(Span<char> buffer, ReadOnlySpan<char> startTag, FontTagType fontTagType, ref int currentOffset)
     {
-#if NET9_0_OR_GREATER
-        if (_valueByStyleVarAltLookup is null && _valueByStyleConstantVarAltLookup is null)
-#else
-        if (_valueByStyleVar is null && _valueByStyleConstantVar is null)
-#endif
+        // checked first, so the val isn't searched for when there are no replacements
+        if (GetReplacements(fontTagType) is not { } replacements)
             return false;
 
         // "<s val=\"StandardTooltipHeader\">"
         ReadOnlySpan<char> fontTagVal = GetFontTagVal(startTag);
 
-        if (fontTagVal.IsEmpty is false &&
-#if NET9_0_OR_GREATER
-            ((_valueByStyleConstantVarAltLookup is not null && startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVarAltLookup.Value.TryGetValue(fontTagVal, out var newValue)) ||
-            (_valueByStyleVarAltLookup is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVarAltLookup.Value.TryGetValue(fontTagVal, out newValue))))
-#else
-            ((_valueByStyleConstantVar is not null && startTag.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar.TryGetValue(fontTagVal.ToString(), out var newValue)) ||
-            (_valueByStyleVar is not null && startTag.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar.TryGetValue(fontTagVal.ToString(), out newValue))))
-#endif
+        if (fontTagVal.IsEmpty || !replacements.TryGetValue(fontTagVal, out (string Value, bool Preserve) newValue))
+            return false;
+
+        // fontTagVal is a slice of startTag, so get its exact position.
+        startTag.Overlaps(fontTagVal, out int indexOfStyleVar);
+
+        // the closing quote of the val attribute, the tag is kept from there on (e.g. other attributes)
+        int indexOfEndQuote = indexOfStyleVar + fontTagVal.Length;
+        indexOfEndQuote += startTag[indexOfEndQuote..].IndexOf('"');
+
+        int tagStartOffset = currentOffset;
+
+        // <s val=\"
+        CopyIntoBuffer(buffer, ref currentOffset, startTag[..indexOfStyleVar], false);
+        CopyIntoBuffer(buffer, ref currentOffset, newValue.Value, false);
+
+        // a tag that already has an hlt-name keeps it instead, since it already has the original value
+        if (newValue.Preserve && !startTag.Contains(_hltNameAttribute, StringComparison.OrdinalIgnoreCase))
         {
-            // fontTagVal is a slice of startTag, so get its exact position.
-            startTag.Overlaps(fontTagVal, out int indexOfStyleVar);
-
-            // the closing quote of the val attribute, the tag is kept from there on (e.g. other attributes)
-            int indexOfEndQuote = indexOfStyleVar + fontTagVal.Length;
-            indexOfEndQuote += startTag[indexOfEndQuote..].IndexOf('"');
-
-            int tagStartOffset = currentOffset;
-
-            // <s val=\"
-            CopyIntoBuffer(buffer, ref currentOffset, startTag[..indexOfStyleVar], false);
-            CopyIntoBuffer(buffer, ref currentOffset, newValue.Value, false);
-
-            // a tag that already has an hlt-name keeps it instead, since it already has the original value
-            if (newValue.Preserve && !startTag.Contains(_hltNameAttribute, StringComparison.OrdinalIgnoreCase))
-            {
-                // $"\" {_hltNameAttribute}\"{fontTagVal}"
-                buffer[currentOffset++] = '"';
-                buffer[currentOffset++] = ' ';
-                _hltNameAttribute.AsSpan().CopyTo(buffer[currentOffset..]);
-                currentOffset += _hltNameAttribute.Length;
-                buffer[currentOffset++] = '"';
-                fontTagVal.CopyTo(buffer[currentOffset..]);
-                currentOffset += fontTagVal.Length;
-            }
-
-            // \"> or \" otherAtt=\"somevalue\">
-            CopyIntoBuffer(buffer, ref currentOffset, startTag[indexOfEndQuote..], false);
-
-            // cleaned as a whole, the same as a tag with no replacement
-            currentOffset = tagStartOffset + CleanUpTag(buffer[tagStartOffset..currentOffset]);
-
-            return true;
+            // $"\" {_hltNameAttribute}\"{fontTagVal}"
+            buffer[currentOffset++] = '"';
+            buffer[currentOffset++] = ' ';
+            CopyIntoBuffer(buffer, ref currentOffset, _hltNameAttribute, false);
+            buffer[currentOffset++] = '"';
+            CopyIntoBuffer(buffer, ref currentOffset, fontTagVal, false);
         }
 
-        return false;
+        // \"> or \" otherAtt=\"somevalue\">
+        CopyIntoBuffer(buffer, ref currentOffset, startTag[indexOfEndQuote..], false);
+
+        // cleaned as a whole, the same as a tag with no replacement
+        currentOffset = tagStartOffset + CleanUpTag(buffer[tagStartOffset..currentOffset]);
+
+        return true;
     }
 
     private int GetSizeOfBuffer(ReadOnlySpan<char> gameString, GameStringFlags flags)
@@ -1041,15 +904,8 @@ internal sealed class GameStringParser
             switch (current.Type)
             {
                 case TextType.MissingEndTag:
-                    {
-                        // find the size of the tag
-                        ReadOnlySpan<char> currentSpan = current.GetText(gameString);
-                        ReadOnlySpan<char> tagTypeSpan = GetEndTagCharType(currentSpan);
-
-                        sum += tagTypeSpan.Length + 3; // 3 for </>
-                        break;
-                    }
-
+                    sum += GetEndTagCharType(current.GetText(gameString)).Length + 3; // 3 for </>
+                    break;
                 case TextType.Newline:
                     if (flags.NewLineTag == TagFlag.Include)
                         sum += 4; // <n/>
@@ -1063,66 +919,16 @@ internal sealed class GameStringParser
                         sum += 1; // as space " "
                     break;
                 case TextType.StartTag:
-                    {
-                        if (flags.ColorTags == TagFlag.Include)
-                        {
-                            ReadOnlySpan<char> currentSpan = current.GetText(gameString);
-#if NET9_0_OR_GREATER
-                            if (currentSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVarAltLookup is not null)
-#else
-                            if (currentSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar is not null)
-#endif
-                            {
-                                ReadOnlySpan<char> tagVarVal = GetFontTagValForReplacement(currentSpan, isStyleTag: false); // #TooltipNumbers
-#if NET9_0_OR_GREATER
-                                if (_valueByStyleConstantVarAltLookup.Value.TryGetValue(tagVarVal, out var newValue))
-#else
-                                if (_valueByStyleConstantVar.TryGetValue(tagVarVal.ToString(), out var newValue))
-#endif
-                                {
-                                    int tagVarValLength = tagVarVal.Length;
-                                    sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
-
-                                    if (newValue.Preserve)
-                                        sum += 3 + _hltNameAttribute.Length + tagVarValLength; // hlt-name="#TooltipNumbers" +3 for space and quotes
-
-                                    break;
-                                }
-                            }
-#if NET9_0_OR_GREATER
-                            else if (currentSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVarAltLookup is not null)
-#else
-                            else if (currentSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar is not null)
-#endif
-                            {
-                                ReadOnlySpan<char> tagVarVal = GetFontTagValForReplacement(currentSpan, isStyleTag: true); // "StandardTooltipHeader"
-#if NET9_0_OR_GREATER
-                                if (_valueByStyleVarAltLookup.Value.TryGetValue(tagVarVal, out var newValue))
-#else
-                                if (_valueByStyleVar.TryGetValue(tagVarVal.ToString(), out var newValue))
-#endif
-                                {
-                                    int tagVarValLength = tagVarVal.Length;
-                                    sum += currentSpan.Length - tagVarValLength + Math.Max(tagVarValLength, newValue.Value.Length);
-
-                                    if (newValue.Preserve)
-                                        sum += 3 + _hltNameAttribute.Length + tagVarValLength; // hlt-name="StandardTooltipHeader" +3 for space and quotes
-
-                                    break;
-                                }
-                            }
-                        }
-
-                        goto case TextType.EndTag;
-                    }
-
+                    if (flags.ColorTags == TagFlag.Include)
+                        sum += current.Length + GetFontValueReplacementGrowth(current.GetText(gameString));
+                    break;
                 case TextType.EndTag:
                     if (flags.ColorTags == TagFlag.Include)
-                        goto default;
+                        sum += current.Length;
                     break;
                 case TextType.ScalingTag:
                     if (flags.ScalingTag == TagFlag.Include)
-                        goto default;
+                        sum += current.Length;
                     else if (flags.ScalingTag == TagFlag.Eval)
                         sum += 21 + current.Length; // 21 largest min text
                     break;
@@ -1135,7 +941,27 @@ internal sealed class GameStringParser
         return sum;
     }
 
-    private void GetScalingLocaleText(Span<char> buffer, ref int offset, double value)
+    // the most that a start tag can grow by from a font value replacement
+    private int GetFontValueReplacementGrowth(ReadOnlySpan<char> startTag)
+    {
+        if (!TryGetFontTagType(startTag, out FontTagType fontTagType) || GetReplacements(fontTagType) is not { } replacements)
+            return 0;
+
+        ReadOnlySpan<char> fontTagVal = GetFontTagValForReplacement(startTag, fontTagType); // e.g. #TooltipNumbers
+
+        if (!replacements.TryGetValue(fontTagVal, out (string Value, bool Preserve) newValue))
+            return 0;
+
+        int growth = Math.Max(0, newValue.Value.Length - fontTagVal.Length);
+
+        // hlt-name="#TooltipNumbers" +3 for the space and quotes
+        if (newValue.Preserve)
+            growth += 3 + _hltNameAttribute.Length + fontTagVal.Length;
+
+        return growth;
+    }
+
+    private void CopyScalingText(Span<char> buffer, ref int offset, double value)
     {
         // formatted the same way as the gamestrings:
         // dede and frfr have a non-breaking space ( ) before the %,
