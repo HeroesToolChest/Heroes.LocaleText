@@ -917,4 +917,48 @@ public class GameStringTextTests
         // assert
         Assert.AreEqual(result, resultRaw);
     }
+
+    [TestMethod]
+    [DataRow(false, "123456", "999999", false, "<s val=\"999999\">Archon</s>")]
+    [DataRow(false, "123456", "999999", true, "<s val=\"999999\" hlt-name=\"123456\">Archon</s>")]
+    [DataRow(true, "123456", "999999", false, "<s val=\"StandardTooltipHeader\">Archon</s>")]
+    [DataRow(true, "StandardTooltipHeader", "999999", false, "<s val=\"999999\">Archon</s>")]
+    [DataRow(true, "StandardTooltipHeader", "999999", true, "<s val=\"999999\" hlt-name=\"StandardTooltipHeader\">Archon</s>")]
+    [DataRow(true, "StandardTooltipHeader", "a-replacement-value-that-is-longer-than-the-whole-tag", true, "<s val=\"a-replacement-value-that-is-longer-than-the-whole-tag\" hlt-name=\"StandardTooltipHeader\">Archon</s>")]
+    public void AddFontValueReplacement_WithRemoveHltNameForStyleTags_ReplacementIsForValLeftAfterRemoval(bool undo, string value, string replacement, bool preserve, string result)
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon</s>")
+            .AddFontValueReplacement(value, replacement, FontTagType.Style, preserve)
+            .RemoveHltNameForStyleTags(undo);
+
+        // act
+        string resultColored = gameStringText.ColoredText;
+
+        // assert
+        Assert.AreEqual(result, resultColored);
+    }
+
+    [TestMethod]
+    public void AddFontValueReplacement_WithRemoveHltNameForConstantTagsCalledFirst_SameResult()
+    {
+        // arrange
+        string text = "<c val=\"123456\" hlt-name=\"#TooltipNumbers\">18</c> seconds";
+
+        GameStringText replaceFirst = new GameStringText(text)
+            .AddFontValueReplacement("123456", "999999", FontTagType.Constant)
+            .RemoveHltNameForConstantTags(false);
+
+        GameStringText removeFirst = new GameStringText(text)
+            .RemoveHltNameForConstantTags(false)
+            .AddFontValueReplacement("123456", "999999", FontTagType.Constant);
+
+        // act
+        string resultReplaceFirst = replaceFirst.ColoredText;
+        string resultRemoveFirst = removeFirst.ColoredText;
+
+        // assert
+        Assert.AreEqual("<c val=\"999999\">18</c> seconds", resultReplaceFirst);
+        Assert.AreEqual(resultReplaceFirst, resultRemoveFirst);
+    }
 }

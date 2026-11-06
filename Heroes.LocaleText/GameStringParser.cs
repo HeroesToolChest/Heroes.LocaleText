@@ -867,10 +867,50 @@ internal sealed class GameStringParser
         // only the tag type that has hlt-name removal turned on is affected, the other tag type still gets its value replacements
         bool removeHltName = (isStyleTag && RemoveHltNameFromStyleTags) || (isConstantTag && RemoveHltNameFromConstantTags);
 
-        if (removeHltName && HltNameRemovedInBuffer(buffer, startTag, isStyleTag, ref currentOffset))
-            return true;
+        if (removeHltName)
+        {
+            // removing the hlt-name never makes the tag longer, so it fits in a buffer the length of the tag
+            char[]? rentedBuffer = null;
+            Span<char> tagBuffer = startTag.Length <= 256 ? stackalloc char[256] : (rentedBuffer = ArrayPool<char>.Shared.Rent(startTag.Length));
+
+            int tagLength = 0;
+            bool isHltNameRemoved = HltNameRemovedInBuffer(tagBuffer, startTag, isStyleTag, ref tagLength);
+
+            if (isHltNameRemoved)
+            {
+                // the hlt-name removal goes first, then the replacement is for the val that is left
+                ReadOnlySpan<char> tagWithoutHltName = tagBuffer[..tagLength];
+
+                if (!CopiedInFontTagVal(buffer, tagWithoutHltName, ref currentOffset))
+                    CopyIntoBuffer(buffer, ref currentOffset, tagWithoutHltName, false);
+            }
+
+            if (rentedBuffer is not null)
+                ArrayPool<char>.Shared.Return(rentedBuffer);
+
+            if (isHltNameRemoved)
+                return true;
+        }
 
         return CopiedInFontTagVal(buffer, startTag, ref currentOffset);
+    }
+
+    // the val value that a replacement is looked up by, which is the hlt-name value when the hlt-name removal undoes the replacement
+    private ReadOnlySpan<char> GetFontTagValForReplacement(ReadOnlySpan<char> startTag, bool isStyleTag)
+    {
+        bool undoHltName = isStyleTag
+            ? RemoveHltNameFromStyleTags && UndoHltNameReplacementForStyleTags
+            : RemoveHltNameFromConstantTags && UndoHltNameReplacementForConstantTags;
+
+        if (undoHltName)
+        {
+            ReadOnlySpan<char> hltNameVal = GetAttributeValue(startTag, _hltNameAttribute);
+
+            if (!hltNameVal.IsEmpty)
+                return hltNameVal;
+        }
+
+        return GetFontTagVal(startTag);
     }
 
     // removes the hlt-name attribute, and if undoing the replacement then sets the val attribute back to the hlt-name value
@@ -1033,7 +1073,7 @@ internal sealed class GameStringParser
                             if (currentSpan.StartsWith("<c", StringComparison.OrdinalIgnoreCase) && _valueByStyleConstantVar is not null)
 #endif
                             {
-                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan); // #TooltipNumbers
+                                ReadOnlySpan<char> tagVarVal = GetFontTagValForReplacement(currentSpan, isStyleTag: false); // #TooltipNumbers
 #if NET9_0_OR_GREATER
                                 if (_valueByStyleConstantVarAltLookup.Value.TryGetValue(tagVarVal, out var newValue))
 #else
@@ -1055,7 +1095,7 @@ internal sealed class GameStringParser
                             else if (currentSpan.StartsWith("<s", StringComparison.OrdinalIgnoreCase) && _valueByStyleVar is not null)
 #endif
                             {
-                                ReadOnlySpan<char> tagVarVal = GetFontTagVal(currentSpan); // "StandardTooltipHeader"
+                                ReadOnlySpan<char> tagVarVal = GetFontTagValForReplacement(currentSpan, isStyleTag: true); // "StandardTooltipHeader"
 #if NET9_0_OR_GREATER
                                 if (_valueByStyleVarAltLookup.Value.TryGetValue(tagVarVal, out var newValue))
 #else
