@@ -1226,6 +1226,48 @@ public class GameStringParserTests
     }
 
     [TestMethod]
+    [DataRow("<c val=\"#TooltipNumbers\">##ERROR##</c> damage", "<c val=\"#TooltipNumbers\">##ERROR##</c> damage", " damage", " damage", " damage")]
+    [DataRow("<c val=\"#TooltipNumbers\">##ERROR##100</c> damage", "<c val=\"#TooltipNumbers\">##ERROR##100</c> damage", "<c val=\"#TooltipNumbers\">100</c> damage", "<c val=\"#TooltipNumbers\">100</c> damage", "100 damage")]
+    [DataRow("<c val=\"#TooltipNumbers\">##ERROR##~~0.04~~</c> damage", "<c val=\"#TooltipNumbers\">##ERROR##~~0.04~~</c> damage", " damage", "<c val=\"#TooltipNumbers\"> (+4% per level)</c> damage", " damage")]
+    [DataRow("Deal <c val=\"A\">5<c val=\"B\">##ERROR##</c></c> damage", "Deal <c val=\"A\">5</c><c val=\"B\">##ERROR##</c> damage", "Deal <c val=\"A\">5</c> damage", "Deal <c val=\"A\">5</c> damage", "Deal 5 damage")]
+    [DataRow("<c val=\"#TooltipNumbers\">##ERROR##", "<c val=\"#TooltipNumbers\">##ERROR##</c>", "", "", "")]
+    public void GetText_ErrorTagFirstInTag_ErrorTagNotKeptInColoredText(string text, string correctRaw, string correctColoredText, string correctColoredTextWithScaling, string correctPlainText)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultColoredText = descriptionParser.GetColoredText(false);
+        string resultColoredTextWithScaling = descriptionParser.GetColoredText(true);
+        string resultPlainText = descriptionParser.GetPlainText(false, false);
+
+        // assert
+        Assert.AreEqual(correctRaw, resultRaw);
+        Assert.AreEqual(correctColoredText, resultColoredText);
+        Assert.AreEqual(correctColoredTextWithScaling, resultColoredTextWithScaling);
+        Assert.AreEqual(correctPlainText, resultPlainText);
+    }
+
+    [TestMethod]
+    [DataRow("###ERROR## text", "# text")]
+    [DataRow("a#####ERROR##b", "a###b")]
+    [DataRow("<c val=\"#TooltipNumbers\">1###ERROR##</c> damage", "1# damage")]
+    public void GetText_ErrorTagAfterExtraHash_ErrorTagIsFound(string text, string correctPlainText)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultPlainText = descriptionParser.GetPlainText(false, false);
+
+        // assert
+        Assert.AreEqual(text, resultRaw);
+        Assert.AreEqual(correctPlainText, resultPlainText);
+    }
+
+    [TestMethod]
     [DataRow("5~~0.5~~% def", "5%~~0.5~~ def", "5% (+50% per level) def")]
     [DataRow("5~~0.5~~ abc% def", "5~~0.5~~ abc% def", "5 (+50% per level) abc% def")]
     public void GetText_PercentAfterScalingTag_OnlyMovesPercentThatIsRightAfterScalingTag(string text, string correctRaw, string correctPlainTextWithScaling)

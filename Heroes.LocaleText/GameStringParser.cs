@@ -423,17 +423,17 @@ internal sealed class GameStringParser
 
                     break;
                 default:
+                    // an excluded error tag doesn't count as text, so a start tag before it stays pending (and is dropped if the tag ends up empty)
+                    if (item.Type == TextType.ErrorTag && flags.ErrorTag != TagFlag.Include)
+                        break;
+
                     if (flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                     {
                         CopyStartTag(buffer, startTag, ref currentOffset);
                         startTag = [];
+                    }
 
-                        CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
-                    }
-                    else if (item.Type != TextType.ErrorTag || flags.ErrorTag == TagFlag.Include)
-                    {
-                        CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
-                    }
+                    CopyIntoBuffer(buffer, ref currentOffset, itemText, false);
 
                     break;
             }
@@ -674,7 +674,9 @@ internal sealed class GameStringParser
         }
 
         tag = default;
-        _index += 2;
+
+        // only past the first #, so an error tag that comes after an extra # (e.g. ###ERROR##) is still found
+        _index++;
 
         return false;
     }
