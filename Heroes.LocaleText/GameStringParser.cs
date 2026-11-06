@@ -256,6 +256,38 @@ internal sealed class GameStringParser
         return attributeNameSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
     }
 
+    // finds the inside of the val attribute's quotes, skipping over the hlt-name attribute
+    private static bool TryGetValValueRange(ReadOnlySpan<char> startTag, int hltNameStart, int hltNameEnd, out int valueStart, out int valueEnd)
+    {
+        valueStart = 0;
+        valueEnd = 0;
+
+        int indexOfVal = startTag[..hltNameStart].IndexOf("val=", StringComparison.OrdinalIgnoreCase);
+        if (indexOfVal < 0)
+        {
+            indexOfVal = startTag[hltNameEnd..].IndexOf("val=", StringComparison.OrdinalIgnoreCase);
+            if (indexOfVal < 0)
+                return false;
+
+            indexOfVal += hltNameEnd;
+        }
+
+        int startIndexOfQuote = startTag[indexOfVal..].IndexOf('"');
+        if (startIndexOfQuote < 0)
+            return false;
+
+        valueStart = indexOfVal + startIndexOfQuote + 1;
+
+        int endIndexOfQuote = startTag[valueStart..].IndexOf('"');
+        if (endIndexOfQuote < 0)
+            return false;
+
+        valueEnd = valueStart + endIndexOfQuote;
+
+        // an unquoted val could pick up the quotes of the hlt-name attribute
+        return valueEnd <= hltNameStart || valueStart >= hltNameEnd;
+    }
+
     private static void CopyEndTag(Span<char> buffer, ref int offset, ReadOnlySpan<char> tagType)
     {
         buffer[offset++] = '<';
@@ -842,6 +874,8 @@ internal sealed class GameStringParser
     }
 
     // removes the hlt-name attribute, and if undoing the replacement then sets the val attribute back to the hlt-name value
+    // the attributes can be in any order, and the other attributes are kept
+    // <s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >
     private bool HltNameRemovedInBuffer(Span<char> buffer, ReadOnlySpan<char> startTag, bool isStyleTag, ref int currentOffset)
     {
         int indexOfHltName = startTag.IndexOf(_hltNameAttribute, StringComparison.OrdinalIgnoreCase);
@@ -856,33 +890,49 @@ internal sealed class GameStringParser
         if (endIndexOfQuote < 0)
             return false;
 
-        bool undoReplacement = isStyleTag ? UndoHltNameReplacementForStyleTags : UndoHltNameReplacementForConstantTags;
+        // the part that gets removed, which is the hlt-name attribute and the whitespace before it
+        int hltNameStart = startTag[..indexOfHltName].TrimEnd().Length;
+        int hltNameEnd = indexOfHltName + startIndexOfQuote + endIndexOfQuote + 2;
 
-        // <s val=\"123456\" hlt-name=\"StandardTooltipHeader\" otherAtt=\"somevalue\" >
+        bool undoReplacement = isStyleTag ? UndoHltNameReplacementForStyleTags : UndoHltNameReplacementForConstantTags;
+        int tagStartOffset = currentOffset;
+
         if (undoReplacement)
         {
-            int indexOfVal = startTag.IndexOf("val=", StringComparison.OrdinalIgnoreCase);
-
-            if (indexOfVal < 0)
+            if (!TryGetValValueRange(startTag, hltNameStart, hltNameEnd, out int valueStart, out int valueEnd))
                 return false;
 
-            CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfVal + 4)], true);
-            buffer[currentOffset++] = '"';
-            CopyIntoBuffer(buffer, ref currentOffset, hltNameSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim(), false);
-            buffer[currentOffset++] = '"';
+            ReadOnlySpan<char> hltNameValue = hltNameSpan[(startIndexOfQuote + 1)..(startIndexOfQuote + endIndexOfQuote + 1)].Trim();
+
+            // the val value is swapped for the hlt-name value
+            if (valueStart < hltNameStart)
+            {
+                CopyIntoBuffer(buffer, ref currentOffset, startTag[..valueStart], false);
+                CopyIntoBuffer(buffer, ref currentOffset, hltNameValue, false);
+                CopyIntoBuffer(buffer, ref currentOffset, startTag[valueEnd..hltNameStart], false);
+                CopyIntoBuffer(buffer, ref currentOffset, startTag[hltNameEnd..], false);
+            }
+            else
+            {
+                CopyIntoBuffer(buffer, ref currentOffset, startTag[..hltNameStart], false);
+                CopyIntoBuffer(buffer, ref currentOffset, startTag[hltNameEnd..valueStart], false);
+                CopyIntoBuffer(buffer, ref currentOffset, hltNameValue, false);
+                CopyIntoBuffer(buffer, ref currentOffset, startTag[valueEnd..], false);
+            }
         }
         else
         {
-            CopyIntoBuffer(buffer, ref currentOffset, startTag[..(indexOfHltName - 1)].Trim(), true);
+            CopyIntoBuffer(buffer, ref currentOffset, startTag[..hltNameStart], false);
+            CopyIntoBuffer(buffer, ref currentOffset, startTag[hltNameEnd..], false);
         }
 
-        ReadOnlySpan<char> remainingStartTag = startTag[(indexOfHltName + _hltNameAttribute.Length + endIndexOfQuote + 2)..];
-        CopyIntoBuffer(buffer, ref currentOffset, remainingStartTag, true);
+        // cleaned as a whole, so any spaces left around the removed attribute get collapsed
+        currentOffset = tagStartOffset + CleanUpTag(buffer[tagStartOffset..currentOffset]);
 
         return true;
     }
 
-    // for copy in the replacement value of the font tag, and if preserve is true then also copy in the hlt-name attribute with the original value
+    // for copy in the replacement value of the font tag, and if preserve is true then also copy in the hlt-name attribute with the original value (unless the tag already has one)
     private bool CopiedInFontTagVal(Span<char> buffer, ReadOnlySpan<char> startTag, ref int currentOffset)
     {
 #if NET9_0_OR_GREATER
@@ -907,11 +957,18 @@ internal sealed class GameStringParser
             // fontTagVal is a slice of startTag, so get its exact position.
             startTag.Overlaps(fontTagVal, out int indexOfStyleVar);
 
+            // the closing quote of the val attribute, the tag is kept from there on (e.g. other attributes)
+            int indexOfEndQuote = indexOfStyleVar + fontTagVal.Length;
+            indexOfEndQuote += startTag[indexOfEndQuote..].IndexOf('"');
+
+            int tagStartOffset = currentOffset;
+
             // <s val=\"
-            CopyIntoBuffer(buffer, ref currentOffset, startTag[..indexOfStyleVar], true);
+            CopyIntoBuffer(buffer, ref currentOffset, startTag[..indexOfStyleVar], false);
             CopyIntoBuffer(buffer, ref currentOffset, newValue.Value, false);
 
-            if (newValue.Preserve)
+            // a tag that already has an hlt-name keeps it instead, since it already has the original value
+            if (newValue.Preserve && !startTag.Contains(_hltNameAttribute, StringComparison.OrdinalIgnoreCase))
             {
                 // $"\" {_hltNameAttribute}\"{fontTagVal}"
                 buffer[currentOffset++] = '"';
@@ -923,7 +980,11 @@ internal sealed class GameStringParser
                 currentOffset += fontTagVal.Length;
             }
 
-            CopyIntoBuffer(buffer, ref currentOffset, "\">", false);
+            // \"> or \" otherAtt=\"somevalue\">
+            CopyIntoBuffer(buffer, ref currentOffset, startTag[indexOfEndQuote..], false);
+
+            // cleaned as a whole, the same as a tag with no replacement
+            currentOffset = tagStartOffset + CleanUpTag(buffer[tagStartOffset..currentOffset]);
 
             return true;
         }

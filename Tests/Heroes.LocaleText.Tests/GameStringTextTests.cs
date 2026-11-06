@@ -885,4 +885,36 @@ public class GameStringTextTests
         // assert
         Assert.AreEqual("<s otherAtt=\"somevalue\" hlt-name=\"StandardTooltipHeader\">Archon </s> more text <c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt2=\"somevalue2\">18</c> seconds", resultRaw);
     }
+
+    [TestMethod]
+    [DataRow(true, "<s val=\"StandardTooltipHeader\" otherAtt=\"somevalue\">Archon </s> more text")]
+    [DataRow(false, "<s val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text")]
+    public void FontStyleValues_RemoveHltNameStyleTagsHltNameBeforeVal_AttributesAreRemoved(bool styleTagsUndo, string result)
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<s hlt-name=\"StandardTooltipHeader\" val=\"123456\" otherAtt=\"somevalue\">Archon </s> more text")
+            .RemoveHltNameForStyleTags(styleTagsUndo);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual(result, resultRaw);
+    }
+
+    [TestMethod]
+    [DataRow(true, "<c val=\"#TooltipNumbers\" otherAtt=\"somevalue\">18</c> seconds")]
+    [DataRow(false, "<c val=\"123456\" otherAtt=\"somevalue\">18</c> seconds")]
+    public void FontStyleValues_RemoveHltNameConstantTagsAttributeBetweenValAndHltName_OtherAttributeIsKept(bool constantTagsUndo, string result)
+    {
+        // arrange
+        GameStringText gameStringText = new GameStringText("<c val=\"123456\" otherAtt=\"somevalue\" hlt-name=\"#TooltipNumbers\">18</c> seconds")
+            .RemoveHltNameForConstantTags(constantTagsUndo);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+
+        // assert
+        Assert.AreEqual(result, resultRaw);
+    }
 }

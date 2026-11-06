@@ -1116,6 +1116,40 @@ public class GameStringParserTests
     }
 
     [TestMethod]
+    [DataRow("<c val=\"#TooltipNumbers\" otherAtt=\"x\">18</c>", false, "<c val=\"123456\" otherAtt=\"x\">18</c>")]
+    [DataRow("<c val=\"#TooltipNumbers\" otherAtt=\"x\">18</c>", true, "<c val=\"123456\" hlt-name=\"#TooltipNumbers\" otherAtt=\"x\">18</c>")]
+    [DataRow("<c otherAtt=\"x\" val=\"#TooltipNumbers\">18</c>", false, "<c otherAtt=\"x\" val=\"123456\">18</c>")]
+    [DataRow("<C  val=\"#TooltipNumbers\"  otherAtt=\"x\">18</c>", false, "<c val=\"123456\" otherAtt=\"x\">18</c>")]
+    public void GetColoredText_WithReplacementOnTagWithOtherAttributes_KeepsOtherAttributes(string text, bool preserve, string correct)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+        descriptionParser.AddStyleConstantVarsWithReplacement("#TooltipNumbers", "123456", preserve);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual(correct, result);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void GetColoredText_WithReplacementOnTagThatHasHltName_KeepsExistingHltName(bool preserve)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance("<s val=\"123456\" hlt-name=\"StandardTooltipHeader\">Archon</s>");
+        descriptionParser.AddStyleVarsWithReplacement("123456", "999999", preserve);
+
+        // act
+        string result = descriptionParser.GetColoredText(false);
+
+        // assert
+        Assert.AreEqual("<s val=\"999999\" hlt-name=\"StandardTooltipHeader\">Archon</s>", result);
+    }
+
+    [TestMethod]
     public void GetRawText_NoTags_ReturnsSameStringInstance()
     {
         // arrange
