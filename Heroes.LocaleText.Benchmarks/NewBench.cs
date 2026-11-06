@@ -5,11 +5,11 @@ namespace Heroes.LocaleText.Benchmarks;
 [MemoryDiagnoser]
 public class NewBench
 {
-    // | Method     | Mean      | Error    | StdDev   | Gen0   | Allocated |
-    // |----------- |----------:|---------:|---------:|-------:|----------:|
-    // | GSPShort   |  17.49 ns | 0.383 ns | 0.680 ns | 0.0052 |      88 B |
-    // | GSP        | 366.36 ns | 3.159 ns | 2.638 ns | 0.0196 |     328 B |
-    // | GSPColored | 547.95 ns | 9.093 ns | 8.506 ns | 0.0410 |     688 B |
+    // | Method     | Mean       | Error     | StdDev    | Gen0   | Allocated |
+    // |----------- |-----------:|----------:|----------:|-------:|----------:|
+    // | GSPShort   |   7.339 ns | 0.0875 ns | 0.0818 ns | 0.0062 |     104 B |
+    // | GSP        | 301.800 ns | 1.1719 ns | 1.0389 ns | 0.0205 |     344 B |
+    // | GSPColored | 456.325 ns | 2.7066 ns | 2.5317 ns | 0.0420 |     704 B |
     [Benchmark]
     public string GSPShort()
     {
