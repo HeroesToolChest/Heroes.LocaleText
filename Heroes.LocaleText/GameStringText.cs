@@ -39,16 +39,17 @@ public class GameStringText
     /// <summary>
     /// Initializes a new instance of the <see cref="GameStringText"/> class.
     /// </summary>
-    /// <param name="text">An already parsed gamestring that has had it's data references computed and has not yet been modified into a readable verbiage (e.g. <see cref="PlainText"/> or <see cref="ColoredText"/> from this class should not be used).</param>
+    /// <param name="text">A gamestring that has had its data references computed but hasn't been turned into readable text yet. Don't pass in the output of <see cref="PlainText"/> or <see cref="ColoredText"/>.</param>
     /// <param name="gameStringLocale">
     /// The localization of the <paramref name="text"/>. This is just used for the scaling text.
     /// The scaling value (e.g. <c>~~0,04~~</c>) may use this locale's decimal separator or a period, and the scaling text (e.g. <c>(+4% per level)</c>) is written for this locale.
     /// If the scaling values only use a period and the scaling text is not needed, then this may be left as the default.
     /// </param>
     /// <param name="extractFontValues">
-    /// If <see langword="true"/>, then the style and constant tags will have their <c>val</c> values saved in <see cref="FontStyleValues"/> and  <see cref="FontConstantValues"/>.
-    /// If not needing the output with style and constant tags, then set to <see langword="false"/> for faster parsing performance.
+    /// If <see langword="true"/>, the <c>val</c> values of the style and constant tags are collected in <see cref="FontStyleValues"/> and <see cref="FontConstantValues"/>.
+    /// If <see langword="false"/>, the values aren't collected, which makes parsing faster. The tags still appear in the output and font value replacements still work.
     /// </param>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> is <see langword="null"/>.</exception>
     public GameStringText(string text, StormLocale gameStringLocale = StormLocale.ENUS, bool extractFontValues = false)
     {
         ArgumentNullException.ThrowIfNull(text);
@@ -60,8 +61,12 @@ public class GameStringText
     }
 
     /// <summary>
-    /// <para>Gets the raw text. Unmatched tags have been fixed and nested tag have been modified into unnested tags.</para>
+    /// <para>Gets the raw text. Unmatched tags have been fixed and nested tags have been modified into unnested tags.</para>
     /// <para>Contains the xml tags, scaling data <c>~~x~~</c>, and newlines <c>&lt;n/&gt;</c>. It can also contain error tags <c>##ERROR##</c>.</para>
+    /// <para>
+    /// Tag names are lowercased, extra spaces in tags are removed, the newline tags <c>&lt;n&gt;</c> and <c>&lt;/n&gt;</c> become <c>&lt;n/&gt;</c>, and empty tags are removed.
+    /// Any font value replacements are applied.
+    /// </para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals &lt;c val="#TooltipNumbers"&gt;200&lt;/c&gt;&lt;c val="#ColorGray"&gt;~~0.04~~&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
@@ -81,7 +86,7 @@ public class GameStringText
 
     /// <summary>
     /// <para>Gets the gamestring as text only.</para>
-    /// <para>Same as <see cref="PlainText"/> but contains newlines.</para>
+    /// <para>Same as <see cref="PlainText"/> but keeps the newlines as <c>&lt;n/&gt;</c> tags.</para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals 200 damage.&lt;n/&gt;Does not affect minions.
@@ -90,7 +95,7 @@ public class GameStringText
     public string PlainTextWithNewlines => _plainTextWithNewlines ??= _descriptionParser.GetPlainText(true, false);
 
     /// <summary>
-    /// <para>Gets the gamestring with text only.</para>
+    /// <para>Gets the gamestring as text only.</para>
     /// <para>Same as <see cref="PlainText"/> but contains the scaling info <c>(+x% per level)</c>.</para>
     /// <para>
     /// Example:<br/>
@@ -100,8 +105,8 @@ public class GameStringText
     public string PlainTextWithScaling => _plainTextWithScaling ??= _descriptionParser.GetPlainText(false, true);
 
     /// <summary>
-    /// <para>Gets the gamestring with text only.</para>
-    /// <para>Same as <see cref="PlainTextWithScaling"/> but contains the newlines.</para>
+    /// <para>Gets the gamestring as text only.</para>
+    /// <para>Same as <see cref="PlainTextWithScaling"/> but keeps the newlines as <c>&lt;n/&gt;</c> tags.</para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals 200 (+4% per level) damage.&lt;n/&gt;Does not affect minions.
@@ -110,7 +115,8 @@ public class GameStringText
     public string PlainTextWithScalingWithNewlines => _plainTextWithScalingWithNewlines ??= _descriptionParser.GetPlainText(true, true);
 
     /// <summary>
-    /// <para>Gets the gamestring with xml tags and new lines, when parsed this is what appears ingame for text and tooltips.</para>
+    /// <para>Gets the gamestring with xml tags and newlines. Once the tags are rendered, this is what appears in-game for text and tooltips.</para>
+    /// <para>No scaling info or error tags. Any font value replacements are applied.</para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals &lt;c val="#TooltipNumbers"&gt;200&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
@@ -123,7 +129,7 @@ public class GameStringText
     /// <para>Same as <see cref="ColoredText"/> but contains the scaling info <c>(+x% per level)</c>.</para>
     /// <para>
     /// Example:<br/>
-    /// Fires a laser that deals &lt;c val=\"#TooltipNumbers\"&gt;200&lt;/c&gt;&lt;c val=\"#ColorGray\"&gt; (+4% per level)&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
+    /// Fires a laser that deals &lt;c val="#TooltipNumbers"&gt;200&lt;/c&gt;&lt;c val="#ColorGray"&gt; (+4% per level)&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
     /// </summary>
     public string ColoredTextWithScaling => _coloredTextWithScaling ??= _descriptionParser.GetColoredText(true);
@@ -134,7 +140,7 @@ public class GameStringText
     public StormLocale GameStringLocale { get; }
 
     /// <summary>
-    /// Gets a value indicating whether the style and constant tag values have been extracted.
+    /// Gets a value indicating whether the style and constant tag values are collected, as set by the <c>extractFontValues</c> constructor parameter.
     /// <para>
     /// If <see langword="true"/>, <see cref="FontStyleValues"/> and <see cref="FontConstantValues"/> will not be <see langword="null"/>.
     /// </para>
@@ -143,14 +149,15 @@ public class GameStringText
     public bool IsFontValuesExtracted { get; }
 
     /// <summary>
-    /// <para>Gets a collection of style tag values used in the gamestring.</para>
+    /// <para>Gets the set of style tag values used in the gamestring. The values are case-sensitive.</para>
+    /// <para>If font value replacements have been added, the replaced values are listed instead of the original values.</para>
     /// <para>
     /// Example:<br/>
-    /// With &lt;s val=\"StandardTooltipHeader\"&gt;&lt;/s&gt; returns StandardTooltipHeader.
+    /// With &lt;s val="StandardTooltipHeader"&gt;&lt;/s&gt; returns StandardTooltipHeader.
     /// </para>
     /// </summary>
-    /// <returns>A collection of style values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
-    public IEnumerable<string>? FontStyleValues
+    /// <value>A read-only set of style tag values, or <see langword="null"/> if <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</value>
+    public IReadOnlySet<string>? FontStyleValues
     {
         get
         {
@@ -165,14 +172,15 @@ public class GameStringText
     }
 
     /// <summary>
-    /// <para>Gets a collection of constant tag values used in the gamestring.</para>
+    /// <para>Gets the set of constant tag values used in the gamestring. The values are case-sensitive.</para>
+    /// <para>If font value replacements have been added, the replaced values are listed instead of the original values.</para>
     /// <para>
     /// Example:<br/>
-    /// With &lt;c val=\"#TooltipNumbers\"&gt;&lt;/c&gt; returns #TooltipNumbers.
+    /// With &lt;c val="#TooltipNumbers"&gt;&lt;/c&gt; returns #TooltipNumbers.
     /// </para>
     /// </summary>
-    /// <returns>A collection of font constant values or <see langword="null"/> if the <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</returns>
-    public IEnumerable<string>? FontConstantValues
+    /// <value>A read-only set of constant tag values, or <see langword="null"/> if <see cref="IsFontValuesExtracted"/> is <see langword="false"/>.</value>
+    public IReadOnlySet<string>? FontConstantValues
     {
         get
         {
@@ -187,11 +195,15 @@ public class GameStringText
     }
 
     /// <summary>
-    /// Adds a dictionary of values that will be replaced by new values. Used to replace the variables in the style and constant tags.
+    /// <para>Adds a dictionary of values that will be replaced by new values. Replaces the <c>val</c> values of either the style or the constant tags, based on <paramref name="fontTagType"/>.</para>
+    /// <para>
+    /// The replacements show up in <see cref="RawText"/>, <see cref="ColoredText"/>, and <see cref="ColoredTextWithScaling"/>, and the replaced values are listed in <see cref="FontStyleValues"/> or <see cref="FontConstantValues"/>.
+    /// The plain text properties have no tags, so they aren't affected.
+    /// </para>
     /// </summary>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
-    /// <param name="preserveValues">If <see langword="true"/> creates a <c>hlt-name</c> attribute with the name of the replaced (the original) value.</param>
-    /// <param name="newValuesByValue">A dictionary of values and their replacement values. Is case-sensitive.</param>
+    /// <param name="preserveValues">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
+    /// <param name="newValuesByValue">A dictionary of values and their replacement values. The values are matched case-sensitively.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
     public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IDictionary<string, string> newValuesByValue)
     {
@@ -206,11 +218,15 @@ public class GameStringText
     }
 
     /// <summary>
-    /// Adds a collection of values that will be replaced by new values. Used to replace the variables in the style and constant tags.
+    /// <para>Adds a collection of values that will be replaced by new values. Replaces the <c>val</c> values of either the style or the constant tags, based on <paramref name="fontTagType"/>.</para>
+    /// <para>
+    /// The replacements show up in <see cref="RawText"/>, <see cref="ColoredText"/>, and <see cref="ColoredTextWithScaling"/>, and the replaced values are listed in <see cref="FontStyleValues"/> or <see cref="FontConstantValues"/>.
+    /// The plain text properties have no tags, so they aren't affected.
+    /// </para>
     /// </summary>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
-    /// <param name="preserveValues">If <see langword="true"/> creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value.</param>
-    /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
+    /// <param name="preserveValues">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
+    /// <param name="newValuesByValue">A collection of values and their replacement values. The values are matched case-sensitively.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
     public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, IEnumerable<(string Value, string Replacement)> newValuesByValue)
     {
@@ -225,11 +241,15 @@ public class GameStringText
     }
 
     /// <summary>
-    /// Adds a collection of values that will be replaced by new values. Used to replace the variables in the style and constant tags.
+    /// <para>Adds a collection of values that will be replaced by new values. Replaces the <c>val</c> values of either the style or the constant tags, based on <paramref name="fontTagType"/>.</para>
+    /// <para>
+    /// The replacements show up in <see cref="RawText"/>, <see cref="ColoredText"/>, and <see cref="ColoredTextWithScaling"/>, and the replaced values are listed in <see cref="FontStyleValues"/> or <see cref="FontConstantValues"/>.
+    /// The plain text properties have no tags, so they aren't affected.
+    /// </para>
     /// </summary>
     /// <param name="fontTagType">The tag type for the replacement of the values.</param>
-    /// <param name="preserveValues">If <see langword="true"/> creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value.</param>
-    /// <param name="newValuesByValue">A collection of values and their replacement values. Is case-sensitive.</param>
+    /// <param name="preserveValues">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) value. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
+    /// <param name="newValuesByValue">A collection of values and their replacement values. The values are matched case-sensitively.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
     public GameStringText AddFontValueReplacements(FontTagType fontTagType, bool preserveValues, params (string Value, string Replacement)[] newValuesByValue)
     {
@@ -244,12 +264,16 @@ public class GameStringText
     }
 
     /// <summary>
-    /// Adds a value that will be replaced by a new value. Used to replace the variables in the style and constant tags.
+    /// <para>Adds a value that will be replaced by a new value. Replaces the <c>val</c> value of either the style or the constant tags, based on <paramref name="fontTagType"/>.</para>
+    /// <para>
+    /// The replacement shows up in <see cref="RawText"/>, <see cref="ColoredText"/>, and <see cref="ColoredTextWithScaling"/>, and the replaced value is listed in <see cref="FontStyleValues"/> or <see cref="FontConstantValues"/>.
+    /// The plain text properties have no tags, so they aren't affected.
+    /// </para>
     /// </summary>
-    /// <param name="value">The value of the val attribute of the tag. Is case-sensitive.</param>
-    /// <param name="replacement">The new value that will replace <paramref name="value"/>. Is case-sensitive.</param>
+    /// <param name="value">The value of the <c>val</c> attribute of the tag. It's matched case-sensitively.</param>
+    /// <param name="replacement">The new value that will replace <paramref name="value"/>.</param>
     /// <param name="fontTagType">The tag type for the replacement of the <paramref name="value"/>.</param>
-    /// <param name="preserveValue">If <see langword="true"/> creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) <paramref name="value"/>.</param>
+    /// <param name="preserveValue">If <see langword="true"/>, creates a new <c>hlt-name</c> attribute with the name of the replaced (the original) <paramref name="value"/>. A tag that already has an <c>hlt-name</c> attribute keeps that one instead.</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
     public GameStringText AddFontValueReplacement(string value, string replacement, FontTagType fontTagType, bool preserveValue = false)
     {
@@ -261,7 +285,9 @@ public class GameStringText
     }
 
     /// <summary>
-    /// Removes the <c>hlt-name</c> attribute from the style tags and optionally undoes the replacement of the value for the style tags.
+    /// <para>Removes the <c>hlt-name</c> attribute from the style tags and optionally undoes the replacement of the value for the style tags.</para>
+    /// <para>Only the <c>hlt-name</c> attributes that are already in the gamestring are removed. The ones created by font value replacements that preserve the value are kept.</para>
+    /// <para>Font value replacements are applied after the removal, to the <c>val</c> value that is left. The order of the calls doesn't matter.</para>
     /// </summary>
     /// <param name="undoFontValueReplacement">If <see langword="true"/>, undoes the replacement of the value for the style tags (it will be set to the removed <c>hlt-name</c> value).</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
@@ -276,7 +302,9 @@ public class GameStringText
     }
 
     /// <summary>
-    /// Removes the <c>hlt-name</c> attribute from the constant tags and optionally undoes the replacement of the value for the constant tags.
+    /// <para>Removes the <c>hlt-name</c> attribute from the constant tags and optionally undoes the replacement of the value for the constant tags.</para>
+    /// <para>Only the <c>hlt-name</c> attributes that are already in the gamestring are removed. The ones created by font value replacements that preserve the value are kept.</para>
+    /// <para>Font value replacements are applied after the removal, to the <c>val</c> value that is left. The order of the calls doesn't matter.</para>
     /// </summary>
     /// <param name="undoFontValueReplacement">If <see langword="true"/>, undoes the replacement of the value for the constant tags (it will be set to the removed <c>hlt-name</c> value).</param>
     /// <returns>The current <see cref="GameStringText"/> instance.</returns>
