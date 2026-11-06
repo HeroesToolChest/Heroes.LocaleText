@@ -1149,4 +1149,62 @@ public class GameStringParserTests
         Assert.AreEqual(correctColoredText, resultColoredText);
         Assert.AreEqual(correctPlainText, resultPlainText);
     }
+
+    [TestMethod]
+    [DataRow("~~")]
+    [DataRow("~~abc")]
+    [DataRow("##")]
+    [DataRow("##abc")]
+    public void GetText_StartsWithNonScalingOrNonErrorTag_ReturnsSameText(string text)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultPlainText = descriptionParser.GetPlainText(false, true);
+        string resultColoredText = descriptionParser.GetColoredText(true);
+
+        // assert
+        Assert.AreEqual(text, resultRaw);
+        Assert.AreEqual(text, resultPlainText);
+        Assert.AreEqual(text, resultColoredText);
+    }
+
+    [TestMethod]
+    [DataRow("<c val=\"#TooltipNumbers\">~~abc</c>", "~~abc")]
+    [DataRow("<c val=\"#TooltipNumbers\">##abc</c>", "##abc")]
+    [DataRow("a<n/>~~b", "a ~~b")]
+    [DataRow("<c val=\"#TooltipNumbers\">a</c>~~b", "a~~b")]
+    [DataRow("a~~0.04~~~~b", "a~~b")]
+    public void GetPlainText_NonScalingOrNonErrorTagAfterTag_TagIsNotKeptAsText(string text, string correctPlainText)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultPlainText = descriptionParser.GetPlainText(false, false);
+
+        // assert
+        Assert.AreEqual(text, resultRaw);
+        Assert.AreEqual(correctPlainText, resultPlainText);
+    }
+
+    [TestMethod]
+    [DataRow("5~~0.5~~% def", "5%~~0.5~~ def", "5% (+50% per level) def")]
+    [DataRow("5~~0.5~~ abc% def", "5~~0.5~~ abc% def", "5 (+50% per level) abc% def")]
+    public void GetText_PercentAfterScalingTag_OnlyMovesPercentThatIsRightAfterScalingTag(string text, string correctRaw, string correctPlainTextWithScaling)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultPlainTextWithScaling = descriptionParser.GetPlainText(false, true);
+
+        // assert
+        Assert.AreEqual(correctRaw, resultRaw);
+        Assert.AreEqual(correctPlainTextWithScaling, resultPlainTextWithScaling);
+    }
 }

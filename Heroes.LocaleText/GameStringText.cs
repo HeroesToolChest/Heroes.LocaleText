@@ -14,8 +14,6 @@ public class GameStringText
     public const string ErrorTag = "##ERROR##";
 
     private readonly GameStringParser _descriptionParser;
-    private HashSet<string>? _fontStyleValues;
-    private HashSet<string>? _fontConstantValues;
 
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private string? _rawText;
@@ -156,10 +154,13 @@ public class GameStringText
     {
         get
         {
-            if (_rawText is null)
-                _ = RawText; // trigger the parsing
+            if (!IsFontValuesExtracted)
+                return null;
 
-            return _fontStyleValues ??= _descriptionParser.StyleTagVariables;
+            // the values are extracted while parsing, no output string needs to be built
+            _descriptionParser.EnsureParsed();
+
+            return _descriptionParser.StyleTagVariables;
         }
     }
 
@@ -175,10 +176,13 @@ public class GameStringText
     {
         get
         {
-            if (_rawText is null)
-                _ = RawText; // trigger the parsing
+            if (!IsFontValuesExtracted)
+                return null;
 
-            return _fontConstantValues ??= _descriptionParser.StyleConstantTagVariables;
+            // the values are extracted while parsing, no output string needs to be built
+            _descriptionParser.EnsureParsed();
+
+            return _descriptionParser.StyleConstantTagVariables;
         }
     }
 
@@ -305,23 +309,27 @@ public class GameStringText
         if (fontTagType == FontTagType.Constant)
         {
             _descriptionParser.AddStyleConstantVarsWithReplacement(value, replacement, preserveValue);
-
-            if (_fontConstantValues is not null)
-            {
-                _fontConstantValues.Remove(value);
-                _fontConstantValues.Add(replacement);
-            }
+            ReplaceFontValue(_descriptionParser.StyleConstantTagVariables, value, replacement);
         }
         else if (fontTagType == FontTagType.Style)
         {
             _descriptionParser.AddStyleVarsWithReplacement(value, replacement, preserveValue);
-
-            if (_fontStyleValues is not null)
-            {
-                _fontStyleValues.Remove(value);
-                _fontStyleValues.Add(replacement);
-            }
+            ReplaceFontValue(_descriptionParser.StyleTagVariables, value, replacement);
         }
+    }
+
+    // keeps the extracted font values in sync with the replacements
+    private void ReplaceFontValue(HashSet<string>? fontValues, string value, string replacement)
+    {
+        if (fontValues is null)
+            return;
+
+        // the values get extracted while parsing, so parse first, otherwise a later parse would add back the original value
+        _descriptionParser.EnsureParsed();
+
+        // only replace a value that is in the gamestring
+        if (fontValues.Remove(value))
+            fontValues.Add(replacement);
     }
 
     private void ClearDescriptionsCaches()

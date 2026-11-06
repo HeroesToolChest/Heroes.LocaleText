@@ -700,6 +700,43 @@ public class GameStringTextTests
     }
 
     [TestMethod]
+    public void FontStyleValues_AddedFontValueReplacementBeforeReadingValues_UpdatedFontStyleValues()
+    {
+        // arrange
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds, <s val=\"StandardTooltipHeader\">Archon </s>", extractFontValues: true);
+
+        gameStringText.AddFontValueReplacement("StandardTooltipHeader", "123456", FontTagType.Style, preserveValue: true);
+        gameStringText.AddFontValueReplacement("#TooltipNumbers", "aaaaaaaa", FontTagType.Constant, preserveValue: true);
+
+        // act
+        List<string> fontStyleValues = [.. gameStringText.FontStyleValues!];
+        List<string> fontConstantValues = [.. gameStringText.FontConstantValues!];
+
+        // assert
+        Assert.HasCount(1, fontStyleValues);
+        Assert.Contains("123456", fontStyleValues);
+        Assert.HasCount(1, fontConstantValues);
+        Assert.Contains("aaaaaaaa", fontConstantValues);
+    }
+
+    [TestMethod]
+    public void FontConstantValues_AddedFontValueReplacementForValueNotInText_ValueNotAdded()
+    {
+        // arrange
+        GameStringText gameStringText = new("Every <c val=\"#TooltipNumbers\">18</c> seconds.", extractFontValues: true);
+        _ = gameStringText.FontConstantValues!.ToList();
+
+        gameStringText.AddFontValueReplacement("#NotInText", "123456", FontTagType.Constant);
+
+        // act
+        List<string> fontConstantValues = [.. gameStringText.FontConstantValues!];
+
+        // assert
+        Assert.HasCount(1, fontConstantValues);
+        Assert.Contains("#TooltipNumbers", fontConstantValues);
+    }
+
+    [TestMethod]
     public void FontStyleValues_FrenchQuoteAtEndOfCVal_ReturnsFontStyleValue()
     {
         // arrange

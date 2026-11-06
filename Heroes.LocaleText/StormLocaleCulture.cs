@@ -7,12 +7,22 @@ namespace Heroes.LocaleText;
 /// </summary>
 public static class StormLocaleCulture
 {
+    // cache per locale
+    private static readonly CultureInfo?[] _cultureByLocale = new CultureInfo?[Enum.GetValues<StormLocale>().Length];
+
     /// <summary>
     /// Gets the <see cref="CultureInfo"/> for the <paramref name="stormLocale"/>.
     /// </summary>
     /// <param name="stormLocale">The locale.</param>
     /// <returns>A cached, read-only <see cref="CultureInfo"/>.</returns>
-    public static CultureInfo GetCultureInfo(StormLocale stormLocale) => CultureInfo.GetCultureInfo(GetCultureName(stormLocale));
+    public static CultureInfo GetCultureInfo(StormLocale stormLocale)
+    {
+        // unknown defaults to ENUS
+        if ((uint)stormLocale >= (uint)_cultureByLocale.Length)
+            stormLocale = StormLocale.ENUS;
+
+        return _cultureByLocale[(int)stormLocale] ??= CultureInfo.GetCultureInfo(GetCultureName(stormLocale));
+    }
 
     private static string GetCultureName(StormLocale stormLocale) => stormLocale switch
     {
