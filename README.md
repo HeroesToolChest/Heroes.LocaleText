@@ -15,6 +15,7 @@ The gamestrings must already have their data references computed, meaning tags s
 | `<n/>` | Newline. `<n>` and `</n>` are also accepted. |
 | `<sp/>` | Space. |
 | `~~0.04~~` | Per-level scaling for the value in front of it. `0.04` is 4% per hero level. |
+| `<c val="#ColorGray" value="55.3" precision="0" scaling="0.0400390625">~~0.04~~</c>` | A scaling value in its own tag. The `value`, `precision`, and `scaling` attributes are for [calculating the value at a level](#calculating-the-value-at-a-level). |
 | `##ERROR##` | Error marker, such as one left by a data reference that failed to compute. |
 
 Other tags, such as `<img .../>`, are kept in the outputs that keep tags and removed from the plain text outputs.
@@ -34,11 +35,13 @@ Create a `GameStringText` from a gamestring, then read one of its properties. Ea
 
 `<sp/>` tags are kept in `RawText` and become a space in every other output. `ToString()` returns the same as `PlainTextWithScaling`.
 
+`RawText` keeps the `value`, `precision`, and `scaling` attributes of a scaling value's start tag, and `ColoredTextWithScaling` removes them.
+
 ```C#
-GameStringText gameStringText = new("Spawn a mine that becomes active after a short time. Deals <c val=\"bfd4fd\">153~~0.04~~</c> damage and reveals the enemy for <c val=\"bfd4fd\">4</c> seconds. Lasts <c val=\"bfd4fd\">90</c> seconds.<n/><n/>Stores up to <c val=\"bfd4fd\">3</c> charges.");
+GameStringText gameStringText = new("Spawn a mine that becomes active after a short time. Deals <c val=\"#TooltipNumbers\">153<c val=\"#ColorGray\" value=\"153\" precision=\"0\" scaling=\"0.0400390625\">~~0.04~~</c></c> damage and reveals the enemy for <c val=\"#TooltipNumbers\">4</c> seconds. Lasts <c val=\"#TooltipNumbers\">90</c> seconds.<n/><n/>Stores up to <c val=\"#TooltipNumbers\">3</c> charges.");
 
 string rawText = gameStringText.RawText;
-// "Spawn a mine that becomes active after a short time. Deals <c val=\"bfd4fd\">153~~0.04~~</c> damage and reveals the enemy for <c val=\"bfd4fd\">4</c> seconds. Lasts <c val=\"bfd4fd\">90</c> seconds.<n/><n/>Stores up to <c val=\"bfd4fd\">3</c> charges."
+// "Spawn a mine that becomes active after a short time. Deals <c val=\"#TooltipNumbers\">153</c><c val=\"#ColorGray\" value=\"153\" precision=\"0\" scaling=\"0.0400390625\">~~0.04~~</c> damage and reveals the enemy for <c val=\"#TooltipNumbers\">4</c> seconds. Lasts <c val=\"#TooltipNumbers\">90</c> seconds.<n/><n/>Stores up to <c val=\"#TooltipNumbers\">3</c> charges."
 
 string plainText = gameStringText.PlainText;
 // "Spawn a mine that becomes active after a short time. Deals 153 damage and reveals the enemy for 4 seconds. Lasts 90 seconds.  Stores up to 3 charges."
@@ -53,10 +56,10 @@ string plainTextWithScalingWithNewlines = gameStringText.PlainTextWithScalingWit
 // "Spawn a mine that becomes active after a short time. Deals 153 (+4% per level) damage and reveals the enemy for 4 seconds. Lasts 90 seconds.<n/><n/>Stores up to 3 charges."
 
 string coloredText = gameStringText.ColoredText;
-// "Spawn a mine that becomes active after a short time. Deals <c val=\"bfd4fd\">153</c> damage and reveals the enemy for <c val=\"bfd4fd\">4</c> seconds. Lasts <c val=\"bfd4fd\">90</c> seconds.<n/><n/>Stores up to <c val=\"bfd4fd\">3</c> charges."
+// "Spawn a mine that becomes active after a short time. Deals <c val=\"#TooltipNumbers\">153</c> damage and reveals the enemy for <c val=\"#TooltipNumbers\">4</c> seconds. Lasts <c val=\"#TooltipNumbers\">90</c> seconds.<n/><n/>Stores up to <c val=\"#TooltipNumbers\">3</c> charges."
 
 string coloredTextWithScaling = gameStringText.ColoredTextWithScaling;
-// "Spawn a mine that becomes active after a short time. Deals <c val=\"bfd4fd\">153 (+4% per level)</c> damage and reveals the enemy for <c val=\"bfd4fd\">4</c> seconds. Lasts <c val=\"bfd4fd\">90</c> seconds.<n/><n/>Stores up to <c val=\"bfd4fd\">3</c> charges."
+// "Spawn a mine that becomes active after a short time. Deals <c val=\"#TooltipNumbers\">153</c><c val=\"#ColorGray\"> (+4% per level)</c> damage and reveals the enemy for <c val=\"#TooltipNumbers\">4</c> seconds. Lasts <c val=\"#TooltipNumbers\">90</c> seconds.<n/><n/>Stores up to <c val=\"#TooltipNumbers\">3</c> charges."
 ```
 
 ### Text Cleanup
@@ -81,19 +84,45 @@ string plainTextWithScaling = gameStringText.PlainTextWithScaling;
 // "Quest: Gain 5% (+4% per level) Armor"
 ```
 
+## Calculating the Value at a Level
+The number shown for a scaling value is its value at level 0, rounded for the tooltip. To work out the value at another level, use the attributes on the scaling value's start tag, which `RawText` keeps:
+
+| Attribute | Description |
+| --- | --- |
+| `value` | The value at level 0, before it was rounded for the tooltip. |
+| `precision` | The number of decimal places the value is rounded to. |
+| `scaling` | The per-level increase the game uses. The `~~0.04~~` shows it rounded. |
+
+The value at a level is `value × (1 + scaling)^level`, rounded to `precision` decimal places. A value exactly halfway is rounded to the even digit, the same as the game does, e.g. `16.5` is `16` and `1.875` with a precision of `2` is `1.88`.
+
+```C#
+// Muradin restores <c val="#TooltipNumbers">55</c><c val="#ColorGray" value="55.3" precision="0" scaling="0.0400390625">~~0.04~~</c> Health per second...
+double value = 55.3;
+int precision = 0;
+double scaling = 0.0400390625;
+int level = 30;
+
+double valueAtLevel = Math.Round(value * Math.Pow(1 + scaling, level), precision, MidpointRounding.ToEven);
+// valueAtLevel: 180
+```
+
+Use the `value` and `scaling` attributes instead of the shown `55` and `~~0.04~~`. Both of those are rounded, so the result can be off by one: in the example above, either one gives `179` at level 30 instead of `180`.
+
+`GameStringText` doesn't do this calculation itself, so the attributes need to be read from `RawText`. They always use a period as the decimal separator, whatever the locale, so they can be parsed with `CultureInfo.InvariantCulture`.
+
 ## Localization
 The second constructor parameter sets the `StormLocale` of the gamestring. The default is `StormLocale.ENUS`. The locale only affects the scaling:
 - The scaling value may use a period or the locale's decimal separator, e.g. `~~0.035~~` or `~~0,035~~`.
 - The scaling text is written in the locale's language and number format.
 
 ```C#
-GameStringText gameStringText = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"bfd4fd\">147~~0,035~~</c> Schaden zufügen. Die Geschosse fügen Gebäuden <c val=\"bfd4fd\">50%</c> des Schadens zu.", StormLocale.DEDE);
+GameStringText gameStringText = new("Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils <c val=\"#TooltipNumbers\">147<c val=\"#ColorGray\" value=\"147\" precision=\"0\" scaling=\"0.034912109375\">~~0.035~~</c></c> Schaden zufügen. Die Geschosse fügen Gebäuden <c val=\"#TooltipNumbers\">50%</c> des Schadens zu.", StormLocale.DEDE);
 
 string result = gameStringText.PlainTextWithScaling;
 // result: "Feuert drei Geschosse auf ein Zielgebiet, die dem ersten getroffenen Gegner jeweils 147 (+3,5 % pro Stufe) Schaden zufügen. Die Geschosse fügen Gebäuden 50% des Schadens zu."
 ```
 
-A scaling value with a comma is only recognized when the locale's decimal separator is a comma. With the default `ENUS`, the `147~~0,035~~` above isn't treated as scaling and is left as-is in every output. If the scaling values only use a period and the scaling text isn't needed, the locale can be left as the default.
+A scaling value with a comma, such as `~~0,035~~`, is only recognized when the locale's decimal separator is a comma. With the default `ENUS`, it isn't treated as scaling and is left as-is in every output. If the scaling values only use a period and the scaling text isn't needed, the locale can be left as the default.
 
 | `StormLocale` | Language | Decimal separator | Scaling text for `~~0.035~~` |
 | --- | --- | :---: | --- |
