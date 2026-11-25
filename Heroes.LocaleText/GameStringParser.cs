@@ -15,6 +15,11 @@ internal sealed class GameStringParser
 {
     private const string _hltNameAttribute = "hlt-name=";
 
+    // the attributes on a scaling tag's start tag, for working out the value at a level
+    private const string _scalingValueAttributeName = "value";
+    private const string _scalingPrecisionAttributeName = "precision";
+    private const string _scalingAttributeName = "scaling";
+
     private static readonly SearchValues<char> _specialChars = SearchValues.Create(['<', '~', '#', '%']);
     private static readonly NumberFormatInfo _commaDecimalNumberFormat = NumberFormatInfo.ReadOnly(new NumberFormatInfo() { NumberDecimalSeparator = "," });
 
@@ -200,6 +205,81 @@ internal sealed class GameStringParser
             tagTypeSpan[j] = char.ToLowerInvariant(tagTypeSpan[j]);
 
         return text.Length;
+    }
+
+    // removes the value, precision, and scaling attributes (and the whitespace before each) from a start tag, in place, and returns the new length.
+    // these are the attributes a scaling tag's start tag has for working out the value at a level,
+    // e.g. <c val="#ColorGray" value="55.3" precision="0" scaling="0.0400390625"> becomes <c val="#ColorGray">
+    private static int RemoveScalingAttributes(Span<char> tag)
+    {
+        int writeIndex = 0;
+        int readIndex = 0;
+
+        while (readIndex < tag.Length)
+        {
+            char current = tag[readIndex];
+
+            if (current == '"')
+            {
+                // a quoted value is copied as is, so its spaces and text aren't mistaken for attributes
+                int endQuoteOffset = tag[(readIndex + 1)..].IndexOf('"');
+                int copyEnd = endQuoteOffset < 0 ? tag.Length : readIndex + endQuoteOffset + 2;
+
+                while (readIndex < copyEnd)
+                    tag[writeIndex++] = tag[readIndex++];
+
+                continue;
+            }
+
+            if (char.IsWhiteSpace(current) && TryGetScalingAttributeEnd(tag, readIndex, out int attributeEnd))
+            {
+                readIndex = attributeEnd;
+
+                continue;
+            }
+
+            tag[writeIndex++] = tag[readIndex++];
+        }
+
+        return writeIndex;
+    }
+
+    // whitespaceIndex is at the whitespace before an attribute, the end is just past the attribute's closing quote
+    private static bool TryGetScalingAttributeEnd(ReadOnlySpan<char> tag, int whitespaceIndex, out int attributeEnd)
+    {
+        attributeEnd = 0;
+
+        int nameStart = whitespaceIndex;
+        while (nameStart < tag.Length && char.IsWhiteSpace(tag[nameStart]))
+            nameStart++;
+
+        int equalsOffset = tag[nameStart..].IndexOf('=');
+        if (equalsOffset < 1)
+            return false;
+
+        ReadOnlySpan<char> name = tag.Slice(nameStart, equalsOffset).TrimEnd();
+
+        if (!name.Equals(_scalingValueAttributeName, StringComparison.OrdinalIgnoreCase) &&
+            !name.Equals(_scalingPrecisionAttributeName, StringComparison.OrdinalIgnoreCase) &&
+            !name.Equals(_scalingAttributeName, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        int startQuote = nameStart + equalsOffset + 1;
+        while (startQuote < tag.Length && char.IsWhiteSpace(tag[startQuote]))
+            startQuote++;
+
+        if (startQuote >= tag.Length || tag[startQuote] != '"')
+            return false;
+
+        int endQuoteOffset = tag[(startQuote + 1)..].IndexOf('"');
+        if (endQuoteOffset < 0)
+            return false;
+
+        attributeEnd = startQuote + endQuoteOffset + 2;
+
+        return true;
     }
 
     // checks if the end tag matches the start tag
@@ -407,8 +487,14 @@ internal sealed class GameStringParser
                 case TextType.ScalingTag:
                     if (flags.ScalingTag != TagFlag.None && flags.ColorTags == TagFlag.Include && !startTag.IsEmpty)
                     {
+                        int startTagOffset = currentOffset;
+
                         CopyStartTag(buffer, startTag, ref currentOffset);
                         startTag = [];
+
+                        // the attributes for working out the value at a level go with the scaling value (~~x~~), so they're removed when it's turned into text
+                        if (flags.ScalingTag == TagFlag.Eval)
+                            currentOffset = startTagOffset + RemoveScalingAttributes(buffer[startTagOffset..currentOffset]);
                     }
 
                     if (flags.ScalingTag == TagFlag.Eval && TryParseScalingValue(itemText.Trim('~'), out double scaleValue))

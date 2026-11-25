@@ -1283,4 +1283,59 @@ public class GameStringParserTests
         Assert.AreEqual(correctRaw, resultRaw);
         Assert.AreEqual(correctPlainTextWithScaling, resultPlainTextWithScaling);
     }
+
+    [TestMethod]
+    [DataRow(
+        "restores <c val=\"#TooltipNumbers\">55<c val=\"#ColorGray\" value=\"55.3\" precision=\"0\" scaling=\"0.0400390625\">~~0.04~~</c></c> Health",
+        "restores <c val=\"#TooltipNumbers\">55</c><c val=\"#ColorGray\" value=\"55.3\" precision=\"0\" scaling=\"0.0400390625\">~~0.04~~</c> Health",
+        "restores <c val=\"#TooltipNumbers\">55</c> Health",
+        "restores <c val=\"#TooltipNumbers\">55</c><c val=\"#ColorGray\"> (+4% per level)</c> Health",
+        "restores 55 Health",
+        "restores 55 (+4% per level) Health")]
+    [DataRow(
+        "by <c val=\"#TooltipNumbers\">25%<c val=\"#ColorGray\" value=\"25.2\" precision=\"0\" scaling=\"0.050048828125\">~~0.05~~</c></c>",
+        "by <c val=\"#TooltipNumbers\">25%</c><c val=\"#ColorGray\" value=\"25.2\" precision=\"0\" scaling=\"0.050048828125\">~~0.05~~</c>",
+        "by <c val=\"#TooltipNumbers\">25%</c>",
+        "by <c val=\"#TooltipNumbers\">25%</c><c val=\"#ColorGray\"> (+5% per level)</c>",
+        "by 25%",
+        "by 25% (+5% per level)")]
+    public void GetText_ScalingTagHasLevelAttributes_AttributesOnlyKeptInRawText(string text, string correctRaw, string correctColoredText, string correctColoredTextWithScaling, string correctPlainText, string correctPlainTextWithScaling)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance(text);
+
+        // act
+        string resultRaw = descriptionParser.GetRawText();
+        string resultColoredText = descriptionParser.GetColoredText(false);
+        string resultColoredTextWithScaling = descriptionParser.GetColoredText(true);
+        string resultPlainText = descriptionParser.GetPlainText(false, false);
+        string resultPlainTextWithScaling = descriptionParser.GetPlainText(false, true);
+
+        // assert
+        Assert.AreEqual(correctRaw, resultRaw);
+        Assert.AreEqual(correctColoredText, resultColoredText);
+        Assert.AreEqual(correctColoredTextWithScaling, resultColoredTextWithScaling);
+        Assert.AreEqual(correctPlainText, resultPlainText);
+        Assert.AreEqual(correctPlainTextWithScaling, resultPlainTextWithScaling);
+    }
+
+    [TestMethod]
+    [DataRow("<c val=\"#ColorGray\" scaling=\"0.0400390625\" value=\"55.3\" precision=\"0\">", "<c val=\"#ColorGray\">")] // any order
+    [DataRow("<c Value=\"55.3\" val=\"#ColorGray\" PRECISION=\"0\" Scaling=\"0.0400390625\">", "<c val=\"#ColorGray\">")] // names ignore case
+    [DataRow("<c val=\"#ColorGray\" value = \"55.3\" precision=\"0\">", "<c val=\"#ColorGray\">")] // spaces around the =
+    [DataRow("<c val=\"#ColorGray\" other=\"x\" value=\"55.3\">", "<c val=\"#ColorGray\" other=\"x\">")] // other attributes are kept
+    [DataRow("<c val=\"#ColorGray\" other=\"has value=\" scaling=\"1\">", "<c val=\"#ColorGray\" other=\"has value=\">")] // text inside another attribute's quotes is not an attribute
+    [DataRow("<c val=\"#ColorGray\" values=\"1\" scale=\"2\">", "<c val=\"#ColorGray\" values=\"1\" scale=\"2\">")] // only the exact names
+    [DataRow("<c val=\"#ColorGray\" value=\"55.3>", "<c val=\"#ColorGray\" value=\"55.3>")] // no closing quote
+    public void GetColoredText_ScalingTagStartTagHasLevelAttributes_AttributesRemoved(string startTag, string correctStartTag)
+    {
+        // arrange
+        GameStringParser descriptionParser = GameStringParser.GetInstance($"deals <c val=\"#TooltipNumbers\">55{startTag}~~0.04~~</c></c> damage");
+
+        // act
+        string result = descriptionParser.GetColoredText(true);
+
+        // assert
+        Assert.AreEqual($"deals <c val=\"#TooltipNumbers\">55</c>{correctStartTag} (+4% per level)</c> damage", result);
+    }
 }

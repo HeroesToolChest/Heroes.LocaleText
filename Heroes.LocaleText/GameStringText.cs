@@ -68,6 +68,9 @@ public class GameStringText
     /// Any font value replacements are applied.
     /// </para>
     /// <para>
+    /// The start tag of a scaling value keeps any attributes it has for working out the value at a level, such as <c>value</c>, <c>precision</c>, and <c>scaling</c>.
+    /// </para>
+    /// <para>
     /// Example:<br/>
     /// Fires a laser that deals &lt;c val="#TooltipNumbers"&gt;200&lt;/c&gt;&lt;c val="#ColorGray"&gt;~~0.04~~&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.
     /// </para>
@@ -127,6 +130,9 @@ public class GameStringText
     /// <summary>
     /// <para>Gets the gamestring with xml tags, newlines, and scaling info.</para>
     /// <para>Same as <see cref="ColoredText"/> but contains the scaling info <c>(+x% per level)</c>.</para>
+    /// <para>
+    /// The <c>value</c>, <c>precision</c>, and <c>scaling</c> attributes are removed from the start tag of the scaling info, since they go with the scaling value <c>~~x~~</c> that the scaling info replaces.
+    /// </para>
     /// <para>
     /// Example:<br/>
     /// Fires a laser that deals &lt;c val="#TooltipNumbers"&gt;200&lt;/c&gt;&lt;c val="#ColorGray"&gt; (+4% per level)&lt;/c&gt; damage.&lt;n/&gt;Does not affect minions.

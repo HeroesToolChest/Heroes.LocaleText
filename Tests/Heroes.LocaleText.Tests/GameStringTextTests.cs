@@ -136,6 +136,35 @@ public class GameStringTextTests
     }
 
     [TestMethod]
+    public void ColoredTextWithScaling_ScalingTagHasLevelAttributesAndDeDe_RemovesAttributesAndWritesScalingInLocale()
+    {
+        // arrange
+        GameStringText gameStringText = new("deals <c val=\"#TooltipNumbers\">3,75<c val=\"#ColorGray\" value=\"3.75\" precision=\"2\" scaling=\"0.044921875\">~~0.045~~</c></c> damage", StormLocale.DEDE);
+
+        // act
+        string result = gameStringText.ColoredTextWithScaling;
+
+        // assert
+        Assert.AreEqual("deals <c val=\"#TooltipNumbers\">3,75</c><c val=\"#ColorGray\"> (+4,5 % pro Stufe)</c> damage", result); // a non-breaking space before the %
+    }
+
+    [TestMethod]
+    public void ColoredTextWithScaling_ScalingTagHasLevelAttributesAndFontValueReplacement_RemovesAttributesAndKeepsReplacement()
+    {
+        // arrange
+        GameStringText gameStringText = new("deals <c val=\"#TooltipNumbers\">55<c val=\"#ColorGray\" value=\"55.3\" precision=\"0\" scaling=\"0.0400390625\">~~0.04~~</c></c> damage");
+        gameStringText.AddFontValueReplacement("#ColorGray", "#Gray", FontTagType.Constant, true);
+
+        // act
+        string resultRaw = gameStringText.RawText;
+        string resultColoredTextWithScaling = gameStringText.ColoredTextWithScaling;
+
+        // assert
+        Assert.AreEqual("deals <c val=\"#TooltipNumbers\">55</c><c val=\"#Gray\" hlt-name=\"#ColorGray\" value=\"55.3\" precision=\"0\" scaling=\"0.0400390625\">~~0.04~~</c> damage", resultRaw);
+        Assert.AreEqual("deals <c val=\"#TooltipNumbers\">55</c><c val=\"#Gray\" hlt-name=\"#ColorGray\"> (+4% per level)</c> damage", resultColoredTextWithScaling);
+    }
+
+    [TestMethod]
     public void ColoredTextWithScaling_TestTextDeDe_ReturnsColoredTextWithScaling()
     {
         // arrange
